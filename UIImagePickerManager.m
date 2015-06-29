@@ -22,9 +22,9 @@ RCT_EXPORT_MODULE();
 RCT_EXPORT_METHOD(showImagePicker:(NSString *)title callback:(RCTResponseSenderBlock)callback)
 {
   self.callback = callback; // Save the callback so we can use it from the delegate methods
-  
+
   self.sheet = [[UIActionSheet alloc] initWithTitle:title delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:@"Take Photo...", @"Choose from Library...", nil];
-  
+
   dispatch_async(dispatch_get_main_queue(), ^{
     UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
     [self.sheet showInView:root.view];
@@ -42,20 +42,23 @@ RCT_EXPORT_METHOD(showImagePicker:(NSString *)title callback:(RCTResponseSenderB
   self.picker.delegate = self;
 
   if (buttonIndex == 0) { // Take photo
-    self.picker.sourceType = UIImagePickerControllerSourceTypeCamera;
+    // Will crash if we try to use camera on the simulator
     #if TARGET_IPHONE_SIMULATOR
-      return; // Will crash if we try to use camera on the simulator, so just do nothing
+      NSLog(@"Camera not available on simulator");
+      return;
+    #else
+      self.picker.sourceType = UIImagePickerControllerSourceTypeCamera;
     #endif
   }
   else if (buttonIndex == 1) { // Choose from library
     self.picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
   }
-  
+
   UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
   dispatch_async(dispatch_get_main_queue(), ^{
     [root presentViewController:self.picker animated:YES completion:nil];
   });
-  
+
 }
 
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
@@ -63,7 +66,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSString *)title callback:(RCTResponseSenderB
   dispatch_async(dispatch_get_main_queue(), ^{
     [picker dismissViewControllerAnimated:YES completion:nil];
   });
-  
+
   NSString *imageURL = [((NSURL*)info[UIImagePickerControllerReferenceURL]) absoluteString];
   if (imageURL) { // Image chosen from library, send
     self.callback(@[@NO, imageURL]);
