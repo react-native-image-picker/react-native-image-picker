@@ -17,11 +17,11 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
 6. Use it like so:
 
   When you want to display the picker:
-  ```javascript  
+  ```javascript
   // The first arg will be the title of your UIAlertSheet, the second is your callback
   // which sends bool: isData, string: response
   UIImagePickerManager.showImagePicker('Select Avatar', (isData, response) => {
-    let source;
+    var source;
     if (isData) { // New photo taken -  response is the 64 bit encoded image data string
       source = {uri: 'data:image/jpeg;base64,' + response, isStatic: true};
     } else { // Selected from library - response is the URI to the local file asset
