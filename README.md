@@ -9,12 +9,12 @@ A React Native module that allows you to use the native UIImagePickerController 
 4. Compile and have fun!
 
 ## Usage
-5. In your React Native javascript code, bring in the native module:
+1. In your React Native javascript code, bring in the native module:
 
   ```javascript
 var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
   ```
-6. Use it like so:
+2. Use it like so:
 
   When you want to display the picker:
   ```javascript
