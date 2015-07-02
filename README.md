@@ -18,19 +18,44 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
 
   When you want to display the picker:
   ```javascript
-  // The first arg will be the title of your UIAlertSheet, the second is your callback
-  // which sends bool: isData, string: response
-  UIImagePickerManager.showImagePicker('Select Avatar', (isData, response) => {
-    var source;
-    if (isData) { // New photo taken -  response is the 64 bit encoded image data string
-      source = {uri: 'data:image/jpeg;base64,' + response, isStatic: true};
-    } else { // Selected from library - response is the URI to the local file asset
-      source = {uri: response};
-    }
+  // The first arg will be the options for cusatomize titles in UIAlertSheet, the second is your callback
+  // which sends string: type, string: response
+  UIImagePickerManager.showImagePicker(null, (type, response) => {
 
-    this.setState({
-      avatarSource: source
-    });
+    if (type !== 'cancel') {
+      var source;
+      if (type === 'data') { // New photo taken -  response is the 64 bit encoded image data string
+        source = {uri: 'data:image/jpeg;base64,' + response, isStatic: true};
+      } else { // Selected from library - response is the URI to the local file asset
+        source = {uri: response};
+      }
+
+      this.setState({avatarSource:source});
+    } else {
+      console.log('Cancel');
+    }
+  });
+
+  // Customize pt_BR (example)
+  UIImagePickerManager.showImagePicker({
+      'title': 'Selecione uma imagem para o perfil',
+      'cancelButtonTitle': 'Cancelar',
+      'takePhotoButtonTitle': 'Tirar foto...',
+      'chooseFromLibraryButtonTitle': 'Escolher da galeria...'
+    }, (type, response) => {
+
+    if (type !== 'cancel') {
+      var source;
+      if (type === 'data') { // New photo taken -  response is the 64 bit encoded image data string
+        source = {uri: 'data:image/jpeg;base64,' + response, isStatic: true};
+      } else { // Selected from library - response is the URI to the local file asset
+        source = {uri: response};
+      }
+
+      this.setState({avatarSource:source});
+    } else {
+      console.log('Cancel');
+    }
   });
   ```
   Then later, if you want to display this image in your render() method:
