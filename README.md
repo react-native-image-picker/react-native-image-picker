@@ -18,8 +18,8 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
 
   When you want to display the picker:
   ```javascript
-  // The first arg will be the options for cusatomize titles in UIAlertSheet, the second is your callback
-  // which sends string: type, string: response
+  // The first arg will be the options object for customizable titles, the second is
+  // your callback which sends string: type, string: response
   UIImagePickerManager.showImagePicker(null, (type, response) => {
 
     if (type !== 'cancel') {
@@ -36,12 +36,12 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
     }
   });
 
-  // Customize pt_BR (example)
+  // Customize by sending any or all of the following keys:
   UIImagePickerManager.showImagePicker({
-      'title': 'Selecione uma imagem para o perfil',
-      'cancelButtonTitle': 'Cancelar',
-      'takePhotoButtonTitle': 'Tirar foto...',
-      'chooseFromLibraryButtonTitle': 'Escolher da galeria...'
+      'title': 'Select Avatar',
+      'cancelButtonTitle': 'Cancel',
+      'takePhotoButtonTitle': 'Take Photo...',
+      'chooseFromLibraryButtonTitle': 'Choose from Library...'
     }, (type, response) => {
 
     if (type !== 'cancel') {

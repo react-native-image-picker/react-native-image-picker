@@ -26,11 +26,11 @@ RCT_EXPORT_MODULE();
   if (self = [super init]) {
 
     self.defaultOptions = @{
-                            @"title": @"Choose one image",
-                            @"cancelButtonTitle": @"Cancel",
-                            @"takePhotoButtonTitle": @"Take Photo...",
-                            @"chooseFromLibraryButtonTitle": @"Choose from Library..."
-                            };
+      @"title": @"Select a Photo",
+      @"cancelButtonTitle": @"Cancel",
+      @"takePhotoButtonTitle": @"Take Photo...",
+      @"chooseFromLibraryButtonTitle": @"Choose from Library..."
+    };
   }
 
   return self;
