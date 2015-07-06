@@ -12,6 +12,8 @@
 @property (nonatomic, strong) UIActionSheet *sheet;
 @property (nonatomic, strong) UIImagePickerController *picker;
 @property (nonatomic, strong) RCTResponseSenderBlock callback;
+@property (nonatomic, strong) NSDictionary *defaultOptions;
+@property (nonatomic, retain) NSMutableDictionary *options;
 
 @end
 
@@ -19,11 +21,31 @@
 
 RCT_EXPORT_MODULE();
 
-RCT_EXPORT_METHOD(showImagePicker:(NSString *)title callback:(RCTResponseSenderBlock)callback)
+- (instancetype)init {
+
+  if (self = [super init]) {
+
+    self.defaultOptions = @{
+                            @"title": @"Choose one image",
+                            @"cancelButtonTitle": @"Cancel",
+                            @"takePhotoButtonTitle": @"Take Photo...",
+                            @"chooseFromLibraryButtonTitle": @"Choose from Library..."
+                            };
+  }
+
+  return self;
+}
+
+RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
 {
   self.callback = callback; // Save the callback so we can use it from the delegate methods
+  self.options = [NSMutableDictionary dictionaryWithDictionary:self.defaultOptions]; // Set default options
 
-  self.sheet = [[UIActionSheet alloc] initWithTitle:title delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:@"Take Photo...", @"Choose from Library...", nil];
+  for (NSString *key in options.keyEnumerator) {
+    [self.options setValue:options[key] forKey:key]; // Replace default options for customized titles
+  }
+
+  self.sheet = [[UIActionSheet alloc] initWithTitle:[self.options valueForKey:@"title"] delegate:self cancelButtonTitle:[self.options valueForKey:@"cancelButtonTitle"] destructiveButtonTitle:nil otherButtonTitles:[self.options valueForKey:@"takePhotoButtonTitle"], [self.options valueForKey:@"chooseFromLibraryButtonTitle"], nil];
 
   dispatch_async(dispatch_get_main_queue(), ^{
     UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
@@ -34,6 +56,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSString *)title callback:(RCTResponseSenderB
 - (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
 {
   if (buttonIndex == 2) { // Cancel
+    self.callback(@[@"cancel"]); // Return callback for 'cancel' action (if is required)
     return;
   }
 
@@ -69,13 +92,13 @@ RCT_EXPORT_METHOD(showImagePicker:(NSString *)title callback:(RCTResponseSenderB
 
   NSString *imageURL = [((NSURL*)info[UIImagePickerControllerReferenceURL]) absoluteString];
   if (imageURL) { // Image chosen from library, send
-    self.callback(@[@NO, imageURL]);
+    self.callback(@[@"uri", imageURL]);
   }
   else {
     UIImage *image = info[UIImagePickerControllerOriginalImage];
     NSData *imageData = UIImageJPEGRepresentation(image, COMPRESSION_QUALITY);
     NSString *dataString = [imageData base64EncodedStringWithOptions:0];
-    self.callback(@[@YES, dataString]);
+    self.callback(@[@"data", dataString]);
   }
 }
 
