@@ -14,9 +14,6 @@
     }
   ],
   "nativePackage": true,
-  "peerDependencies": {
-    "react-native": ">=0.4.3"
-  },
   "keywords": [
     "react-native",
     "react-native-image-picker",
