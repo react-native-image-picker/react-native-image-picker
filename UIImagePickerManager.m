@@ -1,4 +1,5 @@
 #import "UIImagePickerManager.h"
+#import "RCTConvert.h"
 
 /*
  From 0.0 (worst quality image) to 1.0 (best)
@@ -29,7 +30,9 @@ RCT_EXPORT_MODULE();
       @"title": @"Select a Photo",
       @"cancelButtonTitle": @"Cancel",
       @"takePhotoButtonTitle": @"Take Photo...",
-      @"chooseFromLibraryButtonTitle": @"Choose from Library..."
+      @"chooseFromLibraryButtonTitle": @"Choose from Library...",
+      @"returnBase64Image" : @NO, // Only return base64 encoded version of the image
+      @"returnIsVertical" : @NO // If returning base64 image, return the orientation too
     };
   }
 
@@ -40,11 +43,9 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 {
   self.callback = callback; // Save the callback so we can use it from the delegate methods
   self.options = [NSMutableDictionary dictionaryWithDictionary:self.defaultOptions]; // Set default options
-
-  for (NSString *key in options.keyEnumerator) {
-    [self.options setValue:options[key] forKey:key]; // Replace default options for customized titles
+  for (NSString *key in options.keyEnumerator) { // Replace default options
+    [self.options setValue:options[key] forKey:key];
   }
-
   self.sheet = [[UIActionSheet alloc] initWithTitle:[self.options valueForKey:@"title"] delegate:self cancelButtonTitle:[self.options valueForKey:@"cancelButtonTitle"] destructiveButtonTitle:nil otherButtonTitles:[self.options valueForKey:@"takePhotoButtonTitle"], [self.options valueForKey:@"chooseFromLibraryButtonTitle"], nil];
 
   dispatch_async(dispatch_get_main_queue(), ^{
@@ -89,16 +90,27 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
   dispatch_async(dispatch_get_main_queue(), ^{
     [picker dismissViewControllerAnimated:YES completion:nil];
   });
-
-  NSString *imageURL = [((NSURL*)info[UIImagePickerControllerReferenceURL]) absoluteString];
-  if (imageURL) { // Image chosen from library, send
-    self.callback(@[@"uri", imageURL]);
+  
+  BOOL base64 = [[self.options valueForKey:@"returnBase64Image"] boolValue];
+  if (!base64) { // Skip imageURL check if base64 option set to true
+    NSString *imageURL = [((NSURL*)info[UIImagePickerControllerReferenceURL]) absoluteString];
+    if (imageURL) { // Image chosen from library, send
+      self.callback(@[@"uri", imageURL]);
+    }
   }
   else {
     UIImage *image = info[UIImagePickerControllerOriginalImage];
     NSData *imageData = UIImageJPEGRepresentation(image, COMPRESSION_QUALITY);
     NSString *dataString = [imageData base64EncodedStringWithOptions:0];
-    self.callback(@[@"data", dataString]);
+    
+    BOOL returnOrientation = [self.options[@"returnIsVertical"] boolValue];
+    if (returnOrientation) { // Return image orientation if desired
+      NSString *vertical = (image.size.width < image.size.height) ? @"true" : @"false";
+      self.callback(@[@"data", dataString, vertical]);
+    }
+    else {
+      self.callback(@[@"data", dataString]);
+    }
   }
 }
 
