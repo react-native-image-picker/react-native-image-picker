@@ -18,35 +18,23 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
 
   When you want to display the picker:
   ```javascript
-  // The first arg will be the options object for customizable titles, the second is
+
+  // Specify any or all of these keys
+  var options = {
+    title: 'Select Avatar',
+    cancelButtonTitle: 'Cancel',
+    takePhotoButtonTitle: 'Take Photo...',
+    chooseFromLibraryButtonTitle: 'Choose from Library...'
+    returnBase64Image: false,
+    returnIsVertical: false
+  };
+  
+  // The first arg will be the options object for customization, the second is
   // your callback which sends string: type, string: response
-  UIImagePickerManager.showImagePicker(null, (type, response) => {
-
+  UIImagePickerManager.showImagePicker(options, (type, response) => {
     if (type !== 'cancel') {
       var source;
-      if (type === 'data') { // New photo taken -  response is the 64 bit encoded image data string
-        source = {uri: 'data:image/jpeg;base64,' + response, isStatic: true};
-      } else { // Selected from library - response is the URI to the local file asset
-        source = {uri: response};
-      }
-
-      this.setState({avatarSource:source});
-    } else {
-      console.log('Cancel');
-    }
-  });
-
-  // Customize by sending any or all of the following keys:
-  UIImagePickerManager.showImagePicker({
-      'title': 'Select Avatar',
-      'cancelButtonTitle': 'Cancel',
-      'takePhotoButtonTitle': 'Take Photo...',
-      'chooseFromLibraryButtonTitle': 'Choose from Library...'
-    }, (type, response) => {
-
-    if (type !== 'cancel') {
-      var source;
-      if (type === 'data') { // New photo taken -  response is the 64 bit encoded image data string
+      if (type === 'data') { // New photo taken OR passed returnBase64Image true -  response is the 64 bit encoded image data string
         source = {uri: 'data:image/jpeg;base64,' + response, isStatic: true};
       } else { // Selected from library - response is the URI to the local file asset
         source = {uri: response};
