@@ -24,7 +24,7 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
     title: 'Select Avatar',
     cancelButtonTitle: 'Cancel',
     takePhotoButtonTitle: 'Take Photo...',
-    chooseFromLibraryButtonTitle: 'Choose from Library...'
+    chooseFromLibraryButtonTitle: 'Choose from Library...',
     returnBase64Image: false,
     returnIsVertical: false
   };
