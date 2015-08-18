@@ -26,9 +26,10 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
     takePhotoButtonTitle: 'Take Photo...',
     chooseFromLibraryButtonTitle: 'Choose from Library...',
     returnBase64Image: false,
-    returnIsVertical: false
+    returnIsVertical: false,
+    quality: 0.2
   };
-  
+
   // The first arg will be the options object for customization, the second is
   // your callback which sends string: type, string: response
   UIImagePickerManager.showImagePicker(options, (type, response) => {
