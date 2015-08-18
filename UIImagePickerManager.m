@@ -1,12 +1,7 @@
 #import "UIImagePickerManager.h"
 #import "RCTConvert.h"
 
-/*
- From 0.0 (worst quality image) to 1.0 (best)
- Play around with this to suit your app's needs. I found that a 1.0 compressed image takes
- a very long time to load into a React Native <Image>
- */
-#define COMPRESSION_QUALITY 0.2
+
 
 @interface UIImagePickerManager ()
 
@@ -32,7 +27,8 @@ RCT_EXPORT_MODULE();
                                 @"takePhotoButtonTitle": @"Take Photo...",
                                 @"chooseFromLibraryButtonTitle": @"Choose from Library...",
                                 @"returnBase64Image" : @NO, // Only return base64 encoded version of the image
-                                @"returnIsVertical" : @NO // If returning base64 image, return the orientation too
+                                @"returnIsVertical" : @NO, // If returning base64 image, return the orientation too
+                                @"quality" : @0.8 // 1.0 best to 0.0 worst
                                 };
     }
     
@@ -114,7 +110,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                 // This will be the URL
                 NSString* path = [documentsDirectory stringByAppendingPathComponent:ImageName];
                 
-                NSData *data = UIImageJPEGRepresentation(image, COMPRESSION_QUALITY);
+                NSData *data = UIImageJPEGRepresentation(image, [[self.options valueForKey:@"quality"] floatValue]);
                 
                 /* Write to the disk */
                 [data writeToFile:path atomically:YES];
@@ -132,7 +128,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     }
     else {
         UIImage *image = info[UIImagePickerControllerOriginalImage];
-        NSData *imageData = UIImageJPEGRepresentation(image, COMPRESSION_QUALITY);
+        NSData *imageData = UIImageJPEGRepresentation(image, [[self.options valueForKey:@"quality"] floatValue]);
         NSString *dataString = [imageData base64EncodedStringWithOptions:0];
         
         if (returnOrientation) { // Return image orientation if desired
