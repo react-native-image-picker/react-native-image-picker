@@ -6,7 +6,9 @@ A React Native module that allows you to use the native UIImagePickerController 
 1. `npm install react-native-image-picker@latest --save`
 2. In the XCode's "Project navigator", right click on your project's Libraries folder ➜ `Add Files to <...>`
 3. Go to `node_modules` ➜ `react-native-image-picker` ➜ select the `UIImagePickerManager` folder
-4. Compile and have fun!
+4. Double Click your Project in "Project navigator" ➜ select `Build Phases` ➜ Drag and drop the newly imported UIImagePickerManager.h into the `Compile Sources`. Should look like this: 
+![Screenshot of Compile Sources](https://cloud.githubusercontent.com/assets/32771/9377979/e5381fa4-471d-11e5-86e8-9aca42c8a3f8.png)
+5. Compile and have fun!
 
 ## Usage
 1. In your React Native javascript code, bring in the native module:
