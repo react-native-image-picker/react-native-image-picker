@@ -23,7 +23,9 @@ RCT_EXPORT_MODULE();
             @"title": @"Select a Photo",
             @"cancelButtonTitle": @"Cancel",
             @"takePhotoButtonTitle": @"Take Photo...",
+            @"takePhotoButtonHidden": @NO,
             @"chooseFromLibraryButtonTitle": @"Choose from Library...",
+            @"chooseFromLibraryButtonHidden": @NO,
             @"returnBase64Image" : @NO, // Only return base64 encoded version of the image
             @"returnIsVertical" : @NO, // If returning base64 image, return the orientation too
             @"quality" : @0.2 // 1.0 best to 0.0 worst
@@ -40,7 +42,20 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     for (NSString *key in options.keyEnumerator) { // Replace default options
         [self.options setValue:options[key] forKey:key];
     }
-    self.sheet = [[UIActionSheet alloc] initWithTitle:[self.options valueForKey:@"title"] delegate:self cancelButtonTitle:[self.options valueForKey:@"cancelButtonTitle"] destructiveButtonTitle:nil otherButtonTitles:[self.options valueForKey:@"takePhotoButtonTitle"], [self.options valueForKey:@"chooseFromLibraryButtonTitle"], nil];
+    
+    BOOL takePhotoHidden = [[self.options objectForKey:@"takePhotoButtonHidden"] boolValue];
+    BOOL chooseFromLibraryHidden = [[self.options objectForKey:@"chooseFromLibraryButtonHidden"] boolValue];
+    
+    // If they are both set to be hidden, then this module has no purpose -  we'll assume it was accidental and show both anyway.
+    if ((takePhotoHidden && chooseFromLibraryHidden) || (!takePhotoHidden && !chooseFromLibraryHidden)) {
+        self.sheet = [[UIActionSheet alloc] initWithTitle:[self.options valueForKey:@"title"] delegate:self cancelButtonTitle:[self.options valueForKey:@"cancelButtonTitle"] destructiveButtonTitle:nil otherButtonTitles:[self.options valueForKey:@"takePhotoButtonTitle"], [self.options valueForKey:@"chooseFromLibraryButtonTitle"], nil];
+    }
+    else if (takePhotoHidden) {
+        self.sheet = [[UIActionSheet alloc] initWithTitle:[self.options valueForKey:@"title"] delegate:self cancelButtonTitle:[self.options valueForKey:@"cancelButtonTitle"] destructiveButtonTitle:nil otherButtonTitles:[self.options valueForKey:@"chooseFromLibraryButtonTitle"], nil];
+    }
+    else if (chooseFromLibraryHidden) {
+        self.sheet = [[UIActionSheet alloc] initWithTitle:[self.options valueForKey:@"title"] delegate:self cancelButtonTitle:[self.options valueForKey:@"cancelButtonTitle"] destructiveButtonTitle:nil otherButtonTitles:[self.options valueForKey:@"takePhotoButtonTitle"], nil];
+    }
     
     dispatch_async(dispatch_get_main_queue(), ^{
         UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
@@ -50,7 +65,9 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 
 - (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
 {
-    if (buttonIndex == 2) { // Cancel
+    NSString *buttonTitle = [actionSheet buttonTitleAtIndex:buttonIndex];
+    
+    if ([buttonTitle isEqualToString:[self.options valueForKey:@"cancelButtonTitle"]]) {
         self.callback(@[@"cancel"]); // Return callback for 'cancel' action (if is required)
         return;
     }
@@ -59,7 +76,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     self.picker.modalPresentationStyle = UIModalPresentationCurrentContext;
     self.picker.delegate = self;
     
-    if (buttonIndex == 0) { // Take photo
+    if ([buttonTitle isEqualToString:[self.options valueForKey:@"takePhotoButtonTitle"]]) { // Take photo
         // Will crash if we try to use camera on the simulator
 #if TARGET_IPHONE_SIMULATOR
         NSLog(@"Camera not available on simulator");
@@ -68,7 +85,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         self.picker.sourceType = UIImagePickerControllerSourceTypeCamera;
 #endif
     }
-    else if (buttonIndex == 1) { // Choose from library
+    else if ([buttonTitle isEqualToString:[self.options valueForKey:@"chooseFromLibraryButtonTitle"]]) { // Choose from library
         self.picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
     }
     
