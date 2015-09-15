@@ -91,7 +91,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     
     UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
     dispatch_async(dispatch_get_main_queue(), ^{
-        [root presentViewController:self.picker animated:YES completion:nil];
+        [root.presentedViewController presentViewController:self.picker animated:YES completion:nil];
     });
     
 }
