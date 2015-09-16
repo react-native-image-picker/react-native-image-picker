@@ -1,5 +1,4 @@
 #import "UIImagePickerManager.h"
-#import <AssetsLibrary/AssetsLibrary.h>
 #import "RCTConvert.h"
 
 @interface UIImagePickerManager ()
