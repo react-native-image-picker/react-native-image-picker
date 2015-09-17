@@ -5,7 +5,7 @@ A React Native module that allows you to use the native UIImagePickerController 
 ## Install
 1. `npm install react-native-image-picker@latest --save`
 2. In the XCode's "Project navigator", right click on your project's Libraries folder ➜ `Add Files to <...>`
-3. Go to `node_modules` ➜ `react-native-image-picker` ➜ select the `UIImagePickerManager` folder **make sure you have 'Create Groups' selected when adding the folder**
+3. Go to `node_modules` ➜ `react-native-image-picker` ➜ select the `UIImagePickerManager` folder **Make sure you have 'Create Groups' selected**
 4. Make sure `UIImagePickerManager.m` is listed under 'Compile Sources' in your project's 'Build Phases' tab
 5. Compile and have fun!
 
@@ -28,6 +28,11 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
     takePhotoButtonHidden: false,
     chooseFromLibraryButtonTitle: 'Choose from Library...',
     chooseFromLibraryButtonHidden: false,
+    customButtons: {
+      'Choose Photo from Facebook': 'fb', // [Button Text] : [String returned upon selection]
+    },
+    maxWidth: 100,
+    maxHeight: 100,
     returnBase64Image: false,
     returnIsVertical: false,
     quality: 0.2
