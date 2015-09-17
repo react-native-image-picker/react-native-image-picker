@@ -8,6 +8,7 @@
 @property (nonatomic, strong) RCTResponseSenderBlock callback;
 @property (nonatomic, strong) NSDictionary *defaultOptions;
 @property (nonatomic, retain) NSMutableDictionary *options;
+@property (nonatomic, strong) NSDictionary *customButtons;
 
 @end
 
@@ -57,6 +58,14 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         self.sheet = [[UIActionSheet alloc] initWithTitle:[self.options valueForKey:@"title"] delegate:self cancelButtonTitle:[self.options valueForKey:@"cancelButtonTitle"] destructiveButtonTitle:nil otherButtonTitles:[self.options valueForKey:@"takePhotoButtonTitle"], nil];
     }
     
+    // Add custom buttons to action sheet
+    if([self.options objectForKey:@"customButtons"] && [[self.options objectForKey:@"customButtons"] isKindOfClass:[NSDictionary class]]){
+        self.customButtons = [self.options objectForKey:@"customButtons"];
+        for (NSString *key in self.customButtons) {
+            [self.sheet addButtonWithTitle:key];
+        }
+    }
+    
     dispatch_async(dispatch_get_main_queue(), ^{
         UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
         [self.sheet showInView:root.view];
@@ -69,6 +78,12 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     
     if ([buttonTitle isEqualToString:[self.options valueForKey:@"cancelButtonTitle"]]) {
         self.callback(@[@"cancel"]); // Return callback for 'cancel' action (if is required)
+        return;
+    }
+    
+    // if button title is one of the keys in the customButtons dictionary return the value as a callback
+    if ([self.customButtons objectForKey:buttonTitle]) {
+        self.callback(@[[self.customButtons objectForKey:buttonTitle]]);
         return;
     }
     
