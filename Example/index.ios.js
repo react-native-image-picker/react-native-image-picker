@@ -20,7 +20,7 @@ class Example extends React.Component {
 
   avatarTapped() {
     // Specify any or all of these keys
-    var options = {
+    const options = {
       title: 'Select Avatar',
       cancelButtonTitle: 'Cancel',
       takePhotoButtonTitle: 'Take Photo...',
@@ -59,7 +59,7 @@ class Example extends React.Component {
 
 }
 
-var styles = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
