@@ -35,7 +35,8 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
     maxHeight: 100,
     returnBase64Image: false,
     returnIsVertical: false,
-    quality: 0.2
+    quality: 0.2,
+    allowsEditing: false // Built in iOS functionality to resize/reposition the image
   };
 
   // The first arg will be the options object for customization, the second is
