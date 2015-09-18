@@ -28,7 +28,8 @@ RCT_EXPORT_MODULE();
             @"chooseFromLibraryButtonHidden": @NO,
             @"returnBase64Image" : @NO, // Only return base64 encoded version of the image
             @"returnIsVertical" : @NO, // If returning base64 image, return the orientation too
-            @"quality" : @0.2 // 1.0 best to 0.0 worst
+            @"quality" : @0.2, // 1.0 best to 0.0 worst
+            @"allowsEditing" : @NO
         };
     }
     return self;
@@ -87,7 +88,9 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     }
 
     self.picker = [[UIImagePickerController alloc] init];
-    self.picker.allowsEditing = true;
+    if ([[self.options objectForKey:@"allowsEditing"] boolValue]) {
+      self.picker.allowsEditing = true;
+    }
     self.picker.modalPresentationStyle = UIModalPresentationCurrentContext;
     self.picker.delegate = self;
 
@@ -122,7 +125,13 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     });
 
     /* Picked Image */
-    UIImage *image = [info objectForKey:UIImagePickerControllerEditedImage];
+    UIImage *image;
+    if ([[self.options objectForKey:@"allowsEditing"] boolValue]) {
+      image = [info objectForKey:UIImagePickerControllerEditedImage];
+    }
+    else {
+      image = [info objectForKey:UIImagePickerControllerOriginalImage];
+    }
 
     /* creating a temp url to be passed */
     NSString *ImageUUID = [[NSUUID UUID] UUIDString];
