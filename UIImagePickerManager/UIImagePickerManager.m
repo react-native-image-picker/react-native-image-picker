@@ -3,7 +3,7 @@
 
 @interface UIImagePickerManager ()
 
-@property (nonatomic, strong) UIActionSheet *sheet;
+@property (nonatomic, strong) UIAlertController *alertController;
 @property (nonatomic, strong) UIImagePickerController *picker;
 @property (nonatomic, strong) RCTResponseSenderBlock callback;
 @property (nonatomic, strong) NSDictionary *defaultOptions;
@@ -42,71 +42,82 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     for (NSString *key in options.keyEnumerator) { // Replace default options
         [self.options setValue:options[key] forKey:key];
     }
+    
+    self.alertController = [UIAlertController alertControllerWithTitle:[self.options valueForKey:@"title"] message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    
+    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:[self.options valueForKey:@"cancelButtonTitle"] style:UIAlertActionStyleCancel handler:^(UIAlertAction * action) {
+        self.callback(@[@"cancel", [NSNull null]]); // Return callback for 'cancel' action (if is required)
+    }];
+    [self.alertController addAction:cancelAction];
 
     BOOL takePhotoHidden = [[self.options objectForKey:@"takePhotoButtonHidden"] boolValue];
     BOOL chooseFromLibraryHidden = [[self.options objectForKey:@"chooseFromLibraryButtonHidden"] boolValue];
-
-    // If they are both set to be hidden, then this module has no purpose -  we'll assume it was accidental and show both anyway.
-    if ((takePhotoHidden && chooseFromLibraryHidden) || (!takePhotoHidden && !chooseFromLibraryHidden)) {
-        self.sheet = [[UIActionSheet alloc] initWithTitle:[self.options valueForKey:@"title"] delegate:self cancelButtonTitle:[self.options valueForKey:@"cancelButtonTitle"] destructiveButtonTitle:nil otherButtonTitles:[self.options valueForKey:@"takePhotoButtonTitle"], [self.options valueForKey:@"chooseFromLibraryButtonTitle"], nil];
+    
+    if (!takePhotoHidden) {
+        UIAlertAction *takePhotoAction = [UIAlertAction actionWithTitle:[self.options valueForKey:@"takePhotoButtonTitle"] style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+            [self actionHandler:action];
+        }];
+        [self.alertController addAction:takePhotoAction];
     }
-    else if (takePhotoHidden) {
-        self.sheet = [[UIActionSheet alloc] initWithTitle:[self.options valueForKey:@"title"] delegate:self cancelButtonTitle:[self.options valueForKey:@"cancelButtonTitle"] destructiveButtonTitle:nil otherButtonTitles:[self.options valueForKey:@"chooseFromLibraryButtonTitle"], nil];
+    if (!chooseFromLibraryHidden) {
+        UIAlertAction *chooseFromLibraryAction = [UIAlertAction actionWithTitle:[self.options valueForKey:@"chooseFromLibraryButtonTitle"] style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+            [self actionHandler:action];
+        }];
+        [self.alertController addAction:chooseFromLibraryAction];
     }
-    else if (chooseFromLibraryHidden) {
-        self.sheet = [[UIActionSheet alloc] initWithTitle:[self.options valueForKey:@"title"] delegate:self cancelButtonTitle:[self.options valueForKey:@"cancelButtonTitle"] destructiveButtonTitle:nil otherButtonTitles:[self.options valueForKey:@"takePhotoButtonTitle"], nil];
-    }
-
+    
     // Add custom buttons to action sheet
     if([self.options objectForKey:@"customButtons"] && [[self.options objectForKey:@"customButtons"] isKindOfClass:[NSDictionary class]]){
         self.customButtons = [self.options objectForKey:@"customButtons"];
         for (NSString *key in self.customButtons) {
-            [self.sheet addButtonWithTitle:key];
+            UIAlertAction *customAction = [UIAlertAction actionWithTitle:key style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+                [self actionHandler:action];
+            }];
+            [self.alertController addAction:customAction];
         }
     }
-
+    
     dispatch_async(dispatch_get_main_queue(), ^{
         UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
-        [self.sheet showInView:root.view];
+        
+        /* On iPad, UIAlertController presents a popover view rather than an action sheet like on iPhone. We must provide the location
+           of the location to show the popover in this case. For simplicity, we'll just display it on the bottom center of the screen
+           to mimic an action sheet */
+        self.alertController.popoverPresentationController.sourceView = root.view;
+        self.alertController.popoverPresentationController.sourceRect = CGRectMake(root.view.bounds.size.width / 2.0, root.view.bounds.size.height, 1.0, 1.0);
+        [root presentViewController:self.alertController animated:YES completion:nil];
     });
 
 }
 
-- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
+- (void)actionHandler:(UIAlertAction *)action
 {
-    NSString *buttonTitle = [actionSheet buttonTitleAtIndex:buttonIndex];
-
-    if ([buttonTitle isEqualToString:[self.options valueForKey:@"cancelButtonTitle"]]) {
-        self.callback(@[@"cancel"]); // Return callback for 'cancel' action (if is required)
+    // If button title is one of the keys in the customButtons dictionary return the value as a callback
+    if ([self.customButtons objectForKey:action.title]) {
+        self.callback(@[[self.customButtons objectForKey:action.title], [NSNull null]]);
         return;
     }
-
-    // if button title is one of the keys in the customButtons dictionary return the value as a callback
-    if ([self.customButtons objectForKey:buttonTitle]) {
-        self.callback(@[[self.customButtons objectForKey:buttonTitle]]);
-        return;
-    }
-
+    
     self.picker = [[UIImagePickerController alloc] init];
     if ([[self.options objectForKey:@"allowsEditing"] boolValue]) {
-      self.picker.allowsEditing = true;
+        self.picker.allowsEditing = true;
     }
     self.picker.modalPresentationStyle = UIModalPresentationCurrentContext;
     self.picker.delegate = self;
-
-    if ([buttonTitle isEqualToString:[self.options valueForKey:@"takePhotoButtonTitle"]]) { // Take photo
+    
+    if ([action.title isEqualToString:[self.options valueForKey:@"takePhotoButtonTitle"]]) { // Take photo
         // Will crash if we try to use camera on the simulator
-        #if TARGET_IPHONE_SIMULATOR
-            NSLog(@"Camera not available on simulator");
-            return;
-        #else
-            self.picker.sourceType = UIImagePickerControllerSourceTypeCamera;
-        #endif
+#if TARGET_IPHONE_SIMULATOR
+        NSLog(@"Camera not available on simulator");
+        return;
+#else
+        self.picker.sourceType = UIImagePickerControllerSourceTypeCamera;
+#endif
     }
-    else if ([buttonTitle isEqualToString:[self.options valueForKey:@"chooseFromLibraryButtonTitle"]]) { // Choose from library
+    else if ([action.title isEqualToString:[self.options valueForKey:@"chooseFromLibraryButtonTitle"]]) { // Choose from library
         self.picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
     }
-
+    
     UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
     dispatch_async(dispatch_get_main_queue(), ^{
         if (root.presentedViewController) {
@@ -217,7 +228,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         [picker dismissViewControllerAnimated:YES completion:nil];
     });
 
-    self.callback(@[@"cancel"]);
+    self.callback(@[@"cancel", [NSNull null]]);
 }
 
 - (UIImage *)fixOrientation:(UIImage *)srcImg {
