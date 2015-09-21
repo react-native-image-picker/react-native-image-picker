@@ -154,29 +154,27 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     NSDictionary *storageOptions;
     // if storage options are provided change path to the documents directory
     if([self.options objectForKey:@"storageOptions"] && [[self.options objectForKey:@"storageOptions"] isKindOfClass:[NSDictionary class]]){
-      // retrieve documents path
-      NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-      NSString *documentsDirectory = [paths objectAtIndex:0];
-      // update path to save image to documents directory
-      path = [documentsDirectory stringByAppendingPathComponent:ImageName];
-      
-      storageOptions = [self.options objectForKey:@"storageOptions"];
-      // if extra path is provided try to create it
-      if ([storageOptions objectForKey:@"path"]) {
-        NSString *newPath = [documentsDirectory stringByAppendingPathComponent:[storageOptions objectForKey:@"path"]];
-        NSError *error = nil;
-        [[NSFileManager defaultManager] createDirectoryAtPath:newPath
-                                  withIntermediateDirectories:YES
-                                                   attributes:nil
-                                                        error:&error];
-        // if there was an error do not update path
-        if (error != nil) {
-          NSLog(@"error creating directory: %@", error);
+        // retrieve documents path
+        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        NSString *documentsDirectory = [paths objectAtIndex:0];
+        // update path to save image to documents directory
+        path = [documentsDirectory stringByAppendingPathComponent:ImageName];
+
+        storageOptions = [self.options objectForKey:@"storageOptions"];
+        // if extra path is provided try to create it
+        if ([storageOptions objectForKey:@"path"]) {
+            NSString *newPath = [documentsDirectory stringByAppendingPathComponent:[storageOptions objectForKey:@"path"]];
+            NSError *error = nil;
+            [[NSFileManager defaultManager] createDirectoryAtPath:newPath withIntermediateDirectories:YES attributes:nil error:&error];
+            
+            // if there was an error do not update path
+            if (error != nil) {
+                NSLog(@"error creating directory: %@", error);
+            }
+            else {
+                path = [newPath stringByAppendingPathComponent:ImageName];
+            }
         }
-        else {
-          path = [newPath stringByAppendingPathComponent:ImageName];
-        }
-      }
     }
     
     // Rotate the image for upload to web
