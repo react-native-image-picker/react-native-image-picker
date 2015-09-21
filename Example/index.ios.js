@@ -27,15 +27,22 @@ class Example extends React.Component {
       takePhotoButtonHidden: false,
       chooseFromLibraryButtonTitle: 'Choose from Library...',
       chooseFromLibraryButtonHidden: false,
-      returnBase64Image: true,
+      returnBase64Image: false,
       returnIsVertical: false,
       quality: 0.2
     };
 
-    UIImagePickerManager.showImagePicker(options, (type, response) => {
-      console.log(type);
-      if (type !== 'cancel') {
-        const source = {uri: 'data:image/jpeg;base64,' + response, isStatic: true};
+    UIImagePickerManager.showImagePicker(options, (responseType, response) => {
+      console.log(`Response Type = ${responseType}`);
+
+      if (responseType !== 'cancel') {
+        let source;
+        if (responseType === 'data') { // New photo taken OR passed returnBase64Image true -  response is the 64 bit encoded image data string
+          source = {uri: 'data:image/jpeg;base64,' + response, isStatic: true};
+        } else { // Selected from library - response is the URI to the local file asset
+          source = {uri: response.replace('file://', ''), isStatic: true};
+        }
+
         this.setState({
           avatarSource: source
         });
