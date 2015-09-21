@@ -2,6 +2,8 @@
 A React Native module that allows you to use the native UIImagePickerController UI to either select a photo from the device library or directly from the camera, like so:
 ![Screenshot of the UIActionSheet](https://github.com/marcshilling/react-native-image-picker/blob/master/AlertSheetImage.jpg)
 
+**Requires iOS 8 or higher**
+
 ## Install
 1. `npm install react-native-image-picker@latest --save`
 2. In the XCode's "Project navigator", right click on your project's Libraries folder ➜ `Add Files to <...>`
@@ -40,19 +42,23 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
   };
 
   // The first arg will be the options object for customization, the second is
-  // your callback which sends string: type, string: response
-  UIImagePickerManager.showImagePicker(options, (type, response) => {
-    if (type !== 'cancel') {
-      var source;
-      if (type === 'data') { // New photo taken OR passed returnBase64Image true -  response is the 64 bit encoded image data string
+  // your callback which sends string: responseType, string: response.
+  // responseType will be either 'cancel', 'data', 'uri', or one of your custom button values
+  UIImagePickerManager.showImagePicker(options, (responseType, response) => {
+    console.log(`Response Type = ${responseType}`);
+
+    if (responseType !== 'cancel') {
+      let source;
+      if (responseType === 'data') { // New photo taken OR passed returnBase64Image true -  response is the 64 bit encoded image data string
         source = {uri: 'data:image/jpeg;base64,' + response, isStatic: true};
-      } else { // Selected from library - response is the URI to the local file asset
-        source = {uri: response};
+      }
+      else if (responseType === 'uri') { // Selected from library - response is the URI to the local file asset
+        source = {uri: response.replace('file://', ''), isStatic: true};
       }
 
-      this.setState({avatarSource:source});
-    } else {
-      console.log('Cancel');
+      this.setState({
+        avatarSource: source
+      });
     }
   });
   ```
