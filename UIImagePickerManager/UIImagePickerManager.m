@@ -148,9 +148,37 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     NSString *ImageUUID = [[NSUUID UUID] UUIDString];
     NSString *ImageName = [ImageUUID stringByAppendingString:@".jpg"];
 
-    // This will be the URL
+    // This will be the default URL
     NSString* path = [[NSTemporaryDirectory()stringByStandardizingPath] stringByAppendingPathComponent:ImageName];
-
+    
+    NSDictionary *storageOptions;
+    // if storage options are provided change path to the documents directory
+    if([self.options objectForKey:@"storageOptions"] && [[self.options objectForKey:@"storageOptions"] isKindOfClass:[NSDictionary class]]){
+      // retrieve documents path
+      NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+      NSString *documentsDirectory = [paths objectAtIndex:0];
+      // update path to save image to documents directory
+      path = [documentsDirectory stringByAppendingPathComponent:ImageName];
+      
+      storageOptions = [self.options objectForKey:@"storageOptions"];
+      // if extra path is provided try to create it
+      if ([storageOptions objectForKey:@"path"]) {
+        NSString *newPath = [documentsDirectory stringByAppendingPathComponent:[storageOptions objectForKey:@"path"]];
+        NSError *error = nil;
+        [[NSFileManager defaultManager] createDirectoryAtPath:newPath
+                                  withIntermediateDirectories:YES
+                                                   attributes:nil
+                                                        error:&error];
+        // if there was an error do not update path
+        if (error != nil) {
+          NSLog(@"error creating directory: %@", error);
+        }
+        else {
+          path = [newPath stringByAppendingPathComponent:ImageName];
+        }
+      }
+    }
+    
     // Rotate the image for upload to web
     image = [self fixOrientation:image];
 
@@ -179,6 +207,10 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     else {
         [data writeToFile:path atomically:YES];
         NSString *fileURL = [[NSURL fileURLWithPath:path] absoluteString];
+        // if storage options skipBackup set to true then set flag to skip icloud backup
+        if ([[storageOptions objectForKey:@"skipBackup"] boolValue]) {
+            [self addSkipBackupAttributeToItemAtPath:path];
+        }
         [response addObjectsFromArray : @[@"uri", fileURL]];
     }
 
@@ -299,6 +331,25 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     CGContextRelease(ctx);
     CGImageRelease(cgimg);
     return img;
+}
+
+- (BOOL)addSkipBackupAttributeToItemAtPath:(NSString *) filePathString
+{
+    NSURL* URL= [NSURL fileURLWithPath: filePathString];
+    if ([[NSFileManager defaultManager] fileExistsAtPath: [URL path]]) {
+        NSError *error = nil;
+        BOOL success = [URL setResourceValue: [NSNumber numberWithBool: YES]
+                                      forKey: NSURLIsExcludedFromBackupKey error: &error];
+        
+        if(!success){
+            NSLog(@"Error excluding %@ from backup %@", [URL lastPathComponent], error);
+        }
+        return success;
+    }
+    else {
+        NSLog(@"Error setting skip backup attribute: file not found");
+        return @NO;
+    }
 }
 
 @end
