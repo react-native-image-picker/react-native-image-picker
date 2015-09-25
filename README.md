@@ -38,7 +38,11 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
     returnBase64Image: false,
     returnIsVertical: false,
     quality: 0.2,
-    allowsEditing: false // Built in iOS functionality to resize/reposition the image
+    allowsEditing: false, // Built in iOS functionality to resize/reposition the image
+    //storageOptions: {   // if provided, the image will get saved in the documents directory (rather than tmp directory)
+    //  skipBackup: true, // will set attribute so the image is not backed up to iCloud
+    //  path: "images",   // will save image at /Documents/images rather than the root
+    //}
   };
 
   // The first arg will be the options object for customization, the second is
