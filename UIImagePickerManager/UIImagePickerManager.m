@@ -20,6 +20,7 @@ RCT_EXPORT_MODULE();
 {
     if (self = [super init]) {
         self.defaultOptions = @{
+            @"showTitle": @YES,
             @"title": @"Select a Photo",
             @"cancelButtonTitle": @"Cancel",
             @"takePhotoButtonTitle": @"Take Photo...",
@@ -43,7 +44,13 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         [self.options setValue:options[key] forKey:key];
     }
     
-    self.alertController = [UIAlertController alertControllerWithTitle:[self.options valueForKey:@"title"] message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    if ([[self.options objectForKey:@"showTitle"] boolValue]) {
+        self.alertController = [UIAlertController alertControllerWithTitle:[self.options valueForKey:@"title"] message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    } else {
+      self.alertController = [UIAlertController alertControllerWithTitle:nil message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    }
+    
+    
     
     UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:[self.options valueForKey:@"cancelButtonTitle"] style:UIAlertActionStyleCancel handler:^(UIAlertAction * action) {
         self.callback(@[@"cancel", [NSNull null]]); // Return callback for 'cancel' action (if is required)
