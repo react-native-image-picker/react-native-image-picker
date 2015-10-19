@@ -70,3 +70,20 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
   ```javascript
   <Image source={this.state.avatarSource} style={styles.uploadAvatar} />
   ```
+
+### Directly Launching the Camera or Image Library
+
+  To Launch the Camera or Image Library directly (skipping the alert dialog) you can
+  do the following:
+  ```javascript
+  // Launch Camera:
+  UIImagePickerManager.launchCamera(options, (responseType, response) => {
+    // Same code as in above section!
+  });
+  
+  // Open Image Library:
+  UIImagePickerManager.launchImageLibrary(options, (responseType, response) => {
+    // Same code as in above section!
+  });
+  ```
+  

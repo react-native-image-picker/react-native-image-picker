@@ -35,6 +35,18 @@ RCT_EXPORT_MODULE();
     return self;
 }
 
+RCT_EXPORT_METHOD(launchCamera:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
+{
+    self.callback = callback;
+    [self launchImagePicker:RNImagePickerTargetCamera options:options];
+}
+
+RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
+{
+    self.callback = callback;
+    [self launchImagePicker:RNImagePickerTargetLibrarySingleImage options:options];
+}
+
 RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
 {
     self.callback = callback; // Save the callback so we can use it from the delegate methods
@@ -97,27 +109,42 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         self.callback(@[[self.customButtons objectForKey:action.title], [NSNull null]]);
         return;
     }
-    
+
+    if ([action.title isEqualToString:[self.options valueForKey:@"takePhotoButtonTitle"]]) { // Take photo
+        [self launchImagePicker:RNImagePickerTargetCamera];
+    }
+    else if ([action.title isEqualToString:[self.options valueForKey:@"chooseFromLibraryButtonTitle"]]) { // Choose from library
+        [self launchImagePicker:RNImagePickerTargetLibrarySingleImage];
+    }
+}
+
+- (void)launchImagePicker:(RNImagePickerTarget)target
+{
     self.picker = [[UIImagePickerController alloc] init];
+
+    switch(target) {
+        case RNImagePickerTargetCamera:
+#if TARGET_IPHONE_SIMULATOR
+            NSLog(@"Camera not available on simulator");
+            return;
+#else
+            self.picker.sourceType = UIImagePickerControllerSourceTypeCamera;
+            break;
+#endif
+        case RNImagePickerTargetLibrarySingleImage:
+            self.picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
+            break;
+        default:
+            NSLog(@"Well done: This shouldn't happen. Invalid ImagePicker target. Aborting...");
+            return;
+    }
+
     if ([[self.options objectForKey:@"allowsEditing"] boolValue]) {
         self.picker.allowsEditing = true;
     }
     self.picker.modalPresentationStyle = UIModalPresentationCurrentContext;
     self.picker.delegate = self;
-    
-    if ([action.title isEqualToString:[self.options valueForKey:@"takePhotoButtonTitle"]]) { // Take photo
-        // Will crash if we try to use camera on the simulator
-#if TARGET_IPHONE_SIMULATOR
-        NSLog(@"Camera not available on simulator");
-        return;
-#else
-        self.picker.sourceType = UIImagePickerControllerSourceTypeCamera;
-#endif
-    }
-    else if ([action.title isEqualToString:[self.options valueForKey:@"chooseFromLibraryButtonTitle"]]) { // Choose from library
-        self.picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
-    }
-    
+
     UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
     dispatch_async(dispatch_get_main_queue(), ^{
         if (root.presentedViewController) {
@@ -218,6 +245,16 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     }
 
     self.callback(response);
+}
+
+- (void)launchImagePicker:(RNImagePickerTarget)target options:(NSDictionary *)options
+{
+  self.options = [NSMutableDictionary dictionaryWithDictionary:self.defaultOptions]; // Set default options
+  for (NSString *key in options.keyEnumerator) { // Replace default options
+      [self.options setValue:options[key] forKey:key];
+  }
+
+  [self launchImagePicker:target];
 }
 
 - (UIImage*)downscaleImageIfNecessary:(UIImage*)image maxWidth:(float)maxWidth maxHeight:(float)maxHeight
