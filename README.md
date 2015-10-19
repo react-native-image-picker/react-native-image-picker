@@ -24,45 +24,48 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
 
   // Specify any or all of these keys
   var options = {
-    title: 'Select Avatar',
+    title: 'Select Avatar', // specify null or empty string to remove the title
     cancelButtonTitle: 'Cancel',
-    takePhotoButtonTitle: 'Take Photo...',
-    takePhotoButtonHidden: false,
-    chooseFromLibraryButtonTitle: 'Choose from Library...',
-    chooseFromLibraryButtonHidden: false,
+    takePhotoButtonTitle: 'Take Photo...', // specify null or empty string to remove this button
+    chooseFromLibraryButtonTitle: 'Choose from Library...', // specify null or empty string to remove this button
     customButtons: {
       'Choose Photo from Facebook': 'fb', // [Button Text] : [String returned upon selection]
     },
     maxWidth: 100,
     maxHeight: 100,
-    returnBase64Image: false,
-    returnIsVertical: false,
     quality: 0.2,
     allowsEditing: false, // Built in iOS functionality to resize/reposition the image
-    //storageOptions: {   // if provided, the image will get saved in the documents directory (rather than tmp directory)
-    //  skipBackup: true, // will set attribute so the image is not backed up to iCloud
-    //  path: "images",   // will save image at /Documents/images rather than the root
-    //}
+    storageOptions: { // if this key is provided, the image will get saved in the documents directory (rather than a temporary directory)
+      skipBackup: true, // image will NOT be backed up to icloud
+      path: 'images' // will save image at /Documents/images rather than the root
+    }
   };
 
   // The first arg will be the options object for customization, the second is
-  // your callback which sends string: responseType, string: response.
-  // responseType will be either 'cancel', 'data', 'uri', or one of your custom button values
-  UIImagePickerManager.showImagePicker(options, (responseType, response) => {
-    console.log(`Response Type = ${responseType}`);
+  // your callback which sends bool: didCancel, object: response.
+  //
+  // response.data is the base64 encoded image data
+  // response.uri is the uri to the local file asset on the device
+  // response.isVertical will be true if the image is vertically oriented
+  UIImagePickerManager.showImagePicker(options, (didCancel, response) => {
+    console.log('Response = ', response);
 
-    if (responseType !== 'cancel') {
-      let source;
-      if (responseType === 'data') { // New photo taken OR passed returnBase64Image true -  response is the 64 bit encoded image data string
-        source = {uri: 'data:image/jpeg;base64,' + response, isStatic: true};
+    if (didCancel) {
+      console.log('User cancelled image picker');
+    }
+    else {
+      if (response.customButton) {
+        console.log('User tapped custom button: ', response.customButton);
       }
-      else if (responseType === 'uri') { // Selected from library - response is the URI to the local file asset
-        source = {uri: response.replace('file://', ''), isStatic: true};
-      }
+      else {
+        // You can display the image using either:
+        const source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
+        const source = {uri: response.uri.replace('file://', ''), isStatic: true};
 
-      this.setState({
-        avatarSource: source
-      });
+        this.setState({
+          avatarSource: source
+        });
+      }
     }
   });
   ```
@@ -77,13 +80,12 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
   do the following:
   ```javascript
   // Launch Camera:
-  UIImagePickerManager.launchCamera(options, (responseType, response) => {
+  UIImagePickerManager.launchCamera(options, (didCancel, response)  => {
     // Same code as in above section!
   });
-  
+
   // Open Image Library:
-  UIImagePickerManager.launchImageLibrary(options, (responseType, response) => {
+  UIImagePickerManager.launchImageLibrary(options, (didCancel, response)  => {
     // Same code as in above section!
   });
   ```
-  

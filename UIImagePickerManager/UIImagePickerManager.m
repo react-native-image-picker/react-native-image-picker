@@ -23,11 +23,7 @@ RCT_EXPORT_MODULE();
             @"title": @"Select a Photo",
             @"cancelButtonTitle": @"Cancel",
             @"takePhotoButtonTitle": @"Take Photo...",
-            @"takePhotoButtonHidden": @NO,
             @"chooseFromLibraryButtonTitle": @"Choose from Library...",
-            @"chooseFromLibraryButtonHidden": @NO,
-            @"returnBase64Image" : @NO, // Only return base64 encoded version of the image
-            @"returnIsVertical" : @NO, // If returning base64 image, return the orientation too
             @"quality" : @0.2, // 1.0 best to 0.0 worst
             @"allowsEditing" : @NO
         };
@@ -55,24 +51,33 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         [self.options setValue:options[key] forKey:key];
     }
     
-    self.alertController = [UIAlertController alertControllerWithTitle:[self.options valueForKey:@"title"] message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    NSString *title = [self.options valueForKey:@"title"];
+    if ([title isEqual:[NSNull null]] || title.length == 0) {
+        title = nil; // A more visually appealing UIAlertControl is displayed with a nil title rather than title = @""
+    }
     
-    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:[self.options valueForKey:@"cancelButtonTitle"] style:UIAlertActionStyleCancel handler:^(UIAlertAction * action) {
-        self.callback(@[@"cancel", [NSNull null]]); // Return callback for 'cancel' action (if is required)
+    self.alertController = [UIAlertController alertControllerWithTitle:title message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    
+    NSString *cancelTitle = [self.options valueForKey:@"cancelButtonTitle"];
+    if ([cancelTitle isEqual:[NSNull null]] || cancelTitle.length == 0) {
+        cancelTitle = self.defaultOptions[@"cancelButtonTitle"]; // Don't allow null or empty string cancel button title
+    }
+    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:cancelTitle style:UIAlertActionStyleCancel handler:^(UIAlertAction * action) {
+        self.callback(@[@YES, [NSNull null]]); // Return callback for 'cancel' action (if is required)
     }];
     [self.alertController addAction:cancelAction];
 
-    BOOL takePhotoHidden = [[self.options objectForKey:@"takePhotoButtonHidden"] boolValue];
-    BOOL chooseFromLibraryHidden = [[self.options objectForKey:@"chooseFromLibraryButtonHidden"] boolValue];
-    
-    if (!takePhotoHidden) {
-        UIAlertAction *takePhotoAction = [UIAlertAction actionWithTitle:[self.options valueForKey:@"takePhotoButtonTitle"] style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+
+    NSString *takePhotoButtonTitle = [self.options valueForKey:@"takePhotoButtonTitle"];
+    NSString *chooseFromLibraryButtonTitle = [self.options valueForKey:@"chooseFromLibraryButtonTitle"];
+    if (![takePhotoButtonTitle isEqual:[NSNull null]] && takePhotoButtonTitle.length > 0) {
+        UIAlertAction *takePhotoAction = [UIAlertAction actionWithTitle:takePhotoButtonTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
             [self actionHandler:action];
         }];
         [self.alertController addAction:takePhotoAction];
     }
-    if (!chooseFromLibraryHidden) {
-        UIAlertAction *chooseFromLibraryAction = [UIAlertAction actionWithTitle:[self.options valueForKey:@"chooseFromLibraryButtonTitle"] style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+    if (![chooseFromLibraryButtonTitle isEqual:[NSNull null]] && chooseFromLibraryButtonTitle.length > 0) {
+        UIAlertAction *chooseFromLibraryAction = [UIAlertAction actionWithTitle:chooseFromLibraryButtonTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
             [self actionHandler:action];
         }];
         [self.alertController addAction:chooseFromLibraryAction];
@@ -99,14 +104,24 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         self.alertController.popoverPresentationController.sourceRect = CGRectMake(root.view.bounds.size.width / 2.0, root.view.bounds.size.height, 1.0, 1.0);
         [root presentViewController:self.alertController animated:YES completion:nil];
     });
+}
 
+- (void)launchImagePicker:(RNImagePickerTarget)target options:(NSDictionary *)options
+{
+    self.options = [NSMutableDictionary dictionaryWithDictionary:self.defaultOptions]; // Set default options
+    for (NSString *key in options.keyEnumerator) { // Replace default options
+        [self.options setValue:options[key] forKey:key];
+    }
+    
+    [self launchImagePicker:target];
 }
 
 - (void)actionHandler:(UIAlertAction *)action
 {
     // If button title is one of the keys in the customButtons dictionary return the value as a callback
-    if ([self.customButtons objectForKey:action.title]) {
-        self.callback(@[[self.customButtons objectForKey:action.title], [NSNull null]]);
+    NSString *customButtonStr = [self.customButtons objectForKey:action.title];
+    if (customButtonStr) {
+        self.callback(@[@NO, @{@"customButton": customButtonStr}]);
         return;
     }
 
@@ -218,50 +233,42 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     }
     image = [self downscaleImageIfNecessary:image maxWidth:maxWidth maxHeight:maxHeight];
 
+    NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
+    
+    // base64 encoded image string
     NSData *data = UIImageJPEGRepresentation(image, [[self.options valueForKey:@"quality"] floatValue]);
-
-    BOOL BASE64 = [[self.options valueForKey:@"returnBase64Image"] boolValue];
-    BOOL returnOrientation = [self.options[@"returnIsVertical"] boolValue];
-
-    NSMutableArray *response = [[NSMutableArray alloc] init];
-
-    if (BASE64) {
-        NSString *dataString = [data base64EncodedStringWithOptions:0];
-        [response addObjectsFromArray : @[@"data", dataString]];
+    NSString *dataString = [data base64EncodedStringWithOptions:0];
+    [response setObject:dataString forKey:@"data"];
+    
+    // file uri
+    [data writeToFile:path atomically:YES];
+    NSString *fileURL = [[NSURL fileURLWithPath:path] absoluteString];
+    if ([[storageOptions objectForKey:@"skipBackup"] boolValue]) {
+        [self addSkipBackupAttributeToItemAtPath:path];
     }
-    else {
-        [data writeToFile:path atomically:YES];
-        NSString *fileURL = [[NSURL fileURLWithPath:path] absoluteString];
-        // if storage options skipBackup set to true then set flag to skip icloud backup
-        if ([[storageOptions objectForKey:@"skipBackup"] boolValue]) {
-            [self addSkipBackupAttributeToItemAtPath:path];
-        }
-        [response addObjectsFromArray : @[@"uri", fileURL]];
-    }
+    [response setObject:fileURL forKey:@"uri"];
+    
+    // image orientation
+    BOOL vertical = (image.size.width < image.size.height) ? YES : NO;
+    [response setObject:@(vertical) forKey:@"isVertical"];
 
-    if (returnOrientation) { // Return image orientation if desired
-        NSString *vertical = (image.size.width < image.size.height) ? @"true" : @"false";
-        [response addObject : vertical];
-    }
-
-    self.callback(response);
+    self.callback(@[@NO, response]);
 }
 
-- (void)launchImagePicker:(RNImagePickerTarget)target options:(NSDictionary *)options
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
 {
-  self.options = [NSMutableDictionary dictionaryWithDictionary:self.defaultOptions]; // Set default options
-  for (NSString *key in options.keyEnumerator) { // Replace default options
-      [self.options setValue:options[key] forKey:key];
-  }
-
-  [self launchImagePicker:target];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [picker dismissViewControllerAnimated:YES completion:nil];
+    });
+    
+    self.callback(@[@YES, [NSNull null]]);
 }
 
 - (UIImage*)downscaleImageIfNecessary:(UIImage*)image maxWidth:(float)maxWidth maxHeight:(float)maxHeight
 {
     UIImage* newImage = image;
 
-    //Nothing to do here?
+    // Nothing to do here
     if (image.size.width <= maxWidth && image.size.height <= maxHeight) {
         return newImage;
     }
@@ -287,15 +294,6 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     UIGraphicsEndImageContext();
 
     return newImage;
-}
-
-- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
-{
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [picker dismissViewControllerAnimated:YES completion:nil];
-    });
-
-    self.callback(@[@"cancel", [NSNull null]]);
 }
 
 - (UIImage *)fixOrientation:(UIImage *)srcImg {

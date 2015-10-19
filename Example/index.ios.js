@@ -19,33 +19,35 @@ class Example extends React.Component {
   }
 
   avatarTapped() {
-    // Specify any or all of these keys
     const options = {
-      title: 'Select Avatar',
+      title: 'Select Photo',
       cancelButtonTitle: 'Cancel',
       takePhotoButtonTitle: 'Take Photo...',
-      takePhotoButtonHidden: false,
       chooseFromLibraryButtonTitle: 'Choose from Library...',
-      chooseFromLibraryButtonHidden: false,
-      returnBase64Image: false,
-      returnIsVertical: false,
-      quality: 0.2
+      quality: 0.2,
+      storageOptions: {
+        skipBackup: true
+      }
     };
 
-    UIImagePickerManager.showImagePicker(options, (responseType, response) => {
-      console.log(`Response Type = ${responseType}`);
+    UIImagePickerManager.showImagePicker(options, (didCancel, response) => {
+      console.log('Response = ', response);
 
-      if (responseType !== 'cancel') {
-        let source;
-        if (responseType === 'data') { // New photo taken OR passed returnBase64Image true -  response is the 64 bit encoded image data string
-          source = {uri: 'data:image/jpeg;base64,' + response, isStatic: true};
-        } else { // Selected from library - response is the URI to the local file asset
-          source = {uri: response.replace('file://', ''), isStatic: true};
+      if (didCancel) {
+        console.log('User cancelled image picker');
+      }
+      else {
+        if (response.customButton) {
+          console.log('User tapped custom button: ', response.customButton);
         }
+        else {
+          //const source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
+          const source = {uri: response.uri.replace('file://', ''), isStatic: true};
 
-        this.setState({
-          avatarSource: source
-        });
+          this.setState({
+            avatarSource: source
+          });
+        }
       }
     });
   }
