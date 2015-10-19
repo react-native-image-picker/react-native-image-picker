@@ -24,6 +24,7 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
 
   // Specify any or all of these keys
   var options = {
+    showTitle: true,
     title: 'Select Avatar',
     cancelButtonTitle: 'Cancel',
     takePhotoButtonTitle: 'Take Photo...',
