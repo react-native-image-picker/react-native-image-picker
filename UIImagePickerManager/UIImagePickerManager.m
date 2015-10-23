@@ -261,7 +261,12 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     if ([imageOptions valueForKey:@"maxHeight"]) {
         maxHeight = [[imageOptions valueForKey:@"maxHeight"] floatValue];
     }
-    image = [self downscaleImageIfNecessary:image maxWidth:maxWidth maxHeight:maxHeight];
+
+    if ([[imageOptions objectForKey:@"cover"] boolValue]) {
+      image = [self scaleAndCropImage:image width:maxWidth height:maxHeight];
+    } else {
+      image = [self downscaleImageIfNecessary:image maxWidth:maxWidth maxHeight:maxHeight];
+    }
 
     // base64 encoded image string
     NSData *data = UIImageJPEGRepresentation(image, [[self.options valueForKey:@"quality"] floatValue]);
@@ -313,6 +318,32 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     UIGraphicsEndImageContext();
 
     return newImage;
+}
+
+-(UIImage*)scaleAndCropImage:(UIImage*)image width:(float)width height:(float)height
+{
+  // Nothing to do here
+  if (image.size.width == width && image.size.height == height) {
+    return image;
+  }
+
+  float aspectRatio = image.size.width / image.size.height;
+
+  UIGraphicsBeginImageContext(CGSizeMake(width, height));
+
+  if (aspectRatio > 1) {
+    CGFloat offset = ((aspectRatio * width) - height) / -2;
+    [image drawInRect:CGRectMake(offset, 0, width * aspectRatio, height)];
+  }
+  else {
+    CGFloat offset = ((height / aspectRatio) - width) / -2;
+    [image drawInRect:CGRectMake(0, offset, width, height / aspectRatio)];
+  }
+
+  UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+  UIGraphicsEndImageContext();
+
+  return newImage;
 }
 
 - (UIImage *)fixOrientation:(UIImage *)srcImg {
