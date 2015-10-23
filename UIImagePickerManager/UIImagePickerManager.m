@@ -22,8 +22,8 @@ RCT_EXPORT_MODULE();
         self.defaultOptions = @{
             @"title": @"Select a Photo",
             @"cancelButtonTitle": @"Cancel",
-            @"takePhotoButtonTitle": @"Take Photo...",
-            @"chooseFromLibraryButtonTitle": @"Choose from Library...",
+            @"takePhotoButtonTitle": @"Take Photo…",
+            @"chooseFromLibraryButtonTitle": @"Choose from Library…",
             @"quality" : @0.2, // 1.0 best to 0.0 worst
             @"allowsEditing" : @NO
         };
