@@ -12,7 +12,9 @@
 
 @end
 
-@implementation UIImagePickerManager
+@implementation UIImagePickerManager {
+  NSString *_storagePath;
+}
 
 RCT_EXPORT_MODULE();
 
@@ -186,43 +188,18 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
       image = [info objectForKey:UIImagePickerControllerOriginalImage];
     }
 
-    /* creating a temp url to be passed */
-    NSString *ImageUUID = [[NSUUID UUID] UUIDString];
-    NSString *ImageName = [ImageUUID stringByAppendingString:@".jpg"];
-
-    // This will be the default URL
-    NSString* path = [[NSTemporaryDirectory()stringByStandardizingPath] stringByAppendingPathComponent:ImageName];
-    
-    NSDictionary *storageOptions;
-    // if storage options are provided change path to the documents directory
-    if([self.options objectForKey:@"storageOptions"] && [[self.options objectForKey:@"storageOptions"] isKindOfClass:[NSDictionary class]]){
-        // retrieve documents path
-        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-        NSString *documentsDirectory = [paths objectAtIndex:0];
-        // update path to save image to documents directory
-        path = [documentsDirectory stringByAppendingPathComponent:ImageName];
-
-        storageOptions = [self.options objectForKey:@"storageOptions"];
-        // if extra path is provided try to create it
-        if ([storageOptions objectForKey:@"path"]) {
-            NSString *newPath = [documentsDirectory stringByAppendingPathComponent:[storageOptions objectForKey:@"path"]];
-            NSError *error = nil;
-            [[NSFileManager defaultManager] createDirectoryAtPath:newPath withIntermediateDirectories:YES attributes:nil error:&error];
-            
-            // if there was an error do not update path
-            if (error != nil) {
-                NSLog(@"error creating directory: %@", error);
-            }
-            else {
-                path = [newPath stringByAppendingPathComponent:ImageName];
-            }
-        }
-    }
-    
     // Rotate the image for upload to web
     image = [self fixOrientation:image];
 
-    NSMutableDictionary *response = [self imageResponse:image options:self.options path:path];
+    NSString *imageUUID = [[NSUUID UUID] UUIDString];
+    NSString *imagePath = [self.storagePath stringByAppendingPathComponent:[imageUUID stringByAppendingString:@".jpg"]];
+
+    NSMutableDictionary *response = [self imageResponse:image imageOptions:self.options path:imagePath];
+
+    if ([[self.options objectForKey:@"thumbnail"] isKindOfClass:[NSDictionary class]]) {
+        NSString *thumbnailPath = [self.storagePath stringByAppendingPathComponent:[imageUUID stringByAppendingString:@"-thumbnail.jpg"]];
+        [response setObject:[self imageResponse:image imageOptions:[self.options objectForKey:@"thumbnail"] path:thumbnailPath] forKey:@"thumbnail"];
+    }
 
     self.callback(@[@NO, response]);
 }
@@ -236,31 +213,65 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     self.callback(@[@YES, [NSNull null]]);
 }
 
+- (NSString*) storagePath {
+    if (_storagePath) {
+        return _storagePath;
+    }
+
+    // If no storage options are provided, we just write to a temporary path
+    if (![[self.options objectForKey:@"storageOptions"] isKindOfClass:[NSDictionary class]]) {
+        _storagePath = [NSTemporaryDirectory() stringByStandardizingPath];
+        return _storagePath;
+    }
+    NSDictionary* storageOptions = [self.options objectForKey:@"storageOptions"];
+
+    // Otherwise, if storageOptions are provided, we use a path relative to the
+    // documents directory
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    _storagePath = [paths objectAtIndex:0];
+
+    if ([storageOptions objectForKey:@"path"]) {
+        NSString* newPath = [_storagePath stringByAppendingPathComponent:[storageOptions objectForKey:@"path"]];
+
+        // Ensure that the path exists.
+        NSError *error = nil;
+        [[NSFileManager defaultManager] createDirectoryAtPath:newPath withIntermediateDirectories:YES attributes:nil error:&error];
+        // if there was an error do not update path
+        if (error != nil) {
+            NSLog(@"error creating directory: %@", error);
+        } else {
+            _storagePath = newPath;
+        }
+    }
+
+    return _storagePath;
+}
+
 // Generates the {uri, data, isVertical} dictionary, and writes the image to
-// disk if requested.
-- (NSMutableDictionary*)imageResponse:(UIImage*)image options:(NSDictionary*)options path:(NSString*)path {
+// disk if requested
+- (NSMutableDictionary*)imageResponse:(UIImage*)image imageOptions:(NSDictionary*)imageOptions path:(NSString*)path {
     NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
 
     //If needed, downscale image
     float maxWidth = image.size.width;
     float maxHeight = image.size.height;
-    if ([options valueForKey:@"maxWidth"]) {
-        maxWidth = [[options valueForKey:@"maxWidth"] floatValue];
+    if ([imageOptions valueForKey:@"maxWidth"]) {
+        maxWidth = [[imageOptions valueForKey:@"maxWidth"] floatValue];
     }
-    if ([options valueForKey:@"maxHeight"]) {
-        maxHeight = [[options valueForKey:@"maxHeight"] floatValue];
+    if ([imageOptions valueForKey:@"maxHeight"]) {
+        maxHeight = [[imageOptions valueForKey:@"maxHeight"] floatValue];
     }
     image = [self downscaleImageIfNecessary:image maxWidth:maxWidth maxHeight:maxHeight];
 
     // base64 encoded image string
-    NSData *data = UIImageJPEGRepresentation(image, [[options valueForKey:@"quality"] floatValue]);
+    NSData *data = UIImageJPEGRepresentation(image, [[self.options valueForKey:@"quality"] floatValue]);
     NSString *dataString = [data base64EncodedStringWithOptions:0];
     [response setObject:dataString forKey:@"data"];
     
     // file uri
     [data writeToFile:path atomically:YES];
     NSString *fileURL = [[NSURL fileURLWithPath:path] absoluteString];
-    if ([[[options valueForKey:@"storage"] objectForKey:@"skipBackup"] boolValue]) {
+    if ([[[self.options valueForKey:@"storage"] objectForKey:@"skipBackup"] boolValue]) {
         [self addSkipBackupAttributeToItemAtPath:path];
     }
     [response setObject:fileURL forKey:@"uri"];
