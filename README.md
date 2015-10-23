@@ -40,6 +40,7 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
       cover: true, // Whether the thumbnail should be cropped to exactly fit maxWidth & maxHeight.
     },
     allowsEditing: false, // Built in iOS functionality to resize/reposition the image
+    noData: true, // Don't emit the base64 `data` field
     storageOptions: { // if this key is provided, the image will get saved in the documents directory (rather than a temporary directory)
       skipBackup: true, // image will NOT be backed up to icloud
       path: 'images' // will save image at /Documents/images rather than the root
