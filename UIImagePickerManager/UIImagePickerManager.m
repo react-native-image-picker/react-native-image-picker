@@ -222,35 +222,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     // Rotate the image for upload to web
     image = [self fixOrientation:image];
 
-    //If needed, downscale image
-    float maxWidth = image.size.width;
-    float maxHeight = image.size.height;
-    if ([self.options valueForKey:@"maxWidth"]) {
-        maxWidth = [[self.options valueForKey:@"maxWidth"] floatValue];
-    }
-    if ([self.options valueForKey:@"maxHeight"]) {
-        maxHeight = [[self.options valueForKey:@"maxHeight"] floatValue];
-    }
-    image = [self downscaleImageIfNecessary:image maxWidth:maxWidth maxHeight:maxHeight];
-
-    NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
-    
-    // base64 encoded image string
-    NSData *data = UIImageJPEGRepresentation(image, [[self.options valueForKey:@"quality"] floatValue]);
-    NSString *dataString = [data base64EncodedStringWithOptions:0];
-    [response setObject:dataString forKey:@"data"];
-    
-    // file uri
-    [data writeToFile:path atomically:YES];
-    NSString *fileURL = [[NSURL fileURLWithPath:path] absoluteString];
-    if ([[storageOptions objectForKey:@"skipBackup"] boolValue]) {
-        [self addSkipBackupAttributeToItemAtPath:path];
-    }
-    [response setObject:fileURL forKey:@"uri"];
-    
-    // image orientation
-    BOOL vertical = (image.size.width < image.size.height) ? YES : NO;
-    [response setObject:@(vertical) forKey:@"isVertical"];
+    NSMutableDictionary *response = [self imageResponse:image options:self.options path:path];
 
     self.callback(@[@NO, response]);
 }
@@ -260,13 +232,49 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     dispatch_async(dispatch_get_main_queue(), ^{
         [picker dismissViewControllerAnimated:YES completion:nil];
     });
-    
+
     self.callback(@[@YES, [NSNull null]]);
+}
+
+// Generates the {uri, data, isVertical} dictionary, and writes the image to
+// disk if requested.
+- (NSMutableDictionary*)imageResponse:(UIImage*)image options:(NSDictionary*)options path:(NSString*)path {
+    NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
+
+    //If needed, downscale image
+    float maxWidth = image.size.width;
+    float maxHeight = image.size.height;
+    if ([options valueForKey:@"maxWidth"]) {
+        maxWidth = [[options valueForKey:@"maxWidth"] floatValue];
+    }
+    if ([options valueForKey:@"maxHeight"]) {
+        maxHeight = [[options valueForKey:@"maxHeight"] floatValue];
+    }
+    image = [self downscaleImageIfNecessary:image maxWidth:maxWidth maxHeight:maxHeight];
+
+    // base64 encoded image string
+    NSData *data = UIImageJPEGRepresentation(image, [[options valueForKey:@"quality"] floatValue]);
+    NSString *dataString = [data base64EncodedStringWithOptions:0];
+    [response setObject:dataString forKey:@"data"];
+    
+    // file uri
+    [data writeToFile:path atomically:YES];
+    NSString *fileURL = [[NSURL fileURLWithPath:path] absoluteString];
+    if ([[[options valueForKey:@"storage"] objectForKey:@"skipBackup"] boolValue]) {
+        [self addSkipBackupAttributeToItemAtPath:path];
+    }
+    [response setObject:fileURL forKey:@"uri"];
+    
+    // image orientation
+    BOOL vertical = (image.size.width < image.size.height) ? YES : NO;
+    [response setObject:@(vertical) forKey:@"isVertical"];
+
+    return response;
 }
 
 - (UIImage*)downscaleImageIfNecessary:(UIImage*)image maxWidth:(float)maxWidth maxHeight:(float)maxHeight
 {
-    UIImage* newImage = image;
+    UIImage *newImage = image;
 
     // Nothing to do here
     if (image.size.width <= maxWidth && image.size.height <= maxHeight) {
