@@ -31,10 +31,16 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
     customButtons: {
       'Choose Photo from Facebook': 'fb', // [Button Text] : [String returned upon selection]
     },
-    maxWidth: 100,
-    maxHeight: 100,
+    maxWidth: 1024,
+    maxHeight: 1024,
     quality: 0.2,
+    thumbnail: { // Whether a thumbnail should be generated for the image. It is returned via response.thumbnail.
+      maxWidth: 128,
+      maxHeight: 128,
+      cover: true, // Whether the thumbnail should be cropped to exactly fit maxWidth & maxHeight.
+    },
     allowsEditing: false, // Built in iOS functionality to resize/reposition the image
+    noData: true, // Don't emit the base64 `data` field
     storageOptions: { // if this key is provided, the image will get saved in the documents directory (rather than a temporary directory)
       skipBackup: true, // image will NOT be backed up to icloud
       path: 'images' // will save image at /Documents/images rather than the root
