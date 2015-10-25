@@ -234,12 +234,14 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     image = [self downscaleImageIfNecessary:image maxWidth:maxWidth maxHeight:maxHeight];
 
     NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
-    
-    // base64 encoded image string
+
     NSData *data = UIImageJPEGRepresentation(image, [[self.options valueForKey:@"quality"] floatValue]);
-    NSString *dataString = [data base64EncodedStringWithOptions:0];
-    [response setObject:dataString forKey:@"data"];
-    
+    // base64 encoded image string, unless the caller doesn't want it
+    if (![[self.options objectForKey:@"noData"] boolValue]) {
+        NSString *dataString = [data base64EncodedStringWithOptions:0];
+        [response setObject:dataString forKey:@"data"];
+    }
+
     // file uri
     [data writeToFile:path atomically:YES];
     NSString *fileURL = [[NSURL fileURLWithPath:path] absoluteString];
