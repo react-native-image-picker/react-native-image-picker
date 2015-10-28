@@ -219,6 +219,8 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         }
     }
     
+
+    
     // Rotate the image for upload to web
     image = [self fixOrientation:image];
 
@@ -233,7 +235,11 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     }
     image = [self downscaleImageIfNecessary:image maxWidth:maxWidth maxHeight:maxHeight];
 
+    // Create the response object
     NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
+    
+    [response setObject:@(maxWidth) forKey:@"width"];
+    [response setObject:@(maxHeight) forKey:@"height"];
 
     NSData *data = UIImageJPEGRepresentation(image, [[self.options valueForKey:@"quality"] floatValue]);
     // base64 encoded image string, unless the caller doesn't want it

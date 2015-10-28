@@ -20,11 +20,8 @@ class Example extends React.Component {
 
   avatarTapped() {
     const options = {
-      title: 'Select Photo',
-      cancelButtonTitle: 'Cancel',
-      takePhotoButtonTitle: 'Take Photo...',
-      chooseFromLibraryButtonTitle: 'Choose from Library...',
-      quality: 0.2,
+      title: null,
+      quality: 0.5,
       storageOptions: {
         skipBackup: true
       }
@@ -41,6 +38,7 @@ class Example extends React.Component {
           console.log('User tapped custom button: ', response.customButton);
         }
         else {
+          // You can display the image using either:
           //const source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
           const source = {uri: response.uri.replace('file://', ''), isStatic: true};
 
