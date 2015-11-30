@@ -16,18 +16,19 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 
 import java.io.File;
+import java.io.IOException;
 
 public class ImagePickerModule extends ReactContextBaseJavaModule {
   static final int REQUEST_LAUNCH_CAMERA = 1;
   static final int REQUEST_LAUNCH_IMAGE_LIBRARY = 2;
 
   private final ReactApplicationContext mReactContext;
-  private final MainActivity mMainActivity;
+  private final Activity mMainActivity;
 
   private Uri mCameraCaptureURI;
   private Callback mCallback;
 
-  public ImagePickerModule(ReactApplicationContext reactContext, MainActivity mainActivity) {
+  public ImagePickerModule(ReactApplicationContext reactContext, Activity mainActivity) {
     super(reactContext);
 
     mReactContext = reactContext;
@@ -50,8 +51,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
     // we create a tmp file to save the result
     File imageFile;
+    try {
     imageFile = File.createTempFile("exponent_capture_", ".jpg",
       Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES));
+    } catch (IOException e) {
+        return;
+    }
     if (imageFile == null) {
         callback.invoke(true, "error file not created");
         return;

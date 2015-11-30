@@ -7,16 +7,17 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.uimanager.ViewManager;
 
 import android.content.Intent;
+import android.app.Activity;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class ImagePickerPackage implements ReactPackage {
-  private final MainActivity mMainActivity;
+  private final Activity mMainActivity;
   private ImagePickerModule mModuleInstance;
 
-  public ImagePickerPackage(MainActivity mainActivity) {
+  public ImagePickerPackage(Activity mainActivity) {
     this.mMainActivity = mainActivity;
   }
 
