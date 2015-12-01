@@ -38,6 +38,7 @@ dependencies {
 }
 ```
 ```java
+// file: app\src\main\java\com\...\MainActivity.java
 ...
 import com.imagepicker.ImagePickerPackage; // import
 
