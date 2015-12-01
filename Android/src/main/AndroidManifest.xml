@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.imagepicker" >
 
+    // min sdk version not sure if it's actually useful
+    <uses-sdk 
+        android:minSdkVersion="11"/>
     // required permission not sure if it's actually useful
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>

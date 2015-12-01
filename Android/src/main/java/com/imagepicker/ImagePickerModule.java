@@ -6,6 +6,10 @@ import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.database.Cursor;
+import android.util.Base64;
+import android.app.AlertDialog;
+import android.widget.ArrayAdapter;
+import android.content.DialogInterface;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
@@ -17,6 +21,10 @@ import com.facebook.react.bridge.WritableMap;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.FileInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 
 public class ImagePickerModule extends ReactContextBaseJavaModule {
   static final int REQUEST_LAUNCH_CAMERA = 1;
@@ -40,6 +48,37 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     return "UIImagePickerManager"; // To coincide with the iOS native module name
   }
 
+  @ReactMethod
+  public void showImagePicker(ReadableMap options, Callback callback) {
+      // @todo handle all options
+      final String[] option = new String[] { "Select from camera...", "Select from library...", "Cancel" };
+      final ReadableMap opts = options;
+      final Callback cb = callback;
+      ArrayAdapter<String> adapter = new ArrayAdapter<String>(mMainActivity,
+                           android.R.layout.select_dialog_item, option);
+       AlertDialog.Builder builder = new AlertDialog.Builder(mMainActivity);
+       
+       if (options.hasKey("title")) {
+          builder.setTitle(options.getString("title"));
+       }
+
+       builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
+           public void onClick(DialogInterface dialog, int index) {
+               // @todo Auto-generated method stub
+               if (index == 0) {
+                   launchCamera(opts, cb);
+               } else if (index == 1) {
+                   launchImageLibrary(opts, cb);
+               } else {
+                   cb.invoke(true, Arguments.createMap());
+               }
+           } 
+       });
+
+       final AlertDialog dialog = builder.create();
+       dialog.show();
+   }
+  
   // NOTE: Currently not reentrant / doesn't support concurrent requests
   @ReactMethod
   public void launchCamera(ReadableMap options, Callback callback) {
@@ -96,13 +135,16 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     : data.getData();
 
     // let's set data
+    String realPath = getRealPathFromURI(uri);
+
     response.putString("path", uri.toString());
-    response.putString("uri", getRealPathFromURI(uri));
+    response.putString("uri", realPath);
+    response.putString("data", getBase64StringFromFile(realPath));
 
     mCallback.invoke(false, response);
   }
 
-  public String getRealPathFromURI(Uri uri) {
+  private String getRealPathFromURI(Uri uri) {
     String result;
     Cursor cursor = mMainActivity.getContentResolver().query(uri, null, null, null, null);
     if (cursor == null) { // Source is Dropbox or other similar local file path
@@ -114,5 +156,28 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         cursor.close();
     }
     return result;
+  }
+  
+  private String getBase64StringFromFile (String absoluteFilePath) {
+    InputStream inputStream = null;
+    try {
+      inputStream = new FileInputStream(absoluteFilePath);
+    } catch (FileNotFoundException e) {
+        e.printStackTrace();
+    }
+      
+    byte[] bytes;
+    byte[] buffer = new byte[8192];
+    int bytesRead;
+    ByteArrayOutputStream output = new ByteArrayOutputStream();
+    try {
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+            output.write(buffer, 0, bytesRead);
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+    bytes = output.toByteArray();
+    return Base64.encodeToString(bytes, Base64.NO_WRAP);
   }
 }
