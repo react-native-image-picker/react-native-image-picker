@@ -10,6 +10,8 @@ import android.util.Base64;
 import android.app.AlertDialog;
 import android.widget.ArrayAdapter;
 import android.content.DialogInterface;
+import android.graphics.BitmapFactory;
+import android.media.ExifInterface;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
@@ -189,6 +191,29 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         response.putString("data", getBase64StringFromFile(realPath));
     }
 
+    BitmapFactory.Options options = new BitmapFactory.Options();
+    options.inJustDecodeBounds = true;
+    BitmapFactory.decodeFile(realPath, options);
+    response.putInt("width", options.outWidth);
+    response.putInt("height", options.outHeight);
+
+    try {
+        ExifInterface exif = new ExifInterface(realPath);
+        int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+        boolean isVertical = true ;
+        switch (orientation) {
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                isVertical = false ;
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                isVertical = false ;
+                break;
+        }
+        response.putBoolean("isVertical", isVertical);
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+    
     mCallback.invoke(false, response);
   }
 
