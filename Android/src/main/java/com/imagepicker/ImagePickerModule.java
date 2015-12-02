@@ -37,6 +37,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
   private Uri mCameraCaptureURI;
   private Callback mCallback;
+  private Boolean noData = false;
 
   public ImagePickerModule(ReactApplicationContext reactContext, Activity mainActivity) {
     super(reactContext);
@@ -118,6 +119,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
   // NOTE: Currently not reentrant / doesn't support concurrent requests
   @ReactMethod
   public void launchCamera(ReadableMap options, Callback callback) {
+    if (options.hasKey("noData")) {
+        noData = options.getBoolean("noData");
+    }
+
     Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
     if (cameraIntent.resolveActivity(mMainActivity.getPackageManager()) == null) {
         callback.invoke(true, "error resolving activity");
@@ -146,6 +151,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
   // NOTE: Currently not reentrant / doesn't support concurrent requests
   @ReactMethod
   public void launchImageLibrary(ReadableMap options, Callback callback) {
+    if (options.hasKey("noData")) {
+        noData = options.getBoolean("noData");
+    }
+
     Intent libraryIntent = new Intent();
     libraryIntent.setType("image/");
     libraryIntent.setAction(Intent.ACTION_GET_CONTENT);
@@ -176,7 +185,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
     response.putString("path", uri.toString());
     response.putString("uri", realPath);
-    response.putString("data", getBase64StringFromFile(realPath));
+    if (!noData) {
+        response.putString("data", getBase64StringFromFile(realPath));
+    }
 
     mCallback.invoke(false, response);
   }
