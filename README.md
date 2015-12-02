@@ -1,15 +1,11 @@
 # react-native-image-picker
 A React Native module that allows you to use the native UIImagePickerController UI to either select a photo from the device library or directly from the camera, like so:
 
-#### IOS
-![Screenshot of the UIActionSheet](https://github.com/marcshilling/react-native-image-picker/blob/master/AlertSheetImage.jpg)
+### IOS - Android
+<img title="IOS" src="https://github.com/marcshilling/react-native-image-picker/blob/master/AlertSheetImage.jpg" width="50%">
+<img title="Android" src="http://i.imgur.com/jMOLd6w.png" width="49%">
 
-#### Android
-![Screenshot of the UIActionSheet Android](http://i.imgur.com/jMOLd6w.png)
-
-**Requires iOS 8 or higher**
-
-**Requires Api 11 or higher**
+**Requires iOS 8 or higher for iOS - Requires Api 11 or higher for Android**
 
 ## Install
 
@@ -21,6 +17,8 @@ A React Native module that allows you to use the native UIImagePickerController 
 5. Compile and have fun
 
 ### Android
+1. `npm install react-native-image-picker@latest --save`
+
 ```gradle
 // file: android/settings.gradle
 ...
@@ -40,6 +38,7 @@ dependencies {
 ```java
 // file: android/app/src/main/java/com/myappli/MainActivity.java
 ...
+import android.content.Intent; // import
 import com.imagepicker.ImagePickerPackage; // import
 
 public class MainActivity extends Activity implements DefaultHardwareBackBtnHandler {
@@ -94,9 +93,6 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
 
   When you want to display the picker:
   ```javascript
-
-  // Specify any or all of these keys
-  // title is actually the only field supported in android module
   var options = {
     title: 'Select Avatar', // specify null or empty string to remove the title
     cancelButtonTitle: 'Cancel',
@@ -116,13 +112,16 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
     }
   };
 
-  // The first arg will be the options object for customization, the second is
-  // your callback which sends bool: didCancel, object: response.
-  //
-  // response.data is the base64 encoded image data
-  // response.uri is the uri to the local file asset on the device
-  // response.isVertical will be true if the image is vertically oriented
-  // response.width & response.height give you the image dimensions
+  /** 
+   * The first arg will be the options object for customization, the second is
+   * your callback which sends bool: didCancel, object: response.
+   *
+   * response.data is the base64 encoded image data
+   * response.uri is the uri to the local file asset on the device
+   * response.isVertical will be true if the image is vertically oriented
+   * response.width & response.height give you the image dimensions
+   */
+
   UIImagePickerManager.showImagePicker(options, (didCancel, response) => {
     console.log('Response = ', response);
 
@@ -165,3 +164,19 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
     // Same code as in above section!
   });
   ```
+
+### Options
+
+option | iOS  | Android
+------ | ---- | -------
+title | OK | OK
+cancelButtonTitle | OK | OK
+takePhotoButtonTitle | OK | OK
+chooseFromLibraryButtonTitle | OK | OK
+customButtons | OK | -
+maxWidth | OK | -
+maxHeight | OK | -
+quality | OK | -
+allowsEditing | OK | -
+noData | OK | OK
+storageOptions | OK | -
