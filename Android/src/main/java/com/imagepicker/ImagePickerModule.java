@@ -25,6 +25,8 @@ import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
+import java.util.List;
+import java.util.ArrayList;
 
 public class ImagePickerModule extends ReactContextBaseJavaModule {
   static final int REQUEST_LAUNCH_CAMERA = 1;
@@ -49,33 +51,67 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void showImagePicker(ReadableMap options, Callback callback) {
-      // @todo handle all options
-      final String[] option = new String[] { "Select from camera...", "Select from library...", "Cancel" };
-      final ReadableMap opts = options;
-      final Callback cb = callback;
+  public void showImagePicker(final ReadableMap options, final Callback callback) {
+      List<String> mTitles = new ArrayList<String>();
+      List<String> mActions = new ArrayList<String>();
+
+      String cancelButtonTitle = "Cancel";
+
+      if (options.hasKey("takePhotoButtonTitle")
+              && !options.getString("takePhotoButtonTitle").isEmpty()) {
+          mTitles.add(options.getString("takePhotoButtonTitle"));
+          mActions.add("photo");
+      }
+      if (options.hasKey("chooseFromLibraryButtonTitle")
+              && !options.getString("chooseFromLibraryButtonTitle").isEmpty()) {
+          mTitles.add(options.getString("chooseFromLibraryButtonTitle"));
+          mActions.add("library");
+      }
+      if (options.hasKey("cancelButtonTitle")
+              && !options.getString("cancelButtonTitle").isEmpty()) {
+          cancelButtonTitle = options.getString("cancelButtonTitle");
+      }
+      mTitles.add(cancelButtonTitle);
+      mActions.add("cancel");
+
+      String[] option = new String[mTitles.size()];
+      option = mTitles.toArray(option);
+      
+      String[] action = new String[mActions.size()];
+      action = mActions.toArray(action);
+      final String[] act = action;
+      
       ArrayAdapter<String> adapter = new ArrayAdapter<String>(mMainActivity,
                            android.R.layout.select_dialog_item, option);
        AlertDialog.Builder builder = new AlertDialog.Builder(mMainActivity);
-       
-       if (options.hasKey("title")) {
+       if (options.hasKey("title") && !options.getString("title").isEmpty()) {
           builder.setTitle(options.getString("title"));
        }
 
        builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
            public void onClick(DialogInterface dialog, int index) {
-               // @todo Auto-generated method stub
-               if (index == 0) {
-                   launchCamera(opts, cb);
-               } else if (index == 1) {
-                   launchImageLibrary(opts, cb);
+               if (act[index].equals("photo")) {
+                   launchCamera(options, callback);
+               } else if (act[index].equals("library")) {
+                   launchImageLibrary(options, callback);
                } else {
-                   cb.invoke(true, Arguments.createMap());
+                   callback.invoke(true, Arguments.createMap());
                }
-           } 
+           }
        });
 
        final AlertDialog dialog = builder.create();
+       /**
+        * override onCancel method to callback cancel in case of a touch
+        * outside of the dialog or the BACK key pressed
+        */
+       dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                dialog.dismiss();
+                callback.invoke(true, Arguments.createMap());
+            }
+        });
        dialog.show();
    }
   
@@ -94,6 +130,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     imageFile = File.createTempFile("exponent_capture_", ".jpg",
       Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES));
     } catch (IOException e) {
+        e.printStackTrace();
         return;
     }
     if (imageFile == null) {
