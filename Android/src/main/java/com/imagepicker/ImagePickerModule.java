@@ -11,6 +11,7 @@ import android.app.AlertDialog;
 import android.widget.ArrayAdapter;
 import android.content.DialogInterface;
 import android.graphics.BitmapFactory;
+import android.graphics.Bitmap;
 import android.media.ExifInterface;
 
 import com.facebook.react.bridge.Arguments;
@@ -29,6 +30,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.ArrayList;
+import java.io.FileOutputStream;
+import java.util.UUID;
 
 public class ImagePickerModule extends ReactContextBaseJavaModule {
   static final int REQUEST_LAUNCH_CAMERA = 1;
@@ -40,6 +43,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
   private Uri mCameraCaptureURI;
   private Callback mCallback;
   private Boolean noData = false;
+  private int maxWidth = 0;
+  private int maxHeight = 0;
+  private int quality = 100;
 
   public ImagePickerModule(ReactApplicationContext reactContext, Activity mainActivity) {
     super(reactContext);
@@ -120,9 +126,18 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
   
   // NOTE: Currently not reentrant / doesn't support concurrent requests
   @ReactMethod
-  public void launchCamera(ReadableMap options, Callback callback) {
+  public void launchCamera(final ReadableMap options, final Callback callback) {
     if (options.hasKey("noData")) {
         noData = options.getBoolean("noData");
+    }
+    if (options.hasKey("maxWidth")) {
+        maxWidth = options.getInt("maxWidth");
+    }
+    if (options.hasKey("maxHeight")) {
+        maxHeight = options.getInt("maxHeight");
+    }
+    if (options.hasKey("quality")) {
+        quality = (int)(options.getDouble("quality") * 100);
     }
 
     Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -152,9 +167,18 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
   // NOTE: Currently not reentrant / doesn't support concurrent requests
   @ReactMethod
-  public void launchImageLibrary(ReadableMap options, Callback callback) {
+  public void launchImageLibrary(final ReadableMap options, final Callback callback) {
     if (options.hasKey("noData")) {
         noData = options.getBoolean("noData");
+    }
+    if (options.hasKey("maxWidth")) {
+        maxWidth = options.getInt("maxWidth");
+    }
+    if (options.hasKey("maxHeight")) {
+        maxHeight = options.getInt("maxHeight");
+    }
+    if (options.hasKey("quality")) {
+        quality = (int)(options.getDouble("quality") * 100);
     }
 
     Intent libraryIntent = new Intent();
@@ -184,19 +208,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
     // let's set data
     String realPath = getRealPathFromURI(uri);
-
-    response.putString("path", uri.toString());
-    response.putString("uri", realPath);
-    if (!noData) {
-        response.putString("data", getBase64StringFromFile(realPath));
-    }
-
-    BitmapFactory.Options options = new BitmapFactory.Options();
-    options.inJustDecodeBounds = true;
-    BitmapFactory.decodeFile(realPath, options);
-    response.putInt("width", options.outWidth);
-    response.putInt("height", options.outHeight);
-
+    
     try {
         ExifInterface exif = new ExifInterface(realPath);
         int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
@@ -213,7 +225,31 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     } catch (IOException e) {
         e.printStackTrace();
     }
+
+    BitmapFactory.Options options = new BitmapFactory.Options();
+    options.inJustDecodeBounds = true;
+    Bitmap photo = BitmapFactory.decodeFile(realPath, options);
+    int initialWidth = options.outWidth;
+    int initialHeight = options.outHeight;
     
+    // don't create a new file if contraint are respected
+    if (((initialWidth < maxWidth && maxWidth > 0) || maxWidth == 0)
+            && ((initialHeight < maxHeight && maxHeight > 0) || maxHeight == 0)
+            && quality == 100) {
+        response.putInt("width", initialWidth);
+        response.putInt("height", initialHeight);
+    } else {
+        realPath = getResizedImage(realPath, initialWidth, initialHeight);
+        photo = BitmapFactory.decodeFile(realPath, options);
+        response.putInt("width", options.outWidth);
+        response.putInt("height", options.outHeight);
+    }
+
+    response.putString("uri", realPath);
+
+    if (!noData) {
+        response.putString("data", getBase64StringFromFile(realPath));
+    }
     mCallback.invoke(false, response);
   }
 
@@ -252,5 +288,58 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     }
     bytes = output.toByteArray();
     return Base64.encodeToString(bytes, Base64.NO_WRAP);
+  }
+  
+  /**
+   * Create a resized image to fill the maxWidth and maxHeight values and the
+   * quality value
+   * 
+   * @param realpath
+   * @param initialWidth
+   * @param initialHeight
+   * @return absolute path of resized file
+   */
+  private String getResizedImage (final String realPath, final int initialWidth, final int initialHeight) {
+        Bitmap photo = BitmapFactory.decodeFile(realPath);
+
+        Bitmap scaledphoto = null;
+        if (maxWidth == 0) {
+            maxWidth  = initialWidth;
+        }
+        if (maxHeight == 0) {
+            maxHeight = initialHeight;
+        }
+        double widthRatio = (double)maxWidth / initialWidth;
+        double heightRatio = (double)maxHeight / initialHeight;
+
+        double ratio = (widthRatio < heightRatio)
+                ? widthRatio
+                : heightRatio;
+
+        int newWidth = (int)(initialWidth * ratio);
+        int newHeight = (int)(initialHeight * ratio);
+        
+        scaledphoto = Bitmap.createScaledBitmap(photo, newWidth, newHeight, true);
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        scaledphoto.compress(Bitmap.CompressFormat.JPEG, quality, bytes);
+        String filname = UUID.randomUUID().toString();
+        File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator + filname +".jpg");
+        try {
+            f.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        FileOutputStream fo;
+        try {
+            fo = new FileOutputStream(f);
+            try {
+                fo.write(bytes.toByteArray());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return f.getAbsolutePath();
   }
 }
