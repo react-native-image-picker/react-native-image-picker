@@ -174,9 +174,9 @@ cancelButtonTitle | OK | OK
 takePhotoButtonTitle | OK | OK
 chooseFromLibraryButtonTitle | OK | OK
 customButtons | OK | -
-maxWidth | OK | -
-maxHeight | OK | -
-quality | OK | -
+maxWidth | OK | OK
+maxHeight | OK | OK
+quality | OK | OK
 allowsEditing | OK | -
 noData | OK | OK
 storageOptions | OK | -
