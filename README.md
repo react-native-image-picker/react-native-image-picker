@@ -1,15 +1,19 @@
 # react-native-image-picker
 A React Native module that allows you to use the native UIImagePickerController UI to either select a photo from the device library or directly from the camera, like so:
 
-### IOS - Android
-<img title="IOS" src="https://github.com/marcshilling/react-native-image-picker/blob/master/AlertSheetImage.jpg" width="50%">
-<img title="Android" src="http://i.imgur.com/jMOLd6w.png" width="49%">
+### iOS
+** Requires iOS 8 or higher
 
-**Requires iOS 8 or higher for iOS - Requires Api 11 or higher for Android**
+<img title="IOS" src="https://github.com/marcshilling/react-native-image-picker/blob/master/AlertSheetImage.jpg" width="50%">
+
+### Android
+** Requires Api 11 or higher for Android
+
+<img title="Android" src="http://i.imgur.com/jMOLd6w.png" width="49%">
 
 ## Install
 
-### IOS
+### iOS
 1. `npm install react-native-image-picker@latest --save`
 2. In the XCode's "Project navigator", right click on your project's Libraries folder ➜ `Add Files to <...>`
 3. Go to `node_modules` ➜ `react-native-image-picker` ➜ select the `UIImagePickerManager` folder **Make sure you have 'Create Groups' selected**
