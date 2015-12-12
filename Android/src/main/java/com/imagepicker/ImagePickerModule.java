@@ -85,15 +85,15 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
       String[] option = new String[mTitles.size()];
       option = mTitles.toArray(option);
-      
+
       String[] action = new String[mActions.size()];
       action = mActions.toArray(action);
       final String[] act = action;
-      
+
       ArrayAdapter<String> adapter = new ArrayAdapter<String>(mMainActivity,
                            android.R.layout.select_dialog_item, option);
        AlertDialog.Builder builder = new AlertDialog.Builder(mMainActivity);
-       if (options.hasKey("title") && !options.getString("title").isEmpty()) {
+       if (options.hasKey("title") && options.getString("title") != null && !options.getString("title").isEmpty()) {
           builder.setTitle(options.getString("title"));
        }
 
@@ -123,7 +123,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         });
        dialog.show();
    }
-  
+
   // NOTE: Currently not reentrant / doesn't support concurrent requests
   @ReactMethod
   public void launchCamera(final ReadableMap options, final Callback callback) {
@@ -208,7 +208,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
     // let's set data
     String realPath = getRealPathFromURI(uri);
-    
+
     try {
         ExifInterface exif = new ExifInterface(realPath);
         int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
@@ -231,7 +231,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     Bitmap photo = BitmapFactory.decodeFile(realPath, options);
     int initialWidth = options.outWidth;
     int initialHeight = options.outHeight;
-    
+
     // don't create a new file if contraint are respected
     if (((initialWidth < maxWidth && maxWidth > 0) || maxWidth == 0)
             && ((initialHeight < maxHeight && maxHeight > 0) || maxHeight == 0)
@@ -266,7 +266,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     }
     return result;
   }
-  
+
   private String getBase64StringFromFile (String absoluteFilePath) {
     InputStream inputStream = null;
     try {
@@ -274,7 +274,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     } catch (FileNotFoundException e) {
         e.printStackTrace();
     }
-      
+
     byte[] bytes;
     byte[] buffer = new byte[8192];
     int bytesRead;
@@ -289,11 +289,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     bytes = output.toByteArray();
     return Base64.encodeToString(bytes, Base64.NO_WRAP);
   }
-  
+
   /**
    * Create a resized image to fill the maxWidth and maxHeight values and the
    * quality value
-   * 
+   *
    * @param realpath
    * @param initialWidth
    * @param initialHeight
@@ -318,7 +318,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
         int newWidth = (int)(initialWidth * ratio);
         int newHeight = (int)(initialHeight * ratio);
-        
+
         scaledphoto = Bitmap.createScaledBitmap(photo, newWidth, newHeight, true);
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         scaledphoto.compress(Bitmap.CompressFormat.JPEG, quality, bytes);
