@@ -4,19 +4,19 @@ A React Native module that allows you to use the native UIImagePickerController 
 ### iOS
 ** Requires iOS 8 or higher
 
-<img title="IOS" src="https://github.com/marcshilling/react-native-image-picker/blob/master/AlertSheetImage.jpg" width="50%">
+<img title="iOS" src="https://github.com/marcshilling/react-native-image-picker/blob/master/images/ios-image.png" width="50%">
 
 ### Android
 ** Requires Api 11 or higher for Android
 
-<img title="Android" src="http://i.imgur.com/jMOLd6w.png" width="49%">
+<img title="Android" src="https://github.com/marcshilling/react-native-image-picker/blob/master/images/android-image.png" width="50%">
 
 ## Install
 
 ### iOS
 1. `npm install react-native-image-picker@latest --save`
 2. In the XCode's "Project navigator", right click on your project's Libraries folder ➜ `Add Files to <...>`
-3. Go to `node_modules` ➜ `react-native-image-picker` ➜ select the `UIImagePickerManager` folder **Make sure you have 'Create Groups' selected**
+3. Go to `node_modules` ➜ `react-native-image-picker` ➜ `ios` ➜ select `UIImagePickerManager.h` and `UIImagePickerManager.m`
 4. Make sure `UIImagePickerManager.m` is listed under 'Compile Sources' in your project's 'Build Phases' tab
 5. Compile and have fun
 
@@ -116,7 +116,7 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
     }
   };
 
-  /** 
+  /**
    * The first arg will be the options object for customization, the second is
    * your callback which sends bool: didCancel, object: response.
    *
