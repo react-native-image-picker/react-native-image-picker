@@ -28,7 +28,7 @@ A React Native module that allows you to use the native UIImagePickerController 
 ...
 
 include ':react-native-image-picker'
-project(':react-native-image-picker').projectDir = new File(settingsDir, '../node_modules/react-native-image-picker/android')
+project(':react-native-image-picker').projectDir = new File(settingsDir, '../node_modules/react-native-image-picker/Android')
 ```
 ```gradle
 // file: android/app/build.gradle
