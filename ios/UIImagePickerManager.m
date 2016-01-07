@@ -96,7 +96,10 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     
     dispatch_async(dispatch_get_main_queue(), ^{
         UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
-        
+        while (root.presentedViewController != nil) {
+          root = root.presentedViewController;
+        }
+    
         /* On iPad, UIAlertController presents a popover view rather than an action sheet like on iPhone. We must provide the location
            of the location to show the popover in this case. For simplicity, we'll just display it on the bottom center of the screen
            to mimic an action sheet */
