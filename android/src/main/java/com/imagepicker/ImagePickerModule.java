@@ -323,8 +323,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         scaledphoto.compress(Bitmap.CompressFormat.JPEG, quality, bytes);
         String filname = UUID.randomUUID().toString();
-        File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator + filname +".jpg");
+        File path = Environment.getExternalStoragePublicDirectory(
+            Environment.DIRECTORY_PICTURES);
+        File file = new File(path, filname +".jpg");
         try {
+            // Make sure the Pictures directory exists.
+            path.mkdirs();
+
             f.createNewFile();
         } catch (IOException e) {
             e.printStackTrace();
