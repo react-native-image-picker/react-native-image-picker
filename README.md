@@ -131,25 +131,26 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
    * response.width & response.height give you the image dimensions
    */
 
-  UIImagePickerManager.showImagePicker(options, (didCancel, response) => {
+  UIImagePickerManager.showImagePicker(options, (response) => {
     console.log('Response = ', response);
 
-    if (didCancel) {
+    if (response.didCancel) {
       console.log('User cancelled image picker');
     }
+    else if (response.error) {
+      console.log('UIImagePickerManager Error: ', response.error);
+    }
+    else if (response.customButton) {
+      console.log('User tapped custom button: ', response.customButton);
+    }
     else {
-      if (response.customButton) {
-        console.log('User tapped custom button: ', response.customButton);
-      }
-      else {
-        // You can display the image using either:
-        const source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
-        const source = {uri: response.uri.replace('file://', ''), isStatic: true};
+      // You can display the image using either:
+      const source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
+      const source = {uri: response.uri.replace('file://', ''), isStatic: true};
 
-        this.setState({
-          avatarSource: source
-        });
-      }
+      this.setState({
+        avatarSource: source
+      });
     }
   });
   ```
