@@ -325,7 +325,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         String filname = UUID.randomUUID().toString();
         File path = Environment.getExternalStoragePublicDirectory(
             Environment.DIRECTORY_PICTURES);
-        File file = new File(path, filname +".jpg");
+        File f = new File(path, filname +".jpg");
         try {
             // Make sure the Pictures directory exists.
             path.mkdirs();
