@@ -240,10 +240,9 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 
     // Create the response object
     NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
-    
-    [response setObject:@(maxWidth) forKey:@"width"];
-    [response setObject:@(maxHeight) forKey:@"height"];
-
+    [response setObject:@(image.size.width) forKey:@"width"];
+    [response setObject:@(image.size.height) forKey:@"height"];
+  
     NSData *data = UIImageJPEGRepresentation(image, [[self.options valueForKey:@"quality"] floatValue]);
     // base64 encoded image string, unless the caller doesn't want it
     if (![[self.options objectForKey:@"noData"] boolValue]) {
