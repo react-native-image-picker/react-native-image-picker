@@ -1,5 +1,5 @@
 # react-native-image-picker
-A React Native module that allows you to use the native UIImagePickerController UI to either select a photo from the device library or directly from the camera, like so:
+A React Native module that allows you to use native UI to select a photo/video from the device library or directly from the camera, like so:
 
 ### iOS
 ** Requires iOS 8 or higher
@@ -105,11 +105,14 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
     customButtons: {
       'Choose Photo from Facebook': 'fb', // [Button Text] : [String returned upon selection]
     },
-    maxWidth: 100,
-    maxHeight: 100,
-    quality: 0.2,
+    cameraType: 'back', // 'front' or 'back'
+    mediaType: 'photo', // 'photo' or 'video'
+    videoQuality: 'high', // 'low', 'medium', or 'high'
+    maxWidth: 100, // photos only
+    maxHeight: 100, // photos only
+    quality: 0.2, // photos only
     allowsEditing: false, // Built in iOS functionality to resize/reposition the image
-    noData: false, // Disables the base64 `data` field from being generated (greatly improves performance on large photos)
+    noData: false, // photos only - disables the base64 `data` field from being generated (greatly improves performance on large photos)
     storageOptions: { // if this key is provided, the image will get saved in the documents directory (rather than a temporary directory)
       skipBackup: true, // image will NOT be backed up to icloud
       path: 'images' // will save image at /Documents/images rather than the root
@@ -120,8 +123,10 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
    * The first arg will be the options object for customization, the second is
    * your callback which sends bool: didCancel, object: response.
    *
-   * response.data is the base64 encoded image data
-   * response.uri is the uri to the local file asset on the device
+   * response.didCancel will inform you if the user cancelled the process
+   * response.error will contain an error message, if there is one
+   * response.data is the base64 encoded image data (photos only)
+   * response.uri is the uri to the local file asset on the device (photo or video)
    * response.isVertical will be true if the image is vertically oriented
    * response.width & response.height give you the image dimensions
    */
@@ -178,6 +183,9 @@ cancelButtonTitle | OK | OK
 takePhotoButtonTitle | OK | OK
 chooseFromLibraryButtonTitle | OK | OK
 customButtons | OK | -
+cameraType | OK | -
+mediaType | OK | -
+videoQuality | OK | -
 maxWidth | OK | OK
 maxHeight | OK | OK
 quality | OK | OK
