@@ -1,6 +1,8 @@
 #import "UIImagePickerManager.h"
 #import "RCTConvert.h"
 
+@import MobileCoreServices;
+
 @interface UIImagePickerManager ()
 
 @property (nonatomic, strong) UIAlertController *alertController;
@@ -63,7 +65,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         cancelTitle = self.defaultOptions[@"cancelButtonTitle"]; // Don't allow null or empty string cancel button title
     }
     UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:cancelTitle style:UIAlertActionStyleCancel handler:^(UIAlertAction * action) {
-        self.callback(@[@YES, [NSNull null]]); // Return callback for 'cancel' action (if is required)
+        self.callback(@[@{@"didCancel": @YES}]); // Return callback for 'cancel' action (if is required)
     }];
     [self.alertController addAction:cancelAction];
 
@@ -124,7 +126,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     // If button title is one of the keys in the customButtons dictionary return the value as a callback
     NSString *customButtonStr = [self.customButtons objectForKey:action.title];
     if (customButtonStr) {
-        self.callback(@[@NO, @{@"customButton": customButtonStr}]);
+        self.callback(@[@{@"customButton": customButtonStr}]);
         return;
     }
 
@@ -144,6 +146,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         case RNImagePickerTargetCamera:
 #if TARGET_IPHONE_SIMULATOR
             NSLog(@"Camera not available on simulator");
+            self.callback(@[@{@"error": @"Camera not available on simulator"}]);
             return;
 #else
             self.picker.sourceType = UIImagePickerControllerSourceTypeCamera;
@@ -160,17 +163,39 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     if ([[self.options objectForKey:@"allowsEditing"] boolValue]) {
         self.picker.allowsEditing = true;
     }
+  
+    if ([[self.options objectForKey:@"mediaType"] isEqualToString:@"video"]) {
+        self.picker.mediaTypes = @[(NSString *)kUTTypeMovie];
+    }
+    else {
+        self.picker.mediaTypes = @[(NSString *)kUTTypeImage];
+    }
+  
+    if ([[self.options objectForKey:@"videoQuality"] isEqualToString:@"high"]) {
+        self.picker.videoQuality = UIImagePickerControllerQualityTypeHigh;
+    }
+    else if ([[self.options objectForKey:@"videoQuality"] isEqualToString:@"low"]) {
+        self.picker.videoQuality = UIImagePickerControllerQualityTypeLow;
+    }
+    else {
+        self.picker.videoQuality = UIImagePickerControllerQualityTypeMedium;
+    }
+  
+    if (self.picker.sourceType == UIImagePickerControllerSourceTypeCamera && [[self.options objectForKey:@"cameraType"] isEqualToString:@"front"]) {
+        self.picker.cameraDevice = UIImagePickerControllerCameraDeviceFront;
+    }
+    else if (self.picker.sourceType == UIImagePickerControllerSourceTypeCamera && [[self.options objectForKey:@"cameraType"] isEqualToString:@"back"]) {
+        self.picker.cameraDevice = UIImagePickerControllerCameraDeviceRear;
+    }
     self.picker.modalPresentationStyle = UIModalPresentationCurrentContext;
     self.picker.delegate = self;
 
-    UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (root.presentedViewController) {
-            [root.presentedViewController presentViewController:self.picker animated:YES completion:nil];
+        UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
+        while (root.presentedViewController != nil) {
+          root = root.presentedViewController;
         }
-        else {
-            [root presentViewController:self.picker animated:YES completion:nil];
-        }
+        [root presentViewController:self.picker animated:YES completion:nil];
     });
 }
 
@@ -179,22 +204,36 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     dispatch_async(dispatch_get_main_queue(), ^{
         [picker dismissViewControllerAnimated:YES completion:nil];
     });
-
-    /* Picked Image */
+    
+    NSString* path;
+    NSString* fileName;
+    NSString *mediaType = [info objectForKey:UIImagePickerControllerMediaType];
+    
     UIImage *image;
-    if ([[self.options objectForKey:@"allowsEditing"] boolValue]) {
-      image = [info objectForKey:UIImagePickerControllerEditedImage];
+    if ([mediaType isEqualToString:(NSString *)kUTTypeImage]) {
+        /* Picked Image */
+        if ([[self.options objectForKey:@"allowsEditing"] boolValue]) {
+            image = [info objectForKey:UIImagePickerControllerEditedImage];
+        }
+        else {
+            image = [info objectForKey:UIImagePickerControllerOriginalImage];
+        }
+        
+        /* creating a temp url to be passed */
+        NSString *tempFilename = [[NSUUID UUID] UUIDString];
+        if ([[[self.options objectForKey:@"imageFileType"] stringValue] isEqualToString:@"png"]) {
+            fileName = [tempFilename stringByAppendingString:@".png"];
+        }
+        else {
+            fileName = [tempFilename stringByAppendingString:@".jpg"];
+        }
+    } else if ([mediaType isEqualToString:(NSString *)kUTTypeMovie]) {
+        NSURL *videoURL = info[UIImagePickerControllerMediaURL];
+        fileName = videoURL.lastPathComponent;
     }
-    else {
-      image = [info objectForKey:UIImagePickerControllerOriginalImage];
-    }
-
-    /* creating a temp url to be passed */
-    NSString *ImageUUID = [[NSUUID UUID] UUIDString];
-    NSString *ImageName = [ImageUUID stringByAppendingString:@".jpg"];
-
+    
     // This will be the default URL
-    NSString* path = [[NSTemporaryDirectory()stringByStandardizingPath] stringByAppendingPathComponent:ImageName];
+    path = [[NSTemporaryDirectory()stringByStandardizingPath] stringByAppendingPathComponent:fileName];
     
     NSDictionary *storageOptions;
     // if storage options are provided change path to the documents directory
@@ -203,8 +242,8 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
         NSString *documentsDirectory = [paths objectAtIndex:0];
         // update path to save image to documents directory
-        path = [documentsDirectory stringByAppendingPathComponent:ImageName];
-
+        path = [documentsDirectory stringByAppendingPathComponent:fileName];
+        
         storageOptions = [self.options objectForKey:@"storageOptions"];
         // if extra path is provided try to create it
         if ([storageOptions objectForKey:@"path"]) {
@@ -215,54 +254,92 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             // if there was an error do not update path
             if (error != nil) {
                 NSLog(@"error creating directory: %@", error);
+                self.callback(@[@{@"error": error.localizedFailureReason}]);
+                return;
             }
             else {
-                path = [newPath stringByAppendingPathComponent:ImageName];
+                path = [newPath stringByAppendingPathComponent:fileName];
             }
         }
     }
     
-
-    
-    // Rotate the image for upload to web
-    image = [self fixOrientation:image];
-
-    //If needed, downscale image
-    float maxWidth = image.size.width;
-    float maxHeight = image.size.height;
-    if ([self.options valueForKey:@"maxWidth"]) {
-        maxWidth = [[self.options valueForKey:@"maxWidth"] floatValue];
-    }
-    if ([self.options valueForKey:@"maxHeight"]) {
-        maxHeight = [[self.options valueForKey:@"maxHeight"] floatValue];
-    }
-    image = [self downscaleImageIfNecessary:image maxWidth:maxWidth maxHeight:maxHeight];
-
     // Create the response object
     NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
-    [response setObject:@(image.size.width) forKey:@"width"];
-    [response setObject:@(image.size.height) forKey:@"height"];
-  
-    NSData *data = UIImageJPEGRepresentation(image, [[self.options valueForKey:@"quality"] floatValue]);
-    // base64 encoded image string, unless the caller doesn't want it
-    if (![[self.options objectForKey:@"noData"] boolValue]) {
-        NSString *dataString = [data base64EncodedStringWithOptions:0];
-        [response setObject:dataString forKey:@"data"];
+    
+    float maxWidth;
+    float maxHeight;
+    if ([mediaType isEqualToString:(NSString *)kUTTypeImage]) {
+        // Rotate the image for upload to web
+        image = [self fixOrientation:image];
+        
+        //If needed, downscale image
+        maxWidth = image.size.width;
+        maxHeight = image.size.height;
+        if ([self.options valueForKey:@"maxWidth"]) {
+            maxWidth = [[self.options valueForKey:@"maxWidth"] floatValue];
+        }
+        if ([self.options valueForKey:@"maxHeight"]) {
+            maxHeight = [[self.options valueForKey:@"maxHeight"] floatValue];
+        }
+        image = [self downscaleImageIfNecessary:image maxWidth:maxWidth maxHeight:maxHeight];
+        
+        [response setObject:@(image.size.width) forKey:@"width"];
+        [response setObject:@(image.size.height) forKey:@"height"];
     }
+    else if ([mediaType isEqualToString:(NSString *)kUTTypeMovie]) {
+        // video resize code goes here
+    }
+  
+    NSData *data;
+    if ([mediaType isEqualToString:(NSString *)kUTTypeImage]) {
+        if ([[[self.options objectForKey:@"imageFileType"] stringValue] isEqualToString:@"png"]) {
+            data = UIImagePNGRepresentation(image);
+        } else {
+            data = UIImageJPEGRepresentation(image, [[self.options valueForKey:@"quality"] floatValue]);
+        }
+        // base64 encoded image string, unless the caller doesn't want it
+        if (![[self.options objectForKey:@"noData"] boolValue]) {
+            NSString *dataString = [data base64EncodedStringWithOptions:0];
+            [response setObject:dataString forKey:@"data"];
+        }
+        
+        // file uri
+        [data writeToFile:path atomically:YES];
+        
+        // image orientation
+        BOOL vertical = (image.size.width < image.size.height) ? YES : NO;
+        [response setObject:@(vertical) forKey:@"isVertical"];
+    }
+    else if ([mediaType isEqualToString:(NSString *)kUTTypeMovie]) {
+        NSURL *videoURL = info[UIImagePickerControllerMediaURL];
+        // generate the local video file URL
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        NSURL *localVideoURL = [NSURL fileURLWithPath:path];
+        
+        NSError *error = nil;
+        if ([fileName isEqualToString:@"capturedvideo.MOV"]) {
+            if ([fileManager fileExistsAtPath:localVideoURL.path]) {
+                [fileManager removeItemAtURL:localVideoURL error:nil];
+            }
+            [fileManager moveItemAtURL:videoURL toURL:localVideoURL error:&error];
+        }
 
-    // file uri
-    [data writeToFile:path atomically:YES];
+        path = localVideoURL.path;
+        
+        // invoke the callback if there was an error renaming the file
+        if (error) {
+            self.callback(@[@{@"error": error.localizedFailureReason}]);
+            return;
+        }
+    }
+    
     NSString *fileURL = [[NSURL fileURLWithPath:path] absoluteString];
     if ([[storageOptions objectForKey:@"skipBackup"] boolValue]) {
         [self addSkipBackupAttributeToItemAtPath:path];
     }
     [response setObject:fileURL forKey:@"uri"];
     
-    // image orientation
-    BOOL vertical = (image.size.width < image.size.height) ? YES : NO;
-    [response setObject:@(vertical) forKey:@"isVertical"];
-
-    self.callback(@[@NO, response]);
+    self.callback(@[response]);
 }
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
@@ -271,7 +348,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         [picker dismissViewControllerAnimated:YES completion:nil];
     });
     
-    self.callback(@[@YES, [NSNull null]]);
+    self.callback(@[@{@"didCancel": @YES}]);
 }
 
 - (UIImage*)downscaleImageIfNecessary:(UIImage*)image maxWidth:(float)maxWidth maxHeight:(float)maxHeight
