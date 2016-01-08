@@ -165,12 +165,12 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
   do the following:
   ```javascript
   // Launch Camera:
-  UIImagePickerManager.launchCamera(options, (didCancel, response)  => {
+  UIImagePickerManager.launchCamera(options, (response)  => {
     // Same code as in above section!
   });
 
   // Open Image Library:
-  UIImagePickerManager.launchImageLibrary(options, (didCancel, response)  => {
+  UIImagePickerManager.launchImageLibrary(options, response)  => {
     // Same code as in above section!
   });
   ```
