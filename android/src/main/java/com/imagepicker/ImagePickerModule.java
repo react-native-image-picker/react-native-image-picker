@@ -13,6 +13,7 @@ import android.content.DialogInterface;
 import android.graphics.BitmapFactory;
 import android.graphics.Bitmap;
 import android.media.ExifInterface;
+import android.content.ComponentName;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
@@ -194,9 +195,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         quality = (int)(options.getDouble("quality") * 100);
     }
 
-    Intent libraryIntent = new Intent();
-    libraryIntent.setType("image/*");
-    libraryIntent.setAction(Intent.ACTION_GET_CONTENT);
+    Intent libraryIntent = new Intent(Intent.ACTION_PICK,
+        android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
     mCallback = callback;
     mMainActivity.startActivityForResult(libraryIntent, REQUEST_LAUNCH_IMAGE_LIBRARY);
   }
@@ -286,12 +286,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
   private String getRealPathFromURI(Uri uri) {
     String result;
-    Cursor cursor = mMainActivity.getContentResolver().query(uri, null, null, null, null);
+    String[] projection = { MediaStore.Images.Media.DATA };
+    Cursor cursor = mMainActivity.getContentResolver().query(uri, projection, null, null, null);
     if (cursor == null) { // Source is Dropbox or other similar local file path
         result = uri.getPath();
     } else {
         cursor.moveToFirst();
-        int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+        int idx = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
         result = cursor.getString(idx);
         cursor.close();
     }
