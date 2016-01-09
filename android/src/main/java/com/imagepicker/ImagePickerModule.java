@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.io.FileOutputStream;
 import java.util.UUID;
+import java.net.URL;
+import java.net.MalformedURLException;
 
 public class ImagePickerModule extends ReactContextBaseJavaModule {
   static final int REQUEST_LAUNCH_CAMERA = 1;
@@ -46,6 +48,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
   private int maxWidth = 0;
   private int maxHeight = 0;
   private int quality = 100;
+  WritableMap response;
 
   public ImagePickerModule(ReactApplicationContext reactContext, Activity mainActivity) {
     super(reactContext);
@@ -61,6 +64,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void showImagePicker(final ReadableMap options, final Callback callback) {
+      response = Arguments.createMap();
+
       List<String> mTitles = new ArrayList<String>();
       List<String> mActions = new ArrayList<String>();
 
@@ -104,7 +109,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
                } else if (act[index].equals("library")) {
                    launchImageLibrary(options, callback);
                } else {
-                   callback.invoke(true, Arguments.createMap());
+                   response.putBoolean("didCancel", true);
+                   callback.invoke(response);
                }
            }
        });
@@ -118,7 +124,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
             @Override
             public void onCancel(DialogInterface dialog) {
                 dialog.dismiss();
-                callback.invoke(true, Arguments.createMap());
+                response.putBoolean("didCancel", true);
+                callback.invoke(response);
             }
         });
        dialog.show();
@@ -127,6 +134,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
   // NOTE: Currently not reentrant / doesn't support concurrent requests
   @ReactMethod
   public void launchCamera(final ReadableMap options, final Callback callback) {
+    response = Arguments.createMap();
+
     if (options.hasKey("noData")) {
         noData = options.getBoolean("noData");
     }
@@ -142,21 +151,23 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
     Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
     if (cameraIntent.resolveActivity(mMainActivity.getPackageManager()) == null) {
-        callback.invoke(true, "error resolving activity");
+        response.putString("error", "error resolving activity");
+        callback.invoke(response);
         return;
     }
 
     // we create a tmp file to save the result
+    File path = Environment.getExternalStoragePublicDirectory(
+            Environment.DIRECTORY_PICTURES);
     File imageFile;
     try {
-    imageFile = File.createTempFile("exponent_capture_", ".jpg",
-      Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES));
+        // Make sure the Pictures directory exists.
+        path.mkdirs();
+        imageFile = File.createTempFile("image_picker_capture_", ".jpg", path);
     } catch (IOException e) {
         e.printStackTrace();
-        return;
-    }
-    if (imageFile == null) {
-        callback.invoke(true, "error file not created");
+        response.putString("error", e.getMessage());
+        callback.invoke(response);
         return;
     }
     cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(imageFile));
@@ -168,6 +179,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
   // NOTE: Currently not reentrant / doesn't support concurrent requests
   @ReactMethod
   public void launchImageLibrary(final ReadableMap options, final Callback callback) {
+    response = Arguments.createMap();
+
     if (options.hasKey("noData")) {
         noData = options.getBoolean("noData");
     }
@@ -182,7 +195,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     }
 
     Intent libraryIntent = new Intent();
-    libraryIntent.setType("image/");
+    libraryIntent.setType("image/*");
     libraryIntent.setAction(Intent.ACTION_GET_CONTENT);
     mCallback = callback;
     mMainActivity.startActivityForResult(libraryIntent, REQUEST_LAUNCH_IMAGE_LIBRARY);
@@ -197,17 +210,31 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
     // user cancel
     if (resultCode != Activity.RESULT_OK) {
-      mCallback.invoke(true, Arguments.createMap());
+      response.putBoolean("didCancel", true);
+      mCallback.invoke(response);
       return;
     }
 
-    WritableMap response = Arguments.createMap();
     Uri uri = (requestCode == REQUEST_LAUNCH_CAMERA)
     ? mCameraCaptureURI
     : data.getData();
 
-    // let's set data
     String realPath = getRealPathFromURI(uri);
+
+    boolean isUrl = true;
+    try {
+        URL url = new URL(realPath);
+    }
+    catch (MalformedURLException e) {
+        isUrl = false;
+    }
+    if (isUrl) {
+        // @todo handle url as well (Facebook image, etc..)
+        response.putString("uri", uri.toString());
+        response.putString("urlPath", realPath);
+        mCallback.invoke(response);
+        return;
+    }
 
     try {
         ExifInterface exif = new ExifInterface(realPath);
@@ -224,6 +251,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         response.putBoolean("isVertical", isVertical);
     } catch (IOException e) {
         e.printStackTrace();
+        response.putString("error", e.getMessage());
+        mCallback.invoke(response);
+        return;
     }
 
     BitmapFactory.Options options = new BitmapFactory.Options();
@@ -239,18 +269,19 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         response.putInt("width", initialWidth);
         response.putInt("height", initialHeight);
     } else {
-        realPath = getResizedImage(realPath, initialWidth, initialHeight);
+        uri = getResizedImage(getRealPathFromURI(uri), initialWidth, initialHeight);
+        realPath = getRealPathFromURI(uri);
         photo = BitmapFactory.decodeFile(realPath, options);
         response.putInt("width", options.outWidth);
         response.putInt("height", options.outHeight);
     }
 
-    response.putString("uri", realPath);
+    response.putString("uri", uri.toString());
 
     if (!noData) {
         response.putString("data", getBase64StringFromFile(realPath));
     }
-    mCallback.invoke(false, response);
+    mCallback.invoke(response);
   }
 
   private String getRealPathFromURI(Uri uri) {
@@ -294,57 +325,65 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
    * Create a resized image to fill the maxWidth and maxHeight values and the
    * quality value
    *
-   * @param realpath
+   * @param realPath
    * @param initialWidth
    * @param initialHeight
-   * @return absolute path of resized file
+   * @return uri of resized file
    */
-  private String getResizedImage (final String realPath, final int initialWidth, final int initialHeight) {
-        Bitmap photo = BitmapFactory.decodeFile(realPath);
+  private Uri getResizedImage (final String realPath, final int initialWidth, final int initialHeight) {
+    final BitmapFactory.Options options = new BitmapFactory.Options();
+    options.inSampleSize = 8;
+    Bitmap photo = BitmapFactory.decodeFile(realPath, options);
 
-        Bitmap scaledphoto = null;
-        if (maxWidth == 0) {
-            maxWidth  = initialWidth;
-        }
-        if (maxHeight == 0) {
-            maxHeight = initialHeight;
-        }
-        double widthRatio = (double)maxWidth / initialWidth;
-        double heightRatio = (double)maxHeight / initialHeight;
+    Bitmap scaledphoto = null;
+    if (maxWidth == 0) {
+        maxWidth  = initialWidth;
+    }
+    if (maxHeight == 0) {
+        maxHeight = initialHeight;
+    }
+    double widthRatio = (double)maxWidth / initialWidth;
+    double heightRatio = (double)maxHeight / initialHeight;
 
-        double ratio = (widthRatio < heightRatio)
-                ? widthRatio
-                : heightRatio;
+    double ratio = (widthRatio < heightRatio)
+            ? widthRatio
+            : heightRatio;
 
-        int newWidth = (int)(initialWidth * ratio);
-        int newHeight = (int)(initialHeight * ratio);
+    int newWidth = (int)(initialWidth * ratio);
+    int newHeight = (int)(initialHeight * ratio);
 
-        scaledphoto = Bitmap.createScaledBitmap(photo, newWidth, newHeight, true);
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        scaledphoto.compress(Bitmap.CompressFormat.JPEG, quality, bytes);
-        String filname = UUID.randomUUID().toString();
-        File path = Environment.getExternalStoragePublicDirectory(
-            Environment.DIRECTORY_PICTURES);
-        File f = new File(path, filname +".jpg");
+    scaledphoto = Bitmap.createScaledBitmap(photo, newWidth, newHeight, true);
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    scaledphoto.compress(Bitmap.CompressFormat.JPEG, quality, bytes);
+    String filname = UUID.randomUUID().toString();
+    File path = Environment.getExternalStoragePublicDirectory(
+        Environment.DIRECTORY_PICTURES);
+    File f = new File(path, filname +".jpg");
+    try {
+        // Make sure the Pictures directory exists.
+        path.mkdirs();
+
+        f.createNewFile();
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+    FileOutputStream fo;
+    try {
+        fo = new FileOutputStream(f);
         try {
-            // Make sure the Pictures directory exists.
-            path.mkdirs();
-
-            f.createNewFile();
+            fo.write(bytes.toByteArray());
         } catch (IOException e) {
             e.printStackTrace();
         }
-        FileOutputStream fo;
-        try {
-            fo = new FileOutputStream(f);
-            try {
-                fo.write(bytes.toByteArray());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        return f.getAbsolutePath();
+    } catch (FileNotFoundException e) {
+        e.printStackTrace();
+    }
+
+    // recycle to avoid java.lang.OutOfMemoryError
+    if (photo != null) {
+        photo.recycle();
+        photo = null;
+    }
+    return Uri.fromFile(f);
   }
 }

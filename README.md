@@ -2,12 +2,12 @@
 A React Native module that allows you to use native UI to select a photo/video from the device library or directly from the camera, like so:
 
 ### iOS
-** Requires iOS 8 or higher
+**Requires iOS 8 or higher**
 
 <img title="iOS" src="https://github.com/marcshilling/react-native-image-picker/blob/master/images/ios-image.png" width="50%">
 
 ### Android
-** Requires Api 11 or higher for Android
+**Requires Api 11 or higher for Android**
 
 <img title="Android" src="https://github.com/marcshilling/react-native-image-picker/blob/master/images/android-image.png" width="50%">
 
@@ -38,6 +38,25 @@ dependencies {
     ...
     compile project(':react-native-image-picker')
 }
+```
+```xml
+// file: android/src/main/AndroidManifest.xml
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.myApp">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    
+    // add following permissions and the min targeted version
+    <uses-sdk
+            android:minSdkVersion="11"/>
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-feature android:name="android.hardware.camera"
+                  android:required="true"/>
+    <uses-feature android:name="android.hardware.camera.autofocus" />
+    
+    ...
 ```
 ```java
 // file: android/app/src/main/java/com/myappli/MainActivity.java
@@ -77,11 +96,13 @@ public class MainActivity extends Activity implements DefaultHardwareBackBtnHand
         setContentView(mReactRootView);
     }
 
+    ...
+
+    // handle onActivityResult
     @Override
     public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        // handle onActivityResult
         mImagePicker.handleActivityResult(requestCode, resultCode, data);
     }
 ...
@@ -144,9 +165,13 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
       console.log('User tapped custom button: ', response.customButton);
     }
     else {
-      // You can display the image using either:
+      // You can display the image using either data:
       const source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
+      
+      // uri (on iOS)
       const source = {uri: response.uri.replace('file://', ''), isStatic: true};
+      // uri (on android)
+      const source = {uri: response.uri, isStatic: true};
 
       this.setState({
         avatarSource: source
