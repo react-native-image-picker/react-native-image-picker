@@ -40,14 +40,13 @@ dependencies {
 }
 ```
 ```xml
-// file: android/src/main/AndroidManifest.xml
-
+<!-- file: android/src/main/AndroidManifest.xml -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.myApp">
 
     <uses-permission android:name="android.permission.INTERNET" />
     
-    // add following permissions and the min targeted version
+    <!-- add following permissions and the min targeted version -->
     <uses-sdk
             android:minSdkVersion="11"/>
     <uses-permission android:name="android.permission.CAMERA" />
@@ -55,7 +54,7 @@ dependencies {
     <uses-feature android:name="android.hardware.camera"
                   android:required="true"/>
     <uses-feature android:name="android.hardware.camera.autofocus" />
-    
+    <!-- -->
     ...
 ```
 ```java
