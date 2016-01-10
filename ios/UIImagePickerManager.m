@@ -69,7 +69,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     
     
     UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:cancelTitle style:UIAlertActionStyleCancel handler:^(UIAlertAction * action) {
-      self.callback(@[@YES, [NSNull null]]); // Return callback for 'cancel' action (if is required)
+      self.callback(@[@{@"didCancel": @YES}]); // Return callback for 'cancel' action (if is required)
     }];
     [self.alertController addAction:cancelAction];
     
@@ -143,6 +143,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
   switch (popup.tag) {
     case 1: {
       if(buttonIndex == [popup cancelButtonIndex]) {
+        self.callback(@[@{@"didCancel": @YES}]);
         return;
       }
       
