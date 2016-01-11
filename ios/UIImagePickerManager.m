@@ -57,58 +57,78 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     if ([title isEqual:[NSNull null]] || title.length == 0) {
         title = nil; // A more visually appealing UIAlertControl is displayed with a nil title rather than title = @""
     }
-    
-    self.alertController = [UIAlertController alertControllerWithTitle:title message:nil preferredStyle:UIAlertControllerStyleActionSheet];
-    
     NSString *cancelTitle = [self.options valueForKey:@"cancelButtonTitle"];
     if ([cancelTitle isEqual:[NSNull null]] || cancelTitle.length == 0) {
         cancelTitle = self.defaultOptions[@"cancelButtonTitle"]; // Don't allow null or empty string cancel button title
     }
-    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:cancelTitle style:UIAlertActionStyleCancel handler:^(UIAlertAction * action) {
-        self.callback(@[@{@"didCancel": @YES}]); // Return callback for 'cancel' action (if is required)
-    }];
-    [self.alertController addAction:cancelAction];
-
-
     NSString *takePhotoButtonTitle = [self.options valueForKey:@"takePhotoButtonTitle"];
     NSString *chooseFromLibraryButtonTitle = [self.options valueForKey:@"chooseFromLibraryButtonTitle"];
-    if (![takePhotoButtonTitle isEqual:[NSNull null]] && takePhotoButtonTitle.length > 0) {
-        UIAlertAction *takePhotoAction = [UIAlertAction actionWithTitle:takePhotoButtonTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
-            [self actionHandler:action];
-        }];
-        [self.alertController addAction:takePhotoAction];
-    }
-    if (![chooseFromLibraryButtonTitle isEqual:[NSNull null]] && chooseFromLibraryButtonTitle.length > 0) {
-        UIAlertAction *chooseFromLibraryAction = [UIAlertAction actionWithTitle:chooseFromLibraryButtonTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
-            [self actionHandler:action];
-        }];
-        [self.alertController addAction:chooseFromLibraryAction];
-    }
+  
+    if ([UIAlertController class] && [UIAlertAction class]) { // iOS 8+
+        self.alertController = [UIAlertController alertControllerWithTitle:title message:nil preferredStyle:UIAlertControllerStyleActionSheet];
     
-    // Add custom buttons to action sheet
-    if([self.options objectForKey:@"customButtons"] && [[self.options objectForKey:@"customButtons"] isKindOfClass:[NSDictionary class]]){
-        self.customButtons = [self.options objectForKey:@"customButtons"];
-        for (NSString *key in self.customButtons) {
-            UIAlertAction *customAction = [UIAlertAction actionWithTitle:key style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+        UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:cancelTitle style:UIAlertActionStyleCancel handler:^(UIAlertAction * action) {
+            self.callback(@[@{@"didCancel": @YES}]); // Return callback for 'cancel' action (if is required)
+        }];
+        [self.alertController addAction:cancelAction];
+    
+        if (![takePhotoButtonTitle isEqual:[NSNull null]] && takePhotoButtonTitle.length > 0) {
+            UIAlertAction *takePhotoAction = [UIAlertAction actionWithTitle:takePhotoButtonTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
                 [self actionHandler:action];
             }];
-            [self.alertController addAction:customAction];
+            [self.alertController addAction:takePhotoAction];
         }
+        if (![chooseFromLibraryButtonTitle isEqual:[NSNull null]] && chooseFromLibraryButtonTitle.length > 0) {
+            UIAlertAction *chooseFromLibraryAction = [UIAlertAction actionWithTitle:chooseFromLibraryButtonTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+                [self actionHandler:action];
+            }];
+            [self.alertController addAction:chooseFromLibraryAction];
+        }
+    
+        // Add custom buttons to action sheet
+        if ([self.options objectForKey:@"customButtons"] && [[self.options objectForKey:@"customButtons"] isKindOfClass:[NSDictionary class]]) {
+            self.customButtons = [self.options objectForKey:@"customButtons"];
+            for (NSString *key in self.customButtons) {
+                UIAlertAction *customAction = [UIAlertAction actionWithTitle:key style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+                    [self actionHandler:action];
+                }];
+                [self.alertController addAction:customAction];
+            }
+        }
+    
+        dispatch_async(dispatch_get_main_queue(), ^{
+            UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
+            while (root.presentedViewController != nil) {
+                root = root.presentedViewController;
+            }
+          
+            /* On iPad, UIAlertController presents a popover view rather than an action sheet like on iPhone. We must provide the location
+            of the location to show the popover in this case. For simplicity, we'll just display it on the bottom center of the screen
+            to mimic an action sheet */
+            self.alertController.popoverPresentationController.sourceView = root.view;
+            self.alertController.popoverPresentationController.sourceRect = CGRectMake(root.view.bounds.size.width / 2.0, root.view.bounds.size.height, 1.0, 1.0);
+            [root presentViewController:self.alertController animated:YES completion:nil];
+        });
     }
+    else { // iOS 7 support
+        UIActionSheet *popup = [[UIActionSheet alloc] initWithTitle:title delegate:self cancelButtonTitle:cancelTitle destructiveButtonTitle:nil otherButtonTitles:takePhotoButtonTitle, chooseFromLibraryButtonTitle, nil];
     
-    dispatch_async(dispatch_get_main_queue(), ^{
-        UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
-        while (root.presentedViewController != nil) {
-          root = root.presentedViewController;
+        if ([self.options objectForKey:@"customButtons"] && [[self.options objectForKey:@"customButtons"] isKindOfClass:[NSDictionary class]]) {
+            self.customButtons = [self.options objectForKey:@"customButtons"];
+            for (NSString *key in self.customButtons) {
+                [popup addButtonWithTitle:key];
+            }
         }
     
-        /* On iPad, UIAlertController presents a popover view rather than an action sheet like on iPhone. We must provide the location
-           of the location to show the popover in this case. For simplicity, we'll just display it on the bottom center of the screen
-           to mimic an action sheet */
-        self.alertController.popoverPresentationController.sourceView = root.view;
-        self.alertController.popoverPresentationController.sourceRect = CGRectMake(root.view.bounds.size.width / 2.0, root.view.bounds.size.height, 1.0, 1.0);
-        [root presentViewController:self.alertController animated:YES completion:nil];
-    });
+        popup.tag = 1;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
+            while (root.presentedViewController != nil) {
+                root = root.presentedViewController;
+            }
+            [popup showInView:root.view];
+        });
+    }
 }
 
 - (void)launchImagePicker:(RNImagePickerTarget)target options:(NSDictionary *)options
@@ -117,10 +137,32 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     for (NSString *key in options.keyEnumerator) { // Replace default options
         [self.options setValue:options[key] forKey:key];
     }
-    
     [self launchImagePicker:target];
 }
 
+// iOS 7 Handler
+- (void)actionSheet:(UIActionSheet *)popup clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (popup.tag == 1) {
+        if (buttonIndex == [popup cancelButtonIndex]) {
+            self.callback(@[@{@"didCancel": @YES}]);
+            return;
+        }
+        switch (buttonIndex) {
+            case 0:
+                [self launchImagePicker:RNImagePickerTargetCamera];
+                break;
+            case 1:
+                [self launchImagePicker:RNImagePickerTargetLibrarySingleImage];
+                break;
+            default:
+                self.callback(@[@{@"customButton": [self.customButtons allKeys][buttonIndex - 2]}]);
+                break;
+        }
+    }
+}
+
+// iOS 8+ Handler
 - (void)actionHandler:(UIAlertAction *)action
 {
     // If button title is one of the keys in the customButtons dictionary return the value as a callback
