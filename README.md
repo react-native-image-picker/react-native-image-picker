@@ -193,7 +193,7 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
   });
 
   // Open Image Library:
-  UIImagePickerManager.launchImageLibrary(options, response)  => {
+  UIImagePickerManager.launchImageLibrary(options, (response)  => {
     // Same code as in above section!
   });
   ```
