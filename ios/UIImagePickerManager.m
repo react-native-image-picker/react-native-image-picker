@@ -1,5 +1,6 @@
 #import "UIImagePickerManager.h"
 #import "RCTConvert.h"
+#import <AssetsLibrary/AssetsLibrary.h>
 
 @import MobileCoreServices;
 
@@ -274,6 +275,48 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         fileName = videoURL.lastPathComponent;
     }
     
+    NSURL *imageURL = [info valueForKey:UIImagePickerControllerReferenceURL];
+    NSString *imageURLString = [imageURL absoluteString];
+
+    if([imageURLString containsString:@"ext=GIF"]) {
+        NSURL *imageURL = [info valueForKey:UIImagePickerControllerReferenceURL];
+        ALAssetsLibraryAssetForURLResultBlock resultblock = ^(ALAsset *asset)
+        {
+            ALAssetRepresentation *rep = [asset defaultRepresentation];
+            Byte *buffer = (Byte*)malloc(rep.size);
+            NSUInteger buffered = [rep getBytes:buffer fromOffset:0.0 length:rep.size error:nil];
+            NSData *data = [NSData dataWithBytesNoCopy:buffer length:buffered freeWhenDone:YES];
+            NSString *ImageUUID = [[NSUUID UUID] UUIDString];
+            NSString *ImageName = [ImageUUID stringByAppendingString:@".gif"];
+            NSString* path = [[NSTemporaryDirectory()stringByStandardizingPath] stringByAppendingPathComponent:ImageName];
+            [data writeToFile:path atomically:YES];
+            NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
+            [response setObject:@(image.size.width) forKey:@"width"];
+            [response setObject:@(image.size.height) forKey:@"height"];
+            BOOL vertical = (image.size.width < image.size.height) ? YES : NO;
+            [response setObject:@(vertical) forKey:@"isVertical"];
+            if (![[self.options objectForKey:@"noData"] boolValue]) {
+                NSString *dataString = [data base64EncodedStringWithOptions:0];
+                [response setObject:dataString forKey:@"data"];
+            }
+            NSString *fileURL = [[NSURL fileURLWithPath:path] absoluteString];
+            [response setObject:fileURL forKey:@"uri"];
+            self.callback(@[response]);
+        };
+
+        ALAssetsLibraryAccessFailureBlock failureBlock = ^(NSError *error)
+        {
+            self.callback(@[@{@"error": error.localizedFailureReason}]);
+        };
+
+        ALAssetsLibrary* assetslibrary = [[ALAssetsLibrary alloc] init];
+        [assetslibrary assetForURL:imageURL
+                       resultBlock:resultblock
+                      failureBlock:failureBlock];
+
+        return;
+    }
+
     // This will be the default URL
     path = [[NSTemporaryDirectory()stringByStandardizingPath] stringByAppendingPathComponent:fileName];
     
