@@ -132,15 +132,6 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     }
 }
 
-- (void)launchImagePicker:(RNImagePickerTarget)target options:(NSDictionary *)options
-{
-    self.options = [NSMutableDictionary dictionaryWithDictionary:self.defaultOptions]; // Set default options
-    for (NSString *key in options.keyEnumerator) { // Replace default options
-        [self.options setValue:options[key] forKey:key];
-    }
-    [self launchImagePicker:target];
-}
-
 // iOS 7 Handler
 - (void)actionSheet:(UIActionSheet *)popup clickedButtonAtIndex:(NSInteger)buttonIndex
 {
@@ -172,13 +163,22 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         self.callback(@[@{@"customButton": customButtonStr}]);
         return;
     }
-
+    
     if ([action.title isEqualToString:[self.options valueForKey:@"takePhotoButtonTitle"]]) { // Take photo
         [self launchImagePicker:RNImagePickerTargetCamera];
     }
     else if ([action.title isEqualToString:[self.options valueForKey:@"chooseFromLibraryButtonTitle"]]) { // Choose from library
         [self launchImagePicker:RNImagePickerTargetLibrarySingleImage];
     }
+}
+
+- (void)launchImagePicker:(RNImagePickerTarget)target options:(NSDictionary *)options
+{
+    self.options = [NSMutableDictionary dictionaryWithDictionary:self.defaultOptions]; // Set default options
+    for (NSString *key in options.keyEnumerator) { // Replace default options
+        [self.options setValue:options[key] forKey:key];
+    }
+    [self launchImagePicker:target];
 }
 
 - (void)launchImagePicker:(RNImagePickerTarget)target
