@@ -270,6 +270,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
             && quality == 100) {
         response.putInt("width", initialWidth);
         response.putInt("height", initialHeight);
+    } else if (realPath == null) {
+      response.putString("error", "could not resize image");
+      mCallback.invoke(response);
+      return;
     } else {
         uri = getResizedImage(getRealPathFromURI(uri), initialWidth, initialHeight);
         realPath = getRealPathFromURI(uri);
