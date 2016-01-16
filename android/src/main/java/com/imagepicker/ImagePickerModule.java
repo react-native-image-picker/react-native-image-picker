@@ -236,24 +236,26 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         return;
     }
 
-    try {
-        ExifInterface exif = new ExifInterface(realPath);
-        int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
-        boolean isVertical = true ;
-        switch (orientation) {
-            case ExifInterface.ORIENTATION_ROTATE_270:
-                isVertical = false ;
-                break;
-            case ExifInterface.ORIENTATION_ROTATE_90:
-                isVertical = false ;
-                break;
-        }
-        response.putBoolean("isVertical", isVertical);
-    } catch (IOException e) {
-        e.printStackTrace();
-        response.putString("error", e.getMessage());
-        mCallback.invoke(response);
-        return;
+    if (realPath != null) {
+      try {
+          ExifInterface exif = new ExifInterface(realPath);
+          int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+          boolean isVertical = true ;
+          switch (orientation) {
+              case ExifInterface.ORIENTATION_ROTATE_270:
+                  isVertical = false ;
+                  break;
+              case ExifInterface.ORIENTATION_ROTATE_90:
+                  isVertical = false ;
+                  break;
+          }
+          response.putBoolean("isVertical", isVertical);
+      } catch (IOException e) {
+          e.printStackTrace();
+          response.putString("error", e.getMessage());
+          mCallback.invoke(response);
+          return;
+      }
     }
 
     BitmapFactory.Options options = new BitmapFactory.Options();
@@ -268,6 +270,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
             && quality == 100) {
         response.putInt("width", initialWidth);
         response.putInt("height", initialHeight);
+    } else if (realPath == null) {
+      response.putString("error", "could not resize image");
+      mCallback.invoke(response);
+      return;
     } else {
         uri = getResizedImage(getRealPathFromURI(uri), initialWidth, initialHeight);
         realPath = getRealPathFromURI(uri);
