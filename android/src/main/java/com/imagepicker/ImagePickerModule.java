@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.ArrayList;
 import java.io.FileOutputStream;
@@ -220,6 +221,18 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     : data.getData();
 
     String realPath = getRealPathFromURI(uri);
+    if (realPath ==  null) {
+      try {
+        File file = createFileFromURI(uri);
+        realPath = file.getAbsolutePath();
+        uri = Uri.fromFile(file);
+      }
+      catch(Exception e) {
+        response.putString("error", "Could not read photo");
+        mCallback.invoke(response);
+        return;
+      }
+    }
 
     boolean isUrl = true;
     try {
@@ -298,6 +311,26 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         cursor.close();
     }
     return result;
+  }
+
+  private File createFileFromURI(Uri uri) throws Exception {
+    File file = new File(mReactContext.getCacheDir(), "photo-" + uri.getLastPathSegment());
+    InputStream input = mReactContext.getContentResolver().openInputStream(uri);
+    OutputStream output = new FileOutputStream(file);
+
+    try {
+      byte[] buffer = new byte[4 * 1024];
+      int read;
+      while ((read = input.read(buffer)) != -1) {
+          output.write(buffer, 0, read);
+      }
+      output.flush();
+    } finally {
+      output.close();
+      input.close();
+    }
+
+    return file;
   }
 
   private String getBase64StringFromFile (String absoluteFilePath) {
