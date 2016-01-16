@@ -234,21 +234,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
       }
     }
 
-    boolean isUrl = true;
-    try {
-        URL url = new URL(realPath);
-    }
-    catch (MalformedURLException e) {
-        isUrl = false;
-    }
-    if (isUrl) {
-        // @todo handle url as well (Facebook image, etc..)
-        response.putString("uri", uri.toString());
-        response.putString("urlPath", realPath);
-        mCallback.invoke(response);
-        return;
-    }
-
     try {
         ExifInterface exif = new ExifInterface(realPath);
         int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
