@@ -153,7 +153,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
     Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
     if (cameraIntent.resolveActivity(mMainActivity.getPackageManager()) == null) {
-        response.putString("error", "error resolving activity");
+        response.putString("error", "Cannot launch camera");
         callback.invoke(response);
         return;
     }
@@ -180,8 +180,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         mMainActivity.startActivityForResult(cameraIntent, REQUEST_LAUNCH_CAMERA);
     }
     catch(ActivityNotFoundException e) {
-        response.putString("error", "Camera not available");
-        callback.invoke(response);
+        e.printStackTrace();
     }
   }
 
@@ -205,14 +204,20 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
     Intent libraryIntent = new Intent(Intent.ACTION_PICK,
         android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+
+    if (libraryIntent.resolveActivity(mMainActivity.getPackageManager()) == null) {
+        response.putString("error", "Cannot launch photo library");
+        callback.invoke(response);
+        return;
+    }
+
     mCallback = callback;
 
     try {
         mMainActivity.startActivityForResult(libraryIntent, REQUEST_LAUNCH_IMAGE_LIBRARY);
     }
     catch(ActivityNotFoundException e) {
-        response.putString("error", "Photo library not available");
-        callback.invoke(response);
+        e.printStackTrace();
     }
   }
 
