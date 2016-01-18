@@ -221,7 +221,18 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     : data.getData();
 
     String realPath = getRealPathFromURI(uri);
-    if (realPath ==  null) {
+    boolean isUrl = false;
+
+    if (realPath != null) {
+      try {
+        URL url = new URL(realPath);
+        isUrl = true;
+      } catch (MalformedURLException e) {
+        // not a url
+      }
+    }
+
+    if (realPath ==  null || isUrl) {
       try {
         File file = createFileFromURI(uri);
         realPath = file.getAbsolutePath();
