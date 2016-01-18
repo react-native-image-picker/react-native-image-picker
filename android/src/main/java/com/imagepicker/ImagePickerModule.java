@@ -229,6 +229,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
       }
       catch(Exception e) {
         response.putString("error", "Could not read photo");
+        response.putString("uri", uri.toString());
         mCallback.invoke(response);
         return;
       }
