@@ -287,7 +287,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     }
 
     response.putString("uri", uri.toString());
-    response.putString("urlPath", realPath);
+    response.putString("path", realPath);
 
     if (!noData) {
         response.putString("data", getBase64StringFromFile(realPath));
