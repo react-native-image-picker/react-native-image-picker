@@ -1,6 +1,7 @@
 package com.imagepicker;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
@@ -174,7 +175,14 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(imageFile));
     mCameraCaptureURI = Uri.fromFile(imageFile);
     mCallback = callback;
-    mMainActivity.startActivityForResult(cameraIntent, REQUEST_LAUNCH_CAMERA);
+
+    try {
+        mMainActivity.startActivityForResult(cameraIntent, REQUEST_LAUNCH_CAMERA);
+    }
+    catch(ActivityNotFoundException e) {
+        response.putString("error", "Camera not available");
+        callback.invoke(response);
+    }
   }
 
   // NOTE: Currently not reentrant / doesn't support concurrent requests
@@ -198,7 +206,14 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     Intent libraryIntent = new Intent(Intent.ACTION_PICK,
         android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
     mCallback = callback;
-    mMainActivity.startActivityForResult(libraryIntent, REQUEST_LAUNCH_IMAGE_LIBRARY);
+
+    try {
+        mMainActivity.startActivityForResult(libraryIntent, REQUEST_LAUNCH_IMAGE_LIBRARY);
+    }
+    catch(ActivityNotFoundException e) {
+        response.putString("error", "Photo library not available");
+        callback.invoke(response);
+    }
   }
 
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
