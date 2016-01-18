@@ -153,7 +153,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
     Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
     if (cameraIntent.resolveActivity(mMainActivity.getPackageManager()) == null) {
-        response.putString("error", "error resolving activity");
+        response.putString("error", "Cannot launch camera");
         callback.invoke(response);
         return;
     }
