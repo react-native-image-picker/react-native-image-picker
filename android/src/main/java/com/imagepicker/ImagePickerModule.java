@@ -180,8 +180,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         mMainActivity.startActivityForResult(cameraIntent, REQUEST_LAUNCH_CAMERA);
     }
     catch(ActivityNotFoundException e) {
-        response.putString("error", "Camera not available");
-        callback.invoke(response);
+        e.printStackTrace();
     }
   }
 
@@ -211,8 +210,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         mMainActivity.startActivityForResult(libraryIntent, REQUEST_LAUNCH_IMAGE_LIBRARY);
     }
     catch(ActivityNotFoundException e) {
-        response.putString("error", "Photo library not available");
-        callback.invoke(response);
+        e.printStackTrace();
     }
   }
 
