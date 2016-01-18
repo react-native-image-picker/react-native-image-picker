@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.ArrayList;
 import java.io.FileOutputStream;
@@ -240,20 +241,29 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     : data.getData();
 
     String realPath = getRealPathFromURI(uri);
+    boolean isUrl = false;
 
-    boolean isUrl = true;
-    try {
+    if (realPath != null) {
+      try {
         URL url = new URL(realPath);
+        isUrl = true;
+      } catch (MalformedURLException e) {
+        // not a url
+      }
     }
-    catch (MalformedURLException e) {
-        isUrl = false;
-    }
-    if (isUrl) {
-        // @todo handle url as well (Facebook image, etc..)
+
+    if (realPath ==  null || isUrl) {
+      try {
+        File file = createFileFromURI(uri);
+        realPath = file.getAbsolutePath();
+        uri = Uri.fromFile(file);
+      }
+      catch(Exception e) {
+        response.putString("error", "Could not read photo");
         response.putString("uri", uri.toString());
-        response.putString("urlPath", realPath);
         mCallback.invoke(response);
         return;
+      }
     }
 
     try {
@@ -297,6 +307,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     }
 
     response.putString("uri", uri.toString());
+    response.putString("path", realPath);
 
     if (!noData) {
         response.putString("data", getBase64StringFromFile(realPath));
@@ -317,6 +328,26 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         cursor.close();
     }
     return result;
+  }
+
+  private File createFileFromURI(Uri uri) throws Exception {
+    File file = new File(mReactContext.getCacheDir(), "photo-" + uri.getLastPathSegment());
+    InputStream input = mReactContext.getContentResolver().openInputStream(uri);
+    OutputStream output = new FileOutputStream(file);
+
+    try {
+      byte[] buffer = new byte[4 * 1024];
+      int read;
+      while ((read = input.read(buffer)) != -1) {
+          output.write(buffer, 0, read);
+      }
+      output.flush();
+    } finally {
+      output.close();
+      input.close();
+    }
+
+    return file;
   }
 
   private String getBase64StringFromFile (String absoluteFilePath) {
