@@ -204,6 +204,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
     Intent libraryIntent = new Intent(Intent.ACTION_PICK,
         android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+
+    if (libraryIntent.resolveActivity(mMainActivity.getPackageManager()) == null) {
+        response.putString("error", "Cannot launch photo library");
+        callback.invoke(response);
+        return;
+    }
+
     mCallback = callback;
 
     try {
