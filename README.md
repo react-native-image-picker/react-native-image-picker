@@ -44,9 +44,7 @@ dependencies {
 
     <uses-permission android:name="android.permission.INTERNET" />
     
-    <!-- add following permissions and the min targeted version -->
-    <uses-sdk
-            android:minSdkVersion="11"/>
+    <!-- add following permissions -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-feature android:name="android.hardware.camera"
