@@ -127,9 +127,9 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
     maxWidth: 100, // photos only
     maxHeight: 100, // photos only
     quality: 0.2, // photos only
-    allowsEditing: false, // Built in iOS functionality to resize/reposition the image
+    allowsEditing: false, // Built in functionality to resize/reposition the image
     noData: false, // photos only - disables the base64 `data` field from being generated (greatly improves performance on large photos)
-    storageOptions: { // if this key is provided, the image will get saved in the documents directory (rather than a temporary directory)
+    storageOptions: { // if this key is provided, the image will get saved in the documents/pictures directory (rather than a temporary directory)
       skipBackup: true, // image will NOT be backed up to icloud
       path: 'images' // will save image at /Documents/images rather than the root
     }
@@ -210,6 +210,6 @@ videoQuality | OK | -
 maxWidth | OK | OK
 maxHeight | OK | OK
 quality | OK | OK
-allowsEditing | OK | -
+allowsEditing | OK | OK
 noData | OK | OK
-storageOptions | OK | -
+storageOptions | OK | if this key is provided, the image will get saved in the pictures directory
