@@ -152,6 +152,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     if (options.hasKey("quality")) {
         quality = (int)(options.getDouble("quality") * 100);
     }
+    tmpImage = true;
+    if (options.hasKey("storageOptions")) {
+        tmpImage = false;
+    }
 
     Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
     if (cameraIntent.resolveActivity(mMainActivity.getPackageManager()) == null) {
@@ -167,7 +171,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     try {
         // Make sure the Pictures directory exists.
         path.mkdirs();
-        imageFile = File.createTempFile("image_picker_capture_", ".jpg", path);
+        imageFile = File.createTempFile("capture", ".jpg", path);
     } catch (IOException e) {
         e.printStackTrace();
         response.putString("error", e.getMessage());
@@ -336,6 +340,16 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     return result;
   }
 
+  /**
+   * Create a file from uri to allow image picking of image in disk cache
+   * (Exemple: facebook image, google image etc..)
+   * 
+   * @doc => https://github.com/nostra13/Android-Universal-Image-Loader#load--display-task-flow
+   * 
+   * @param uri
+   * @return File
+   * @throws Exception 
+   */
   private File createFileFromURI(Uri uri) throws Exception {
     File file = new File(mReactContext.getCacheDir(), "photo-" + uri.getLastPathSegment());
     InputStream input = mReactContext.getContentResolver().openInputStream(uri);
@@ -386,7 +400,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
    * @param realPath
    * @param initialWidth
    * @param initialHeight
-   * @return uri of resized file
+   * @return resized file
    */
   private File getResizedImage (final String realPath, final int initialWidth, final int initialHeight) {
     final BitmapFactory.Options options = new BitmapFactory.Options();
@@ -435,16 +449,19 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     return f;
   }
 
+  /**
+   * Create a file to receive the resized image data 
+   *
+   * @return empty file
+   */
   private File createFileForResize() {
+    String filename = "resized-" + UUID.randomUUID().toString() + ".jpg";
     if (tmpImage) {
-      String filname = "resized-" + UUID.randomUUID().toString() + ".jpg";
-      return new File(mReactContext.getCacheDir(), filname);
-    }
-    else {
-      String filname = UUID.randomUUID().toString();
+      return new File(mReactContext.getCacheDir(), filename);
+    } else {
       File path = Environment.getExternalStoragePublicDirectory(
           Environment.DIRECTORY_PICTURES);
-      File f = new File(path, filname +".jpg");
+      File f = new File(path, filename);
 
       try {
         path.mkdirs();
