@@ -41,14 +41,17 @@ import java.net.MalformedURLException;
 public class ImagePickerModule extends ReactContextBaseJavaModule {
   static final int REQUEST_LAUNCH_CAMERA = 1;
   static final int REQUEST_LAUNCH_IMAGE_LIBRARY = 2;
+  static final int REQUEST_IMAGE_CROPPING = 3;
 
   private final ReactApplicationContext mReactContext;
   private final Activity mMainActivity;
 
   private Uri mCameraCaptureURI;
+  private Uri mCropImagedUri;
   private Callback mCallback;
   private Boolean noData = false;
   private Boolean tmpImage;
+  private Boolean allowEditing = false;
   private int maxWidth = 0;
   private int maxHeight = 0;
   private int quality = 100;
@@ -156,6 +159,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     if (options.hasKey("storageOptions")) {
         tmpImage = false;
     }
+    if (options.hasKey("allowsEditing")) {
+        allowEditing = options.getBoolean("allowsEditing");
+    }
 
     Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
     if (cameraIntent.resolveActivity(mMainActivity.getPackageManager()) == null) {
@@ -211,6 +217,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     if (options.hasKey("storageOptions")) {
         tmpImage = false;
     }
+    if (options.hasKey("allowsEditing")) {
+        allowEditing = options.getBoolean("allowsEditing");
+    }
 
     Intent libraryIntent = new Intent(Intent.ACTION_PICK,
         android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
@@ -225,8 +234,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
     try {
         mMainActivity.startActivityForResult(libraryIntent, REQUEST_LAUNCH_IMAGE_LIBRARY);
-    }
-    catch(ActivityNotFoundException e) {
+    } catch(ActivityNotFoundException e) {
         e.printStackTrace();
     }
   }
@@ -234,7 +242,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
     //robustness code
     if (mCallback == null || (mCameraCaptureURI == null && requestCode == REQUEST_LAUNCH_CAMERA)
-            || (requestCode != REQUEST_LAUNCH_CAMERA && requestCode != REQUEST_LAUNCH_IMAGE_LIBRARY)) {
+            || (requestCode != REQUEST_LAUNCH_CAMERA && requestCode != REQUEST_LAUNCH_IMAGE_LIBRARY
+            && requestCode != REQUEST_IMAGE_CROPPING)) {
       return;
     }
 
@@ -245,9 +254,36 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
       return;
     }
 
-    Uri uri = (requestCode == REQUEST_LAUNCH_CAMERA)
-    ? mCameraCaptureURI
-    : data.getData();
+    Uri uri;
+    switch (requestCode)
+    {
+        case REQUEST_LAUNCH_CAMERA:
+            uri = mCameraCaptureURI;
+            break;
+        case REQUEST_IMAGE_CROPPING:
+            uri = mCropImagedUri;
+            break;
+        default:
+            uri = data.getData();
+    }
+
+    if (requestCode != REQUEST_IMAGE_CROPPING && allowEditing == true) {
+        Intent cropIntent = new Intent("com.android.camera.action.CROP"); 
+        cropIntent.setDataAndType(uri, "image/*");
+        cropIntent.putExtra("crop", "true");
+
+        // we create a file to save the result
+        File imageFile = createNewFile();
+        mCropImagedUri = Uri.fromFile(imageFile);
+        cropIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCropImagedUri);
+
+        try {
+            mMainActivity.startActivityForResult(cropIntent, REQUEST_IMAGE_CROPPING);
+        } catch(ActivityNotFoundException e) {
+            e.printStackTrace();
+        }
+        return;
+    }
 
     String realPath = getRealPathFromURI(uri);
     boolean isUrl = false;
@@ -428,7 +464,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     scaledphoto.compress(Bitmap.CompressFormat.JPEG, quality, bytes);
 
-    File f = createFileForResize();
+    File f = createNewFile();
     FileOutputStream fo;
     try {
         fo = new FileOutputStream(f);
@@ -450,12 +486,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
   }
 
   /**
-   * Create a file to receive the resized image data 
+   * Create a new file
    *
-   * @return empty file
+   * @return an empty file
    */
-  private File createFileForResize() {
-    String filename = "resized-" + UUID.randomUUID().toString() + ".jpg";
+  private File createNewFile() {
+    String filename = "image-" + UUID.randomUUID().toString() + ".jpg";
     if (tmpImage) {
       return new File(mReactContext.getCacheDir(), filename);
     } else {
