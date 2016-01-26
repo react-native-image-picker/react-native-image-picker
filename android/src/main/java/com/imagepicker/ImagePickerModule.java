@@ -48,6 +48,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
   private Uri mCameraCaptureURI;
   private Callback mCallback;
   private Boolean noData = false;
+  private Boolean tmpImage;
   private int maxWidth = 0;
   private int maxHeight = 0;
   private int quality = 100;
@@ -202,6 +203,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     if (options.hasKey("quality")) {
         quality = (int)(options.getDouble("quality") * 100);
     }
+    tmpImage = true;
+    if (options.hasKey("storageOptions")) {
+        tmpImage = false;
+    }
 
     Intent libraryIntent = new Intent(Intent.ACTION_PICK,
         android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
@@ -299,8 +304,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         response.putInt("width", initialWidth);
         response.putInt("height", initialHeight);
     } else {
-        uri = getResizedImage(getRealPathFromURI(uri), initialWidth, initialHeight);
-        realPath = getRealPathFromURI(uri);
+        File resized = getResizedImage(getRealPathFromURI(uri), initialWidth, initialHeight);
+        realPath = resized.getAbsolutePath();
+        uri = Uri.fromFile(resized);
         photo = BitmapFactory.decodeFile(realPath, options);
         response.putInt("width", options.outWidth);
         response.putInt("height", options.outHeight);
@@ -382,7 +388,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
    * @param initialHeight
    * @return uri of resized file
    */
-  private Uri getResizedImage (final String realPath, final int initialWidth, final int initialHeight) {
+  private File getResizedImage (final String realPath, final int initialWidth, final int initialHeight) {
     final BitmapFactory.Options options = new BitmapFactory.Options();
     options.inSampleSize = 8;
     Bitmap photo = BitmapFactory.decodeFile(realPath, options);
@@ -407,18 +413,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     scaledphoto = Bitmap.createScaledBitmap(photo, newWidth, newHeight, true);
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     scaledphoto.compress(Bitmap.CompressFormat.JPEG, quality, bytes);
-    String filname = UUID.randomUUID().toString();
-    File path = Environment.getExternalStoragePublicDirectory(
-        Environment.DIRECTORY_PICTURES);
-    File f = new File(path, filname +".jpg");
-    try {
-        // Make sure the Pictures directory exists.
-        path.mkdirs();
 
-        f.createNewFile();
-    } catch (IOException e) {
-        e.printStackTrace();
-    }
+    File f = createFileForResize();
     FileOutputStream fo;
     try {
         fo = new FileOutputStream(f);
@@ -436,6 +432,28 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         photo.recycle();
         photo = null;
     }
-    return Uri.fromFile(f);
+    return f;
+  }
+
+  private File createFileForResize() {
+    if (tmpImage) {
+      String filname = "resized-" + UUID.randomUUID().toString() + ".jpg";
+      return new File(mReactContext.getCacheDir(), filname);
+    }
+    else {
+      String filname = UUID.randomUUID().toString();
+      File path = Environment.getExternalStoragePublicDirectory(
+          Environment.DIRECTORY_PICTURES);
+      File f = new File(path, filname +".jpg");
+
+      try {
+        path.mkdirs();
+        f.createNewFile();
+      }
+      catch (IOException e) {
+        e.printStackTrace();
+      }
+      return f;
+    }
   }
 }
