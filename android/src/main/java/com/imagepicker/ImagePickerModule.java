@@ -15,6 +15,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Bitmap;
 import android.media.ExifInterface;
 import android.content.ComponentName;
+import android.graphics.Matrix;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
@@ -55,6 +56,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
   private int maxWidth = 0;
   private int maxHeight = 0;
   private int quality = 100;
+  private int angle = 0;
+  private Boolean forceAngle = false;
   WritableMap response;
 
   public ImagePickerModule(ReactApplicationContext reactContext, Activity mainActivity) {
@@ -162,6 +165,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     if (options.hasKey("allowsEditing")) {
         allowEditing = options.getBoolean("allowsEditing");
     }
+    forceAngle = false;
+    if (options.hasKey("angle")) {
+        forceAngle = true;
+        angle = options.getInt("angle");
+    }
 
     Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
     if (cameraIntent.resolveActivity(mMainActivity.getPackageManager()) == null) {
@@ -219,6 +227,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     }
     if (options.hasKey("allowsEditing")) {
         allowEditing = options.getBoolean("allowsEditing");
+    }
+    forceAngle = false;
+    if (options.hasKey("angle")) {
+        forceAngle = true;
+        angle = options.getInt("angle");
     }
 
     Intent libraryIntent = new Intent(Intent.ACTION_PICK,
@@ -311,6 +324,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
       }
     }
 
+    int CurrentAngle = 0;
     try {
         ExifInterface exif = new ExifInterface(realPath);
         int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
@@ -318,9 +332,14 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         switch (orientation) {
             case ExifInterface.ORIENTATION_ROTATE_270:
                 isVertical = false ;
+                CurrentAngle = 270;
                 break;
             case ExifInterface.ORIENTATION_ROTATE_90:
                 isVertical = false ;
+                CurrentAngle = 90;
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                CurrentAngle = 180;
                 break;
         }
         response.putBoolean("isVertical", isVertical);
@@ -340,7 +359,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     // don't create a new file if contraint are respected
     if (((initialWidth < maxWidth && maxWidth > 0) || maxWidth == 0)
             && ((initialHeight < maxHeight && maxHeight > 0) || maxHeight == 0)
-            && quality == 100) {
+            && quality == 100 && (!forceAngle || (forceAngle && CurrentAngle == angle))) {
         response.putInt("width", initialWidth);
         response.putInt("height", initialHeight);
     } else {
@@ -430,8 +449,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
   }
 
   /**
-   * Create a resized image to fill the maxWidth and maxHeight values and the
-   * quality value
+   * Create a resized image to fill the maxWidth/maxHeight values,the
+   * quality value and the angle value
    *
    * @param realPath
    * @param initialWidth
@@ -439,13 +458,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
    * @return resized file
    */
   private File getResizedImage (final String realPath, final int initialWidth, final int initialHeight) {
-    final BitmapFactory.Options options = new BitmapFactory.Options();
-    options.inSampleSize = 8;
-    Bitmap photo = BitmapFactory.decodeFile(realPath, options);
+    Bitmap photo = BitmapFactory.decodeFile(realPath);
 
     Bitmap scaledphoto = null;
     if (maxWidth == 0) {
-        maxWidth  = initialWidth;
+        maxWidth = initialWidth;
     }
     if (maxHeight == 0) {
         maxHeight = initialHeight;
@@ -457,10 +474,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
             ? widthRatio
             : heightRatio;
 
-    int newWidth = (int)(initialWidth * ratio);
-    int newHeight = (int)(initialHeight * ratio);
-
-    scaledphoto = Bitmap.createScaledBitmap(photo, newWidth, newHeight, true);
+    Matrix matrix = new Matrix();
+    matrix.postRotate(angle);
+    matrix.postScale((float)ratio, (float)ratio);
+    
+    scaledphoto = Bitmap.createBitmap(photo, 0, 0, photo.getWidth(), photo.getHeight(), matrix, true);
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     scaledphoto.compress(Bitmap.CompressFormat.JPEG, quality, bytes);
 

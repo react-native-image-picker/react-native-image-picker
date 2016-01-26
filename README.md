@@ -127,6 +127,7 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
     maxWidth: 100, // photos only
     maxHeight: 100, // photos only
     quality: 0.2, // photos only
+    angle: 0, // photos only
     allowsEditing: false, // Built in functionality to resize/reposition the image
     noData: false, // photos only - disables the base64 `data` field from being generated (greatly improves performance on large photos)
     storageOptions: { // if this key is provided, the image will get saved in the documents/pictures directory (rather than a temporary directory)
@@ -207,6 +208,7 @@ customButtons | OK | -
 cameraType | OK | -
 mediaType | OK | -
 videoQuality | OK | -
+angle | - | OK
 maxWidth | OK | OK
 maxHeight | OK | OK
 quality | OK | OK
