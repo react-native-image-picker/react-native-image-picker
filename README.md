@@ -6,7 +6,6 @@ A React Native module that allows you to use native UI to select a photo/video f
 <img title="iOS" src="https://github.com/marcshilling/react-native-image-picker/blob/master/images/ios-image.png" width="50%">
 
 ### Android
-**Requires Api 11 or higher for Android**
 
 <img title="Android" src="https://github.com/marcshilling/react-native-image-picker/blob/master/images/android-image.png" width="50%">
 
@@ -45,9 +44,7 @@ dependencies {
 
     <uses-permission android:name="android.permission.INTERNET" />
     
-    <!-- add following permissions and the min targeted version -->
-    <uses-sdk
-            android:minSdkVersion="11"/>
+    <!-- add following permissions -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-feature android:name="android.hardware.camera"
@@ -130,9 +127,10 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
     maxWidth: 100, // photos only
     maxHeight: 100, // photos only
     quality: 0.2, // photos only
-    allowsEditing: false, // Built in iOS functionality to resize/reposition the image
+    angle: 0, // photos only
+    allowsEditing: false, // Built in functionality to resize/reposition the image
     noData: false, // photos only - disables the base64 `data` field from being generated (greatly improves performance on large photos)
-    storageOptions: { // if this key is provided, the image will get saved in the documents directory (rather than a temporary directory)
+    storageOptions: { // if this key is provided, the image will get saved in the documents/pictures directory (rather than a temporary directory)
       skipBackup: true, // image will NOT be backed up to icloud
       path: 'images' // will save image at /Documents/images rather than the root
     }
@@ -193,7 +191,7 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
   });
 
   // Open Image Library:
-  UIImagePickerManager.launchImageLibrary(options, response)  => {
+  UIImagePickerManager.launchImageLibrary(options, (response)  => {
     // Same code as in above section!
   });
   ```
@@ -210,9 +208,10 @@ customButtons | OK | -
 cameraType | OK | -
 mediaType | OK | -
 videoQuality | OK | -
+angle | - | OK
 maxWidth | OK | OK
 maxHeight | OK | OK
 quality | OK | OK
-allowsEditing | OK | -
+allowsEditing | OK | OK
 noData | OK | OK
-storageOptions | OK | -
+storageOptions | OK | if this key is provided, the image will get saved in the pictures directory
