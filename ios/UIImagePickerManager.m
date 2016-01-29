@@ -288,13 +288,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                 path = [newPath stringByAppendingPathComponent:fileName];
             }
         }
-        
-        if ([[storageOptions objectForKey:@"skipBackup"] boolValue]) {
-            [self addSkipBackupAttributeToItemAtPath:path]; // Don't back up the file to iCloud
-        }
     }
-    
-    
     
     // Create the response object
     NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
@@ -342,7 +336,6 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         
         image = [self fixOrientation:image];  // Rotate the image for upload to web
         
-        
         // If needed, downscale image
         float maxWidth = image.size.width;
         float maxHeight = image.size.height;
@@ -353,7 +346,6 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             maxHeight = [[self.options valueForKey:@"maxHeight"] floatValue];
         }
         image = [self downscaleImageIfNecessary:image maxWidth:maxWidth maxHeight:maxHeight];
-        
         
         NSData *data;
         if ([[[self.options objectForKey:@"imageFileType"] stringValue] isEqualToString:@"png"]) {
@@ -382,20 +374,29 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         NSURL *videoURL = info[UIImagePickerControllerMediaURL];
         NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
         
+        NSFileManager *fileManager = [NSFileManager defaultManager];
         if ([fileName isEqualToString:@"capturedvideo.MOV"]) {
-            NSFileManager *fileManager = [NSFileManager defaultManager];
             if ([fileManager fileExistsAtPath:videoDestinationURL.path]) {
                 [fileManager removeItemAtURL:videoDestinationURL error:nil];
             }
-            NSError *error = nil;
-            [fileManager moveItemAtURL:videoURL toURL:videoDestinationURL error:&error];
-            if (error) {
-                self.callback(@[@{@"error": error.localizedFailureReason}]);
-                return;
-            }
+        }
+        NSError *error = nil;
+        [fileManager moveItemAtURL:videoURL toURL:videoDestinationURL error:&error];
+        if (error) {
+            self.callback(@[@{@"error": error.localizedFailureReason}]);
+            return;
         }
 
         [response setObject:videoDestinationURL.absoluteString forKey:@"uri"];
+    }
+    
+    // If storage options are provided, check the skipBackup flag
+    if ([self.options objectForKey:@"storageOptions"] && [[self.options objectForKey:@"storageOptions"] isKindOfClass:[NSDictionary class]]) {
+      NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
+
+      if ([[storageOptions objectForKey:@"skipBackup"] boolValue]) {
+        [self addSkipBackupAttributeToItemAtPath:path]; // Don't back up the file to iCloud
+      }
     }
     
     self.callback(@[response]);
