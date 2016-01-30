@@ -211,6 +211,8 @@ cameraType | OK | -
 mediaType | OK | -
 videoQuality | OK | -
 angle | - | OK
+aspectX | - | OK
+aspectY | - | OK
 maxWidth | OK | OK
 maxHeight | OK | OK
 quality | OK | OK
