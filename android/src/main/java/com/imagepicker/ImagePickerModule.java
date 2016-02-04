@@ -518,7 +518,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
     // recycle to avoid java.lang.OutOfMemoryError
     if (photo != null) {
+        scaledphoto.recycle();
         photo.recycle();
+        scaledphoto = null;
         photo = null;
     }
     return f;
