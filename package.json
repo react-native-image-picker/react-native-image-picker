@@ -25,5 +25,8 @@
     "native",
     "image",
     "picker"
-  ]
+  ],
+  "devDependencies": {
+    "react-native": "^0.19.0"
+  }
 }

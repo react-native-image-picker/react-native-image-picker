@@ -108,6 +108,16 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             to mimic an action sheet */
             self.alertController.popoverPresentationController.sourceView = root.view;
             self.alertController.popoverPresentationController.sourceRect = CGRectMake(root.view.bounds.size.width / 2.0, root.view.bounds.size.height, 1.0, 1.0);
+            
+            if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+                self.alertController.popoverPresentationController.permittedArrowDirections = 0;
+                for (id subview in self.alertController.view.subviews) {
+                    if ([subview isMemberOfClass:[UIView class]]) {
+                        ((UIView *)subview).backgroundColor = [UIColor whiteColor];
+                    }
+                }
+            }
+
             [root presentViewController:self.alertController animated:YES completion:nil];
         });
     }
