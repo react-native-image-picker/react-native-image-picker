@@ -14,8 +14,8 @@ A React Native module that allows you to use native UI to select a photo/video f
 ### iOS
 1. `npm install react-native-image-picker@latest --save`
 2. In the XCode's "Project navigator", right click on your project's Libraries folder ➜ `Add Files to <...>`
-3. Go to `node_modules` ➜ `react-native-image-picker` ➜ `ios` ➜ select `UIImagePickerManager.h` and `UIImagePickerManager.m`
-4. Make sure `UIImagePickerManager.m` is listed under 'Compile Sources' in your project's 'Build Phases' tab
+3. Go to `node_modules` ➜ `react-native-image-picker` ➜ `ios` ➜ select `RNImagePicker.xcodeproj`
+4. Add `RNImagePicker.a` to `Build Phases -> Link Binary With Libraries`
 5. Compile and have fun
 
 ### Android
