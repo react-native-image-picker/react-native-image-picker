@@ -126,6 +126,8 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
     videoQuality: 'high', // 'low', 'medium', or 'high'
     maxWidth: 100, // photos only
     maxHeight: 100, // photos only
+    aspectX: 2, // aspectX:aspectY, the cropping image's ratio of width to height
+    aspectY: 1, // aspectX:aspectY, the cropping image's ratio of width to height
     quality: 0.2, // photos only
     angle: 0, // photos only
     allowsEditing: false, // Built in functionality to resize/reposition the image
@@ -209,6 +211,8 @@ cameraType | OK | -
 mediaType | OK | -
 videoQuality | OK | -
 angle | - | OK
+aspectX | - | OK
+aspectY | - | OK
 maxWidth | OK | OK
 maxHeight | OK | OK
 quality | OK | OK

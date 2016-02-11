@@ -55,6 +55,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
   private Boolean allowEditing = false;
   private int maxWidth = 0;
   private int maxHeight = 0;
+  private int aspectX = 0;
+  private int aspectY = 0;
   private int quality = 100;
   private int angle = 0;
   private Boolean forceAngle = false;
@@ -155,6 +157,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     if (options.hasKey("maxHeight")) {
         maxHeight = options.getInt("maxHeight");
     }
+    if (options.hasKey("aspectX")) {
+        aspectX = options.getInt("aspectX");
+    }
+    if (options.hasKey("aspectY")) {
+        aspectY = options.getInt("aspectY");
+    }
     if (options.hasKey("quality")) {
         quality = (int)(options.getDouble("quality") * 100);
     }
@@ -217,6 +225,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     }
     if (options.hasKey("maxHeight")) {
         maxHeight = options.getInt("maxHeight");
+    }
+    if (options.hasKey("aspectX")) {
+        aspectX = options.getInt("aspectX");
+    }
+    if (options.hasKey("aspectY")) {
+        aspectY = options.getInt("aspectY");
     }
     if (options.hasKey("quality")) {
         quality = (int)(options.getDouble("quality") * 100);
@@ -284,6 +298,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         Intent cropIntent = new Intent("com.android.camera.action.CROP"); 
         cropIntent.setDataAndType(uri, "image/*");
         cropIntent.putExtra("crop", "true");
+
+        if (aspectX > 0 && aspectY > 0) {
+          // aspectX:aspectY, the ratio of width to height
+          cropIntent.putExtra("aspectX", aspectX);
+          cropIntent.putExtra("aspectY", aspectY);
+          cropIntent.putExtra("scale", true);
+        }
 
         // we create a file to save the result
         File imageFile = createNewFile();
@@ -497,7 +518,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
     // recycle to avoid java.lang.OutOfMemoryError
     if (photo != null) {
+        scaledphoto.recycle();
         photo.recycle();
+        scaledphoto = null;
         photo = null;
     }
     return f;
