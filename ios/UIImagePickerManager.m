@@ -258,7 +258,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     NSString *fileName;
     if ([mediaType isEqualToString:(NSString *)kUTTypeImage]) {
         NSString *tempFileName = [[NSUUID UUID] UUIDString];
-        if ([[imageURL absoluteString] rangeOfString:@"ext=GIF"].location != NSNotFound) {
+        if (imageURL && [[imageURL absoluteString] rangeOfString:@"ext=GIF"].location != NSNotFound) {
             fileName = [tempFileName stringByAppendingString:@".gif"];
         }
         else if ([[[self.options objectForKey:@"imageFileType"] stringValue] isEqualToString:@"png"]) {
@@ -313,7 +313,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         }
         
         // GIFs break when resized, so we handle them differently
-        if ([[imageURL absoluteString] rangeOfString:@"ext=GIF"].location != NSNotFound) {
+        if (imageURL && [[imageURL absoluteString] rangeOfString:@"ext=GIF"].location != NSNotFound) {
             ALAssetsLibrary* assetsLibrary = [[ALAssetsLibrary alloc] init];
             [assetsLibrary assetForURL:imageURL resultBlock:^(ALAsset *asset) {
                 ALAssetRepresentation *rep = [asset defaultRepresentation];
