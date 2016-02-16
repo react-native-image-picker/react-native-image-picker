@@ -84,12 +84,14 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
       String cancelButtonTitle = "Cancel";
 
       if (options.hasKey("takePhotoButtonTitle")
-              && !options.getString("takePhotoButtonTitle").isEmpty()) {
+              && options.getString("takePhotoButtonTitle") != null
+	          && !options.getString("takePhotoButtonTitle").isEmpty()) {
           mTitles.add(options.getString("takePhotoButtonTitle"));
           mActions.add("photo");
       }
       if (options.hasKey("chooseFromLibraryButtonTitle")
-              && !options.getString("chooseFromLibraryButtonTitle").isEmpty()) {
+              && options.getString("chooseFromLibraryButtonTitle") != null
+	          && !options.getString("chooseFromLibraryButtonTitle").isEmpty()) {
           mTitles.add(options.getString("chooseFromLibraryButtonTitle"));
           mActions.add("library");
       }
