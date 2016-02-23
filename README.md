@@ -43,7 +43,7 @@ dependencies {
     package="com.myApp">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    
+
     <!-- add following permissions -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
@@ -77,7 +77,7 @@ public class MainActivity extends ReactActivity {
     }
 
     ...
-    
+
     // AND ADD THIS WHOLE METHOD
     @Override
     public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
@@ -92,7 +92,7 @@ public class MainActivity extends ReactActivity {
 1. In your React Native javascript code, bring in the native module:
 
   ```javascript
-var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
+var ImagePickerManager = require('NativeModules').ImagePickerManager;
   ```
 2. Use it like so:
 
@@ -135,14 +135,14 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
    * response.width & response.height give you the image dimensions
    */
 
-  UIImagePickerManager.showImagePicker(options, (response) => {
+  ImagePickerManager.showImagePicker(options, (response) => {
     console.log('Response = ', response);
 
     if (response.didCancel) {
       console.log('User cancelled image picker');
     }
     else if (response.error) {
-      console.log('UIImagePickerManager Error: ', response.error);
+      console.log('ImagePickerManager Error: ', response.error);
     }
     else if (response.customButton) {
       console.log('User tapped custom button: ', response.customButton);
@@ -150,7 +150,7 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
     else {
       // You can display the image using either data:
       const source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
-      
+
       // uri (on iOS)
       const source = {uri: response.uri.replace('file://', ''), isStatic: true};
       // uri (on android)
@@ -173,12 +173,12 @@ var UIImagePickerManager = require('NativeModules').UIImagePickerManager;
   do the following:
   ```javascript
   // Launch Camera:
-  UIImagePickerManager.launchCamera(options, (response)  => {
+  ImagePickerManager.launchCamera(options, (response)  => {
     // Same code as in above section!
   });
 
   // Open Image Library:
-  UIImagePickerManager.launchImageLibrary(options, (response)  => {
+  ImagePickerManager.launchImageLibrary(options, (response)  => {
     // Same code as in above section!
   });
   ```

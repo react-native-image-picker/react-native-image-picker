@@ -8,7 +8,7 @@ const {
   TouchableOpacity,
   Image,
   NativeModules: {
-    UIImagePickerManager
+    ImagePickerManager
   }
 } = React;
 
@@ -30,14 +30,14 @@ class Example extends React.Component {
       }
     };
 
-    UIImagePickerManager.showImagePicker(options, (response) => {
+    ImagePickerManager.showImagePicker(options, (response) => {
       console.log('Response = ', response);
 
       if (response.didCancel) {
         console.log('User cancelled photo picker');
       }
       else if (response.error) {
-        console.log('UIImagePickerManager Error: ', response.error);
+        console.log('ImagePickerManager Error: ', response.error);
       }
       else if (response.customButton) {
         console.log('User tapped custom button: ', response.customButton);
@@ -62,14 +62,14 @@ class Example extends React.Component {
       videoQuality: 'medium'
     };
 
-    UIImagePickerManager.showImagePicker(options, (response) => {
+    ImagePickerManager.showImagePicker(options, (response) => {
       console.log('Response = ', response);
 
       if (response.didCancel) {
         console.log('User cancelled video picker');
       }
       else if (response.error) {
-        console.log('UIImagePickerManager Error: ', response.error);
+        console.log('ImagePickerManager Error: ', response.error);
       }
       else if (response.customButton) {
         console.log('User tapped custom button: ', response.customButton);

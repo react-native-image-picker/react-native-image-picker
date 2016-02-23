@@ -71,7 +71,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
   @Override
   public String getName() {
-    return "UIImagePickerManager"; // To coincide with the iOS native module name
+    return "ImagePickerManager";
   }
 
   @ReactMethod
@@ -297,7 +297,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     }
 
     if (requestCode != REQUEST_IMAGE_CROPPING && allowEditing == true) {
-        Intent cropIntent = new Intent("com.android.camera.action.CROP"); 
+        Intent cropIntent = new Intent("com.android.camera.action.CROP");
         cropIntent.setDataAndType(uri, "image/*");
         cropIntent.putExtra("crop", "true");
 
@@ -421,12 +421,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
   /**
    * Create a file from uri to allow image picking of image in disk cache
    * (Exemple: facebook image, google image etc..)
-   * 
+   *
    * @doc => https://github.com/nostra13/Android-Universal-Image-Loader#load--display-task-flow
-   * 
+   *
    * @param uri
    * @return File
-   * @throws Exception 
+   * @throws Exception
    */
   private File createFileFromURI(Uri uri) throws Exception {
     File file = new File(mReactContext.getCacheDir(), "photo-" + uri.getLastPathSegment());
@@ -500,7 +500,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     Matrix matrix = new Matrix();
     matrix.postRotate(angle);
     matrix.postScale((float)ratio, (float)ratio);
-    
+
     scaledphoto = Bitmap.createBitmap(photo, 0, 0, photo.getWidth(), photo.getHeight(), matrix, true);
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     scaledphoto.compress(Bitmap.CompressFormat.JPEG, quality, bytes);
