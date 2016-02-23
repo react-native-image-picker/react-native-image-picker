@@ -47,8 +47,7 @@ dependencies {
     <!-- add following permissions -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-feature android:name="android.hardware.camera"
-                  android:required="true"/>
+    <uses-feature android:name="android.hardware.camera" android:required="true"/>
     <uses-feature android:name="android.hardware.camera.autofocus" />
     <!-- -->
     ...
@@ -59,41 +58,27 @@ dependencies {
 import android.content.Intent; // import
 import com.imagepicker.ImagePickerPackage; // import
 
-public class MainActivity extends Activity implements DefaultHardwareBackBtnHandler {
+public class MainActivity extends ReactActivity {
 
-    private ReactInstanceManager mReactInstanceManager;
-    private ReactRootView mReactRootView;
+    private ImagePickerPackage mImagePicker; // <--- ADD THIS
 
-    // declare package
-    private ImagePickerPackage mImagePicker;
-
+   /**
+   * A list of packages used by the app. If the app uses additional views
+   * or modules besides the default ones, add more packages here.
+   */
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        mReactRootView = new ReactRootView(this);
+    protected List<ReactPackage> getPackages() {
+        mImagePicker = new ImagePickerPackage(this); // <--- AND THIS
 
-        // instantiate package
-        mImagePicker = new ImagePickerPackage(this);
-
-        mReactInstanceManager = ReactInstanceManager.builder()
-                .setApplication(getApplication())
-                .setBundleAssetName("index.android.bundle")
-                .setJSMainModuleName("index.android")
-                .addPackage(new MainReactPackage())
-
-                // register package here
-                .addPackage(mImagePicker)
-
-                .setUseDeveloperSupport(BuildConfig.DEBUG)
-                .setInitialLifecycleState(LifecycleState.RESUMED)
-                .build();
-        mReactRootView.startReactApplication(mReactInstanceManager, "AwesomeProject", null);
-        setContentView(mReactRootView);
+        return Arrays.<ReactPackage>asList(
+            new MainReactPackage(),
+            mImagePicker // <--- AND THIS
+        );
     }
 
     ...
-
-    // handle onActivityResult
+    
+    // AND ADD THIS WHOLE METHOD
     @Override
     public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
