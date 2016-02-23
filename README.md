@@ -53,7 +53,7 @@ dependencies {
     ...
 ```
 ```java
-// file: android/app/src/main/java/com/myappli/MainActivity.java
+// file: MainActivity.java
 ...
 import android.content.Intent; // import
 import com.imagepicker.ImagePickerPackage; // import
