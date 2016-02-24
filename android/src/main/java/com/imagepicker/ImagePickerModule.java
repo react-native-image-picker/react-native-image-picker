@@ -309,7 +309,20 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         }
 
         // we create a file to save the result
-        File imageFile = createNewFile();
+        File path = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES);
+        File imageFile;
+        try {
+            // Make sure the Pictures directory exists.
+            path.mkdirs();
+            imageFile = File.createTempFile("crop", ".jpg", path);
+        } catch (IOException e) {
+            e.printStackTrace();
+            response.putString("error", e.getMessage());
+            mCallback.invoke(response);
+            return;
+        }
+
         mCropImagedUri = Uri.fromFile(imageFile);
         cropIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCropImagedUri);
 
