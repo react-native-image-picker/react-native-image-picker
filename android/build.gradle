@@ -1,3 +1,12 @@
+import groovy.json.JsonSlurper
+
+def computeVersionName() {
+    // dynamically retrieve version from package.json
+    def slurper = new JsonSlurper()
+    def json = slurper.parse(file('../package.json'), "utf-8")
+    return json.version
+}
+
 buildscript {
     repositories {
         jcenter()
@@ -18,7 +27,8 @@ android {
         minSdkVersion 16
         targetSdkVersion 22
         versionCode 1
-        versionName "1.0"
+        // get version name from package.json version
+        versionName computeVersionName()
     }
     lintOptions {
         abortOnError false
@@ -30,5 +40,5 @@ repositories {
 }
 
 dependencies {
-    compile 'com.facebook.react:react-native:0.12.+'
+    compile 'com.facebook.react:react-native:0.20.+'
 }

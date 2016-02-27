@@ -14,7 +14,6 @@ import android.content.DialogInterface;
 import android.graphics.BitmapFactory;
 import android.graphics.Bitmap;
 import android.media.ExifInterface;
-import android.content.ComponentName;
 import android.graphics.Matrix;
 
 import com.facebook.react.bridge.Arguments;
@@ -24,6 +23,7 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.ActivityEventListener;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,7 +39,7 @@ import java.util.UUID;
 import java.net.URL;
 import java.net.MalformedURLException;
 
-public class ImagePickerModule extends ReactContextBaseJavaModule {
+public class ImagePickerModule extends ReactContextBaseJavaModule implements ActivityEventListener {
   static final int REQUEST_LAUNCH_CAMERA = 1;
   static final int REQUEST_LAUNCH_IMAGE_LIBRARY = 2;
   static final int REQUEST_IMAGE_CROPPING = 3;
@@ -64,6 +64,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
   public ImagePickerModule(ReactApplicationContext reactContext, Activity mainActivity) {
     super(reactContext);
+
+    reactContext.addActivityEventListener(this);
 
     mReactContext = reactContext;
     mMainActivity = mainActivity;
@@ -182,7 +184,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     }
 
     Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-    if (cameraIntent.resolveActivity(mMainActivity.getPackageManager()) == null) {
+    if (cameraIntent.resolveActivity(mReactContext.getPackageManager()) == null) {
         response.putString("error", "Cannot launch camera");
         callback.invoke(response);
         return;
@@ -253,7 +255,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     Intent libraryIntent = new Intent(Intent.ACTION_PICK,
         android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 
-    if (libraryIntent.resolveActivity(mMainActivity.getPackageManager()) == null) {
+    if (libraryIntent.resolveActivity(mReactContext.getPackageManager()) == null) {
         response.putString("error", "Cannot launch photo library");
         callback.invoke(response);
         return;
@@ -268,7 +270,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     }
   }
 
-  public void onActivityResult(int requestCode, int resultCode, Intent data) {
+  public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
     //robustness code
     if (mCallback == null || (mCameraCaptureURI == null && requestCode == REQUEST_LAUNCH_CAMERA)
             || (requestCode != REQUEST_LAUNCH_CAMERA && requestCode != REQUEST_LAUNCH_IMAGE_LIBRARY
@@ -419,7 +421,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
   private String getRealPathFromURI(Uri uri) {
     String result;
     String[] projection = { MediaStore.Images.Media.DATA };
-    Cursor cursor = mMainActivity.getContentResolver().query(uri, projection, null, null, null);
+    Cursor cursor = mReactContext.getContentResolver().query(uri, projection, null, null, null);
     if (cursor == null) { // Source is Dropbox or other similar local file path
         result = uri.getPath();
     } else {

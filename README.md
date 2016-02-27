@@ -55,12 +55,10 @@ dependencies {
 ```java
 // file: MainActivity.java
 ...
-import android.content.Intent; // import
-import com.imagepicker.ImagePickerPackage; // import
+
+import com.imagepicker.ImagePickerPackage; // import package
 
 public class MainActivity extends ReactActivity {
-
-    private ImagePickerPackage mImagePicker; // <--- ADD THIS
 
    /**
    * A list of packages used by the app. If the app uses additional views
@@ -68,24 +66,13 @@ public class MainActivity extends ReactActivity {
    */
     @Override
     protected List<ReactPackage> getPackages() {
-        mImagePicker = new ImagePickerPackage(this); // <--- AND THIS
-
         return Arrays.<ReactPackage>asList(
             new MainReactPackage(),
-            mImagePicker // <--- AND THIS
+            new ImagePickerPackage(this) // Add package
         );
     }
-
-    ...
-
-    // AND ADD THIS WHOLE METHOD
-    @Override
-    public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        mImagePicker.handleActivityResult(requestCode, resultCode, data);
-    }
 ...
+}
 
 ```
 ## Usage
