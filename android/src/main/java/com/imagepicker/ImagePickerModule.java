@@ -511,21 +511,27 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   }
 
   private void parseOptions(final ReadableMap options) {
+    noData = false;
     if (options.hasKey("noData")) {
         noData = options.getBoolean("noData");
     }
+    maxWidth = 0;
     if (options.hasKey("maxWidth")) {
         maxWidth = options.getInt("maxWidth");
     }
+    maxHeight = 0;
     if (options.hasKey("maxHeight")) {
         maxHeight = options.getInt("maxHeight");
     }
+    aspectX = 0;
     if (options.hasKey("aspectX")) {
         aspectX = options.getInt("aspectX");
     }
+    aspectY = 0;
     if (options.hasKey("aspectY")) {
         aspectY = options.getInt("aspectY");
     }
+    quality = 100;
     if (options.hasKey("quality")) {
         quality = (int)(options.getDouble("quality") * 100);
     }
@@ -533,10 +539,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     if (options.hasKey("storageOptions")) {
         tmpImage = false;
     }
+    allowEditing = false;
     if (options.hasKey("allowsEditing")) {
         allowEditing = options.getBoolean("allowsEditing");
     }
     forceAngle = false;
+    angle = 0;
     if (options.hasKey("angle")) {
         forceAngle = true;
         angle = options.getInt("angle");
