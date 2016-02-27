@@ -152,36 +152,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   public void launchCamera(final ReadableMap options, final Callback callback) {
     response = Arguments.createMap();
 
-    if (options.hasKey("noData")) {
-        noData = options.getBoolean("noData");
-    }
-    if (options.hasKey("maxWidth")) {
-        maxWidth = options.getInt("maxWidth");
-    }
-    if (options.hasKey("maxHeight")) {
-        maxHeight = options.getInt("maxHeight");
-    }
-    if (options.hasKey("aspectX")) {
-        aspectX = options.getInt("aspectX");
-    }
-    if (options.hasKey("aspectY")) {
-        aspectY = options.getInt("aspectY");
-    }
-    if (options.hasKey("quality")) {
-        quality = (int)(options.getDouble("quality") * 100);
-    }
-    tmpImage = true;
-    if (options.hasKey("storageOptions")) {
-        tmpImage = false;
-    }
-    if (options.hasKey("allowsEditing")) {
-        allowEditing = options.getBoolean("allowsEditing");
-    }
-    forceAngle = false;
-    if (options.hasKey("angle")) {
-        forceAngle = true;
-        angle = options.getInt("angle");
-    }
+    parseOptions(options);
 
     Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
     if (cameraIntent.resolveActivity(mReactContext.getPackageManager()) == null) {
@@ -221,36 +192,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   public void launchImageLibrary(final ReadableMap options, final Callback callback) {
     response = Arguments.createMap();
 
-    if (options.hasKey("noData")) {
-        noData = options.getBoolean("noData");
-    }
-    if (options.hasKey("maxWidth")) {
-        maxWidth = options.getInt("maxWidth");
-    }
-    if (options.hasKey("maxHeight")) {
-        maxHeight = options.getInt("maxHeight");
-    }
-    if (options.hasKey("aspectX")) {
-        aspectX = options.getInt("aspectX");
-    }
-    if (options.hasKey("aspectY")) {
-        aspectY = options.getInt("aspectY");
-    }
-    if (options.hasKey("quality")) {
-        quality = (int)(options.getDouble("quality") * 100);
-    }
-    tmpImage = true;
-    if (options.hasKey("storageOptions")) {
-        tmpImage = false;
-    }
-    if (options.hasKey("allowsEditing")) {
-        allowEditing = options.getBoolean("allowsEditing");
-    }
-    forceAngle = false;
-    if (options.hasKey("angle")) {
-        forceAngle = true;
-        angle = options.getInt("angle");
-    }
+    parseOptions(options);
 
     Intent libraryIntent = new Intent(Intent.ACTION_PICK,
         android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
@@ -565,6 +507,39 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         e.printStackTrace();
       }
       return f;
+    }
+  }
+
+  private void parseOptions(final ReadableMap options) {
+    if (options.hasKey("noData")) {
+        noData = options.getBoolean("noData");
+    }
+    if (options.hasKey("maxWidth")) {
+        maxWidth = options.getInt("maxWidth");
+    }
+    if (options.hasKey("maxHeight")) {
+        maxHeight = options.getInt("maxHeight");
+    }
+    if (options.hasKey("aspectX")) {
+        aspectX = options.getInt("aspectX");
+    }
+    if (options.hasKey("aspectY")) {
+        aspectY = options.getInt("aspectY");
+    }
+    if (options.hasKey("quality")) {
+        quality = (int)(options.getDouble("quality") * 100);
+    }
+    tmpImage = true;
+    if (options.hasKey("storageOptions")) {
+        tmpImage = false;
+    }
+    if (options.hasKey("allowsEditing")) {
+        allowEditing = options.getBoolean("allowsEditing");
+    }
+    forceAngle = false;
+    if (options.hasKey("angle")) {
+        forceAngle = true;
+        angle = options.getInt("angle");
     }
   }
 }
