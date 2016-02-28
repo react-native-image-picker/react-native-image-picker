@@ -47,7 +47,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   static final int REQUEST_LAUNCH_VIDEO_CAPTURE = 4;
 
   private final ReactApplicationContext mReactContext;
-  private final Activity mMainActivity;
 
   private Uri mCameraCaptureURI;
   private Uri mCropImagedUri;
@@ -67,13 +66,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   private int videoDurationLimit = 0;
   WritableMap response;
 
-  public ImagePickerModule(ReactApplicationContext reactContext, Activity mainActivity) {
+  public ImagePickerModule(ReactApplicationContext reactContext) {
     super(reactContext);
 
     reactContext.addActivityEventListener(this);
 
     mReactContext = reactContext;
-    mMainActivity = mainActivity;
   }
 
   @Override
@@ -83,7 +81,14 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
   @ReactMethod
   public void showImagePicker(final ReadableMap options, final Callback callback) {
+    Activity currentActivity = getCurrentActivity();
     response = Arguments.createMap();
+
+    if (currentActivity == null) {
+      response.putString("error", "can't find current Activity");
+      callback.invoke(response);
+      return;
+    }
 
     List<String> mTitles = new ArrayList<String>();
     List<String> mActions = new ArrayList<String>();
@@ -116,9 +121,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     action = mActions.toArray(action);
     final String[] act = action;
 
-    ArrayAdapter<String> adapter = new ArrayAdapter<String>(mMainActivity,
+    ArrayAdapter<String> adapter = new ArrayAdapter<String>(currentActivity,
             android.R.layout.select_dialog_item, option);
-    AlertDialog.Builder builder = new AlertDialog.Builder(mMainActivity);
+    AlertDialog.Builder builder = new AlertDialog.Builder(currentActivity);
     if (options.hasKey("title") && options.getString("title") != null && !options.getString("title").isEmpty()) {
       builder.setTitle(options.getString("title"));
     }
@@ -158,6 +163,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     int requestCode;
     Intent cameraIntent;
     response = Arguments.createMap();
+    Activity currentActivity = getCurrentActivity();
+
+    if (currentActivity == null) {
+      response.putString("error", "can't find current Activity");
+      callback.invoke(response);
+      return;
+    }
 
     parseOptions(options);
 
@@ -193,7 +205,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     mCallback = callback;
 
     try {
-      mMainActivity.startActivityForResult(cameraIntent, requestCode);
+      currentActivity.startActivityForResult(cameraIntent, requestCode);
     } catch (ActivityNotFoundException e) {
       e.printStackTrace();
     }
@@ -205,6 +217,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     int requestCode;
     Intent libraryIntent;
     response = Arguments.createMap();
+    Activity currentActivity = getCurrentActivity();
+
+    if (currentActivity == null) {
+      response.putString("error", "can't find current Activity");
+      callback.invoke(response);
+      return;
+    }
 
     parseOptions(options);
 
@@ -238,7 +257,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     mCallback = callback;
 
     try {
-      mMainActivity.startActivityForResult(libraryIntent, requestCode);
+      currentActivity.startActivityForResult(libraryIntent, requestCode);
     } catch (ActivityNotFoundException e) {
       e.printStackTrace();
     }
