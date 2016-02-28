@@ -96,6 +96,7 @@ var ImagePickerManager = require('NativeModules').ImagePickerManager;
     cameraType: 'back', // 'front' or 'back'
     mediaType: 'photo', // 'photo' or 'video'
     videoQuality: 'high', // 'low', 'medium', or 'high'
+    durationLimit: 10, // video recording max time in seconds
     maxWidth: 100, // photos only
     maxHeight: 100, // photos only
     aspectX: 2, // aspectX:aspectY, the cropping image's ratio of width to height
@@ -180,8 +181,9 @@ takePhotoButtonTitle | OK | OK
 chooseFromLibraryButtonTitle | OK | OK
 customButtons | OK | -
 cameraType | OK | -
-mediaType | OK | -
-videoQuality | OK | -
+mediaType | OK | OK
+videoQuality | OK | 'low' or 'high'
+durationLimit | - | OK
 angle | - | OK
 aspectX | - | OK
 aspectY | - | OK

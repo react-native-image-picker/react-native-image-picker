@@ -41,8 +41,10 @@ import java.net.MalformedURLException;
 
 public class ImagePickerModule extends ReactContextBaseJavaModule implements ActivityEventListener {
 
-  static final int REQUEST_LAUNCH_CAMERA = 1;
+  static final int REQUEST_LAUNCH_IMAGE_CAPTURE = 1;
   static final int REQUEST_LAUNCH_IMAGE_LIBRARY = 2;
+  static final int REQUEST_LAUNCH_VIDEO_LIBRARY = 3;
+  static final int REQUEST_LAUNCH_VIDEO_CAPTURE = 4;
 
   private final ReactApplicationContext mReactContext;
   private final Activity mMainActivity;
@@ -53,6 +55,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   private Boolean noData = false;
   private Boolean tmpImage;
   private Boolean allowEditing = false;
+  private Boolean pickVideo = false;
   private int maxWidth = 0;
   private int maxHeight = 0;
   private int aspectX = 0;
@@ -60,6 +63,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   private int quality = 100;
   private int angle = 0;
   private Boolean forceAngle = false;
+  private int videoQuality = 1;
+  private int videoDurationLimit = 0;
   WritableMap response;
 
   public ImagePickerModule(ReactApplicationContext reactContext, Activity mainActivity) {
@@ -150,32 +155,45 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   // NOTE: Currently not reentrant / doesn't support concurrent requests
   @ReactMethod
   public void launchCamera(final ReadableMap options, final Callback callback) {
+    int requestCode;
+    Intent cameraIntent;
     response = Arguments.createMap();
 
     parseOptions(options);
 
-    Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+    if (pickVideo == true) {
+      requestCode = REQUEST_LAUNCH_VIDEO_CAPTURE;
+      cameraIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+      cameraIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, videoQuality);
+      if (videoDurationLimit > 0) {
+        cameraIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, videoDurationLimit);
+      }
+    } else {
+      requestCode = REQUEST_LAUNCH_IMAGE_CAPTURE;
+      cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+      // we create a tmp file to save the result
+      File imageFile = createNewFile(true);
+      mCameraCaptureURI = Uri.fromFile(imageFile);
+      cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(imageFile));
+
+      if (allowEditing == true) {
+        cameraIntent.putExtra("crop", "true");
+        cameraIntent.putExtra("aspectX", aspectX);
+        cameraIntent.putExtra("aspectY", aspectY);
+      }
+    }
+
     if (cameraIntent.resolveActivity(mReactContext.getPackageManager()) == null) {
       response.putString("error", "Cannot launch camera");
       callback.invoke(response);
       return;
     }
 
-    // we create a tmp file to save the result
-    File imageFile = createNewFile(true);
-    cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(imageFile));
-
-    if (allowEditing == true) {
-      cameraIntent.putExtra("crop", "true");
-      cameraIntent.putExtra("aspectX", aspectX);
-      cameraIntent.putExtra("aspectY", aspectY);
-    }
-
-    mCameraCaptureURI = Uri.fromFile(imageFile);
     mCallback = callback;
 
     try {
-      mMainActivity.startActivityForResult(cameraIntent, REQUEST_LAUNCH_CAMERA);
+      mMainActivity.startActivityForResult(cameraIntent, requestCode);
     } catch (ActivityNotFoundException e) {
       e.printStackTrace();
     }
@@ -184,22 +202,31 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   // NOTE: Currently not reentrant / doesn't support concurrent requests
   @ReactMethod
   public void launchImageLibrary(final ReadableMap options, final Callback callback) {
+    int requestCode;
+    Intent libraryIntent;
     response = Arguments.createMap();
 
     parseOptions(options);
 
-    Intent libraryIntent = new Intent(Intent.ACTION_PICK,
-            android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+    if (pickVideo == true) {
+      requestCode = REQUEST_LAUNCH_VIDEO_LIBRARY;
+      libraryIntent = new Intent(Intent.ACTION_PICK);
+      libraryIntent.setType("video/*");
+    } else {
+      requestCode = REQUEST_LAUNCH_IMAGE_LIBRARY;
+      libraryIntent = new Intent(Intent.ACTION_PICK,
+        android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 
-    mCropImagedUri = null;
-    if (allowEditing == true) {
-      // create a file to save the croped image
-      File imageFile = createNewFile(true);
-      mCropImagedUri = Uri.fromFile(imageFile);
-      libraryIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCropImagedUri);
-      libraryIntent.putExtra("crop", "true");
-      libraryIntent.putExtra("aspectX", aspectX);
-      libraryIntent.putExtra("aspectY", aspectY);
+      mCropImagedUri = null;
+      if (allowEditing == true) {
+        // create a file to save the croped image
+        File imageFile = createNewFile(true);
+        mCropImagedUri = Uri.fromFile(imageFile);
+        libraryIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCropImagedUri);
+        libraryIntent.putExtra("crop", "true");
+        libraryIntent.putExtra("aspectX", aspectX);
+        libraryIntent.putExtra("aspectY", aspectY);
+      }
     }
 
     if (libraryIntent.resolveActivity(mReactContext.getPackageManager()) == null) {
@@ -211,7 +238,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     mCallback = callback;
 
     try {
-      mMainActivity.startActivityForResult(libraryIntent, REQUEST_LAUNCH_IMAGE_LIBRARY);
+      mMainActivity.startActivityForResult(libraryIntent, requestCode);
     } catch (ActivityNotFoundException e) {
       e.printStackTrace();
     }
@@ -219,8 +246,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
   public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
     //robustness code
-    if (mCallback == null || (mCameraCaptureURI == null && requestCode == REQUEST_LAUNCH_CAMERA)
-            || (requestCode != REQUEST_LAUNCH_CAMERA && requestCode != REQUEST_LAUNCH_IMAGE_LIBRARY)) {
+    if (mCallback == null || (mCameraCaptureURI == null && requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE)
+            || (requestCode != REQUEST_LAUNCH_IMAGE_CAPTURE && requestCode != REQUEST_LAUNCH_IMAGE_LIBRARY
+            && requestCode != REQUEST_LAUNCH_VIDEO_LIBRARY && requestCode != REQUEST_LAUNCH_VIDEO_CAPTURE)) {
       return;
     }
 
@@ -233,7 +261,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
     Uri uri;
     switch (requestCode) {
-      case REQUEST_LAUNCH_CAMERA:
+      case REQUEST_LAUNCH_IMAGE_CAPTURE:
         uri = mCameraCaptureURI;
         break;
       case REQUEST_LAUNCH_IMAGE_LIBRARY:
@@ -243,6 +271,14 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
           uri = mCropImagedUri;
         }
         break;
+      case REQUEST_LAUNCH_VIDEO_LIBRARY:
+        response.putString("uri", data.getData().toString());
+        mCallback.invoke(response);
+        return;
+      case REQUEST_LAUNCH_VIDEO_CAPTURE:
+        response.putString("uri", data.getData().toString());
+        mCallback.invoke(response);
+        return;
       default:
         uri = null;
     }
@@ -518,6 +554,18 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     if (options.hasKey("angle")) {
       forceAngle = true;
       angle = options.getInt("angle");
+    }
+    pickVideo = false;
+    if (options.hasKey("mediaType") && options.getString("mediaType").equals("video")) {
+      pickVideo = true;
+    }
+    videoQuality = 1;
+    if (options.hasKey("videoQuality") && options.getString("videoQuality").equals("low")) {
+      videoQuality = 0;
+    }
+    videoDurationLimit = 0;
+    if (options.hasKey("durationLimit")) {
+      videoDurationLimit = options.getInt("durationLimit");
     }
   }
 }
