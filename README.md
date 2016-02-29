@@ -170,6 +170,10 @@ var ImagePickerManager = require('NativeModules').ImagePickerManager;
     // Same code as in above section!
   });
   ```
+  
+ 
+#### Note
+On iOS, don't assume that the absolute uri returned will persist. See [#107](/../../issues/107)
 
 ### Options
 
