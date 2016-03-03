@@ -247,178 +247,180 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
 {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [picker dismissViewControllerAnimated:YES completion:nil];
-    });
-    
-    NSURL *imageURL = [info valueForKey:UIImagePickerControllerReferenceURL];
-    NSString *mediaType = [info objectForKey:UIImagePickerControllerMediaType];
-    
-    
-    NSString *fileName;
-    if ([mediaType isEqualToString:(NSString *)kUTTypeImage]) {
-        NSString *tempFileName = [[NSUUID UUID] UUIDString];
-        if (imageURL && [[imageURL absoluteString] rangeOfString:@"ext=GIF"].location != NSNotFound) {
-            fileName = [tempFileName stringByAppendingString:@".gif"];
-        }
-        else if ([[[self.options objectForKey:@"imageFileType"] stringValue] isEqualToString:@"png"]) {
-            fileName = [tempFileName stringByAppendingString:@".png"];
+    dispatch_block_t dismissCompletionBlock = ^{
+        
+        NSURL *imageURL = [info valueForKey:UIImagePickerControllerReferenceURL];
+        NSString *mediaType = [info objectForKey:UIImagePickerControllerMediaType];
+        
+        
+        NSString *fileName;
+        if ([mediaType isEqualToString:(NSString *)kUTTypeImage]) {
+            NSString *tempFileName = [[NSUUID UUID] UUIDString];
+            if (imageURL && [[imageURL absoluteString] rangeOfString:@"ext=GIF"].location != NSNotFound) {
+                fileName = [tempFileName stringByAppendingString:@".gif"];
+            }
+            else if ([[[self.options objectForKey:@"imageFileType"] stringValue] isEqualToString:@"png"]) {
+                fileName = [tempFileName stringByAppendingString:@".png"];
+            }
+            else {
+                fileName = [tempFileName stringByAppendingString:@".jpg"];
+            }
         }
         else {
-            fileName = [tempFileName stringByAppendingString:@".jpg"];
+            NSURL *videoURL = info[UIImagePickerControllerMediaURL];
+            fileName = videoURL.lastPathComponent;
         }
-    }
-    else {
-        NSURL *videoURL = info[UIImagePickerControllerMediaURL];
-        fileName = videoURL.lastPathComponent;
-    }
-    
-    // We default to path to the temporary directory
-    NSString *path = [[NSTemporaryDirectory()stringByStandardizingPath] stringByAppendingPathComponent:fileName];
+        
+        // We default to path to the temporary directory
+        NSString *path = [[NSTemporaryDirectory()stringByStandardizingPath] stringByAppendingPathComponent:fileName];
 
-    // If storage options are provided, we use the documents directory which is persisted
-    if ([self.options objectForKey:@"storageOptions"] && [[self.options objectForKey:@"storageOptions"] isKindOfClass:[NSDictionary class]]) {
-        NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
+        // If storage options are provided, we use the documents directory which is persisted
+        if ([self.options objectForKey:@"storageOptions"] && [[self.options objectForKey:@"storageOptions"] isKindOfClass:[NSDictionary class]]) {
+            NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
+            
+            NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+            NSString *documentsDirectory = [paths objectAtIndex:0];
+            path = [documentsDirectory stringByAppendingPathComponent:fileName];
+            
+            // Creates documents subdirectory, if provided
+            if ([storageOptions objectForKey:@"path"]) {
+                NSString *newPath = [documentsDirectory stringByAppendingPathComponent:[storageOptions objectForKey:@"path"]];
+                NSError *error;
+                [[NSFileManager defaultManager] createDirectoryAtPath:newPath withIntermediateDirectories:YES attributes:nil error:&error];
+                if (error) {
+                    NSLog(@"Error creating documents subdirectory: %@", error);
+                    self.callback(@[@{@"error": error.localizedFailureReason}]);
+                    return;
+                }
+                else {
+                    path = [newPath stringByAppendingPathComponent:fileName];
+                }
+            }
+        }
         
-        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-        NSString *documentsDirectory = [paths objectAtIndex:0];
-        path = [documentsDirectory stringByAppendingPathComponent:fileName];
+        // Create the response object
+        NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
         
-        // Creates documents subdirectory, if provided
-        if ([storageOptions objectForKey:@"path"]) {
-            NSString *newPath = [documentsDirectory stringByAppendingPathComponent:[storageOptions objectForKey:@"path"]];
-            NSError *error;
-            [[NSFileManager defaultManager] createDirectoryAtPath:newPath withIntermediateDirectories:YES attributes:nil error:&error];
+        if ([mediaType isEqualToString:(NSString *)kUTTypeImage]) { // PHOTOS
+            UIImage *image;
+            if ([[self.options objectForKey:@"allowsEditing"] boolValue]) {
+                image = [info objectForKey:UIImagePickerControllerEditedImage];
+            }
+            else {
+                image = [info objectForKey:UIImagePickerControllerOriginalImage];
+            }
+            
+            // GIFs break when resized, so we handle them differently
+            if (imageURL && [[imageURL absoluteString] rangeOfString:@"ext=GIF"].location != NSNotFound) {
+                ALAssetsLibrary* assetsLibrary = [[ALAssetsLibrary alloc] init];
+                [assetsLibrary assetForURL:imageURL resultBlock:^(ALAsset *asset) {
+                    ALAssetRepresentation *rep = [asset defaultRepresentation];
+                    Byte *buffer = (Byte*)malloc(rep.size);
+                    NSUInteger buffered = [rep getBytes:buffer fromOffset:0.0 length:rep.size error:nil];
+                    NSData *data = [NSData dataWithBytesNoCopy:buffer length:buffered freeWhenDone:YES];
+                    [data writeToFile:path atomically:YES];
+                    
+                    NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
+                    [response setObject:@(image.size.width) forKey:@"width"];
+                    [response setObject:@(image.size.height) forKey:@"height"];
+                    
+                    BOOL vertical = (image.size.width < image.size.height) ? YES : NO;
+                    [response setObject:@(vertical) forKey:@"isVertical"];
+                    
+                    if (![[self.options objectForKey:@"noData"] boolValue]) {
+                        NSString *dataString = [data base64EncodedStringWithOptions:0];
+                        [response setObject:dataString forKey:@"data"];
+                    }
+                    
+                    NSString *fileURL = [[NSURL fileURLWithPath:path] absoluteString];
+                    [response setObject:fileURL forKey:@"uri"];
+                    
+                    self.callback(@[response]);
+                } failureBlock:^(NSError *error) {
+                    self.callback(@[@{@"error": error.localizedFailureReason}]);
+                }];
+                return;
+            }
+            
+            image = [self fixOrientation:image];  // Rotate the image for upload to web
+            
+            // If needed, downscale image
+            float maxWidth = image.size.width;
+            float maxHeight = image.size.height;
+            if ([self.options valueForKey:@"maxWidth"]) {
+                maxWidth = [[self.options valueForKey:@"maxWidth"] floatValue];
+            }
+            if ([self.options valueForKey:@"maxHeight"]) {
+                maxHeight = [[self.options valueForKey:@"maxHeight"] floatValue];
+            }
+            image = [self downscaleImageIfNecessary:image maxWidth:maxWidth maxHeight:maxHeight];
+            
+            NSData *data;
+            if ([[[self.options objectForKey:@"imageFileType"] stringValue] isEqualToString:@"png"]) {
+                data = UIImagePNGRepresentation(image);
+            }
+            else {
+                data = UIImageJPEGRepresentation(image, [[self.options valueForKey:@"quality"] floatValue]);
+            }
+            [data writeToFile:path atomically:YES];
+            
+            if (![[self.options objectForKey:@"noData"] boolValue]) {
+                NSString *dataString = [data base64EncodedStringWithOptions:0]; // base64 encoded image string
+                [response setObject:dataString forKey:@"data"];
+            }
+            
+            BOOL vertical = (image.size.width < image.size.height) ? YES : NO;
+            [response setObject:@(vertical) forKey:@"isVertical"];
+            
+            NSString *filePath = [[NSURL fileURLWithPath:path] absoluteString];
+            [response setObject:filePath forKey:@"uri"];
+            
+            [response setObject:@(image.size.width) forKey:@"width"];
+            [response setObject:@(image.size.height) forKey:@"height"];
+        }
+        else { // VIDEO
+            NSURL *videoURL = info[UIImagePickerControllerMediaURL];
+            NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
+            
+            NSFileManager *fileManager = [NSFileManager defaultManager];
+            if ([fileName isEqualToString:@"capturedvideo.MOV"]) {
+                if ([fileManager fileExistsAtPath:videoDestinationURL.path]) {
+                    [fileManager removeItemAtURL:videoDestinationURL error:nil];
+                }
+            }
+            NSError *error = nil;
+            [fileManager moveItemAtURL:videoURL toURL:videoDestinationURL error:&error];
             if (error) {
-                NSLog(@"Error creating documents subdirectory: %@", error);
                 self.callback(@[@{@"error": error.localizedFailureReason}]);
                 return;
             }
-            else {
-                path = [newPath stringByAppendingPathComponent:fileName];
-            }
-        }
-    }
-    
-    // Create the response object
-    NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
-    
-    if ([mediaType isEqualToString:(NSString *)kUTTypeImage]) { // PHOTOS
-        UIImage *image;
-        if ([[self.options objectForKey:@"allowsEditing"] boolValue]) {
-            image = [info objectForKey:UIImagePickerControllerEditedImage];
-        }
-        else {
-            image = [info objectForKey:UIImagePickerControllerOriginalImage];
-        }
-        
-        // GIFs break when resized, so we handle them differently
-        if (imageURL && [[imageURL absoluteString] rangeOfString:@"ext=GIF"].location != NSNotFound) {
-            ALAssetsLibrary* assetsLibrary = [[ALAssetsLibrary alloc] init];
-            [assetsLibrary assetForURL:imageURL resultBlock:^(ALAsset *asset) {
-                ALAssetRepresentation *rep = [asset defaultRepresentation];
-                Byte *buffer = (Byte*)malloc(rep.size);
-                NSUInteger buffered = [rep getBytes:buffer fromOffset:0.0 length:rep.size error:nil];
-                NSData *data = [NSData dataWithBytesNoCopy:buffer length:buffered freeWhenDone:YES];
-                [data writeToFile:path atomically:YES];
-                
-                NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
-                [response setObject:@(image.size.width) forKey:@"width"];
-                [response setObject:@(image.size.height) forKey:@"height"];
-                
-                BOOL vertical = (image.size.width < image.size.height) ? YES : NO;
-                [response setObject:@(vertical) forKey:@"isVertical"];
-                
-                if (![[self.options objectForKey:@"noData"] boolValue]) {
-                    NSString *dataString = [data base64EncodedStringWithOptions:0];
-                    [response setObject:dataString forKey:@"data"];
-                }
-                
-                NSString *fileURL = [[NSURL fileURLWithPath:path] absoluteString];
-                [response setObject:fileURL forKey:@"uri"];
-                
-                self.callback(@[response]);
-            } failureBlock:^(NSError *error) {
-                self.callback(@[@{@"error": error.localizedFailureReason}]);
-            }];
-            return;
-        }
-        
-        image = [self fixOrientation:image];  // Rotate the image for upload to web
-        
-        // If needed, downscale image
-        float maxWidth = image.size.width;
-        float maxHeight = image.size.height;
-        if ([self.options valueForKey:@"maxWidth"]) {
-            maxWidth = [[self.options valueForKey:@"maxWidth"] floatValue];
-        }
-        if ([self.options valueForKey:@"maxHeight"]) {
-            maxHeight = [[self.options valueForKey:@"maxHeight"] floatValue];
-        }
-        image = [self downscaleImageIfNecessary:image maxWidth:maxWidth maxHeight:maxHeight];
-        
-        NSData *data;
-        if ([[[self.options objectForKey:@"imageFileType"] stringValue] isEqualToString:@"png"]) {
-            data = UIImagePNGRepresentation(image);
-        }
-        else {
-            data = UIImageJPEGRepresentation(image, [[self.options valueForKey:@"quality"] floatValue]);
-        }
-        [data writeToFile:path atomically:YES];
-        
-        if (![[self.options objectForKey:@"noData"] boolValue]) {
-            NSString *dataString = [data base64EncodedStringWithOptions:0]; // base64 encoded image string
-            [response setObject:dataString forKey:@"data"];
-        }
-        
-        BOOL vertical = (image.size.width < image.size.height) ? YES : NO;
-        [response setObject:@(vertical) forKey:@"isVertical"];
-        
-        NSString *filePath = [[NSURL fileURLWithPath:path] absoluteString];
-        [response setObject:filePath forKey:@"uri"];
-        
-        [response setObject:@(image.size.width) forKey:@"width"];
-        [response setObject:@(image.size.height) forKey:@"height"];
-    }
-    else { // VIDEO
-        NSURL *videoURL = info[UIImagePickerControllerMediaURL];
-        NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
-        
-        NSFileManager *fileManager = [NSFileManager defaultManager];
-        if ([fileName isEqualToString:@"capturedvideo.MOV"]) {
-            if ([fileManager fileExistsAtPath:videoDestinationURL.path]) {
-                [fileManager removeItemAtURL:videoDestinationURL error:nil];
-            }
-        }
-        NSError *error = nil;
-        [fileManager moveItemAtURL:videoURL toURL:videoDestinationURL error:&error];
-        if (error) {
-            self.callback(@[@{@"error": error.localizedFailureReason}]);
-            return;
-        }
 
-        [response setObject:videoDestinationURL.absoluteString forKey:@"uri"];
-    }
-    
-    // If storage options are provided, check the skipBackup flag
-    if ([self.options objectForKey:@"storageOptions"] && [[self.options objectForKey:@"storageOptions"] isKindOfClass:[NSDictionary class]]) {
-      NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
+            [response setObject:videoDestinationURL.absoluteString forKey:@"uri"];
+        }
+        
+        // If storage options are provided, check the skipBackup flag
+        if ([self.options objectForKey:@"storageOptions"] && [[self.options objectForKey:@"storageOptions"] isKindOfClass:[NSDictionary class]]) {
+          NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
 
-      if ([[storageOptions objectForKey:@"skipBackup"] boolValue]) {
-        [self addSkipBackupAttributeToItemAtPath:path]; // Don't back up the file to iCloud
-      }
-    }
-    
-    self.callback(@[response]);
+          if ([[storageOptions objectForKey:@"skipBackup"] boolValue]) {
+            [self addSkipBackupAttributeToItemAtPath:path]; // Don't back up the file to iCloud
+          }
+        }
+        
+        self.callback(@[response]);
+    };
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [picker dismissViewControllerAnimated:YES completion:dismissCompletionBlock];
+    });
 }
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
 {
     dispatch_async(dispatch_get_main_queue(), ^{
-        [picker dismissViewControllerAnimated:YES completion:nil];
+        [picker dismissViewControllerAnimated:YES completion:^{
+            self.callback(@[@{@"didCancel": @YES}]);
+        }];
     });
-    
-    self.callback(@[@{@"didCancel": @YES}]);
 }
 
 - (UIImage*)downscaleImageIfNecessary:(UIImage*)image maxWidth:(float)maxWidth maxHeight:(float)maxHeight
