@@ -58,19 +58,38 @@ dependencies {
 
 import com.imagepicker.ImagePickerPackage; // import package
 
-public class MainActivity extends ReactActivity {
+public class MainActivity extends Activity implements DefaultHardwareBackBtnHandler {
+
+  private ReactInstanceManager mReactInstanceManager;
 
    /**
    * A list of packages used by the app. If the app uses additional views
    * or modules besides the default ones, add more packages here.
    */
-    @Override
-    protected List<ReactPackage> getPackages() {
-        return Arrays.<ReactPackage>asList(
-            new MainReactPackage(),
-            new ImagePickerPackage() // Add package
-        );
-    }
+   @Override
+   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+       super.onActivityResult(requestCode, resultCode, data);
+       mReactInstanceManager.onActivityResult(requestCode, resultCode, data);
+   }
+
+   @Override
+   protected void onCreate(Bundle savedInstanceState) {
+     super.onCreate(savedInstanceState);
+     mReactRootView = new ReactRootView(this);
+
+     mReactInstanceManager = ReactInstanceManager.builder()
+             .setApplication(getApplication())
+             .setBundleAssetName("index.android.bundle")
+             .setJSMainModuleName("index.android")
+             .addPackage(new MainReactPackage())
+             .addPackage(new ImagePickerPackage()) // ---> add here
+             .setUseDeveloperSupport(BuildConfig.DEBUG)
+             .setInitialLifecycleState(LifecycleState.RESUMED)
+             .build();
+
+       mReactRootView.startReactApplication(mReactInstanceManager, "YourApp", null);
+       setContentView(mReactRootView);
+   }
 ...
 }
 
@@ -170,8 +189,8 @@ var ImagePickerManager = require('NativeModules').ImagePickerManager;
     // Same code as in above section!
   });
   ```
-  
- 
+
+
 #### Note
 On iOS, don't assume that the absolute uri returned will persist. See [#107](/../../issues/107)
 

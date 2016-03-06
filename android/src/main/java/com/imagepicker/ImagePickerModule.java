@@ -257,12 +257,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     mCallback = callback;
 
     try {
-      currentActivity.startActivityForResult(libraryIntent, requestCode);
+      mReactContext.startActivityForResult(libraryIntent, requestCode, null);
     } catch (ActivityNotFoundException e) {
       e.printStackTrace();
     }
   }
 
+  @Override
   public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
     //robustness code
     if (mCallback == null || (mCameraCaptureURI == null && requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE)
