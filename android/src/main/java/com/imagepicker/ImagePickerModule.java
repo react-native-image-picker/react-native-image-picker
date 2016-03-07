@@ -93,7 +93,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     List<String> mTitles = new ArrayList<String>();
     List<String> mActions = new ArrayList<String>();
 
-    String cancelButtonTitle = "Cancel";
+    String cancelButtonTitle = getReactApplicationContext().getString(android.R.string.cancel);
 
     if (options.hasKey("takePhotoButtonTitle")
             && options.getString("takePhotoButtonTitle") != null
