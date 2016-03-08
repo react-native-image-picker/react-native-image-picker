@@ -9,6 +9,7 @@ import android.provider.MediaStore;
 import android.database.Cursor;
 import android.util.Base64;
 import android.app.AlertDialog;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.content.DialogInterface;
 import android.graphics.BitmapFactory;
@@ -22,6 +23,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.ActivityEventListener;
 
@@ -104,9 +106,29 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     if (options.hasKey("chooseFromLibraryButtonTitle")
             && options.getString("chooseFromLibraryButtonTitle") != null
             && !options.getString("chooseFromLibraryButtonTitle").isEmpty()) {
+
       mTitles.add(options.getString("chooseFromLibraryButtonTitle"));
       mActions.add("library");
     }
+
+    final ArrayList<String> customKeys = new ArrayList<>();
+    if (options.hasKey("customButtons")
+            && options.getMap("customButtons") != null) {
+
+      ReadableMap customButtons = options.getMap("customButtons");
+
+      ReadableMapKeySetIterator iterator = customButtons.keySetIterator();
+      while (iterator.hasNextKey()) {
+        String key = iterator.nextKey();
+        String value = customButtons.getString(key);
+
+        mTitles.add(key);
+        mActions.add(value);
+        customKeys.add(value);
+      }
+
+    }
+
     if (options.hasKey("cancelButtonTitle")
             && !options.getString("cancelButtonTitle").isEmpty()) {
       cancelButtonTitle = options.getString("cancelButtonTitle");
@@ -134,6 +156,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
           launchCamera(options, callback);
         } else if (act[index].equals("library")) {
           launchImageLibrary(options, callback);
+        } else if (customKeys.indexOf(act[index])>-1) {
+          response.putString("customButton", act[index]);
+          callback.invoke(response);
         } else {
           response.putBoolean("didCancel", true);
           callback.invoke(response);
@@ -234,7 +259,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     } else {
       requestCode = REQUEST_LAUNCH_IMAGE_LIBRARY;
       libraryIntent = new Intent(Intent.ACTION_PICK,
-        android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+              android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 
       mCropImagedUri = null;
       if (allowEditing == true) {
