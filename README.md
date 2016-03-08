@@ -183,7 +183,7 @@ title | OK | OK
 cancelButtonTitle | OK | OK
 takePhotoButtonTitle | OK | OK
 chooseFromLibraryButtonTitle | OK | OK
-customButtons | OK | -
+customButtons | OK | OK
 cameraType | OK | -
 mediaType | OK | OK
 videoQuality | 'low', 'medium', or 'high' | 'low' or 'high'
