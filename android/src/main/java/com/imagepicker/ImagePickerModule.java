@@ -36,22 +36,25 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
     private Uri mImageURI;
     private Callback mCallback;
-    private Boolean noData = false;
-    private Boolean tmpImage;
-    private Boolean allowEditing = false;
-    private Boolean pickVideo = false;
-    private Boolean savePrivate;
-    private String path;
-    private int maxWidth = 0;
-    private int maxHeight = 0;
-    private int aspectX = 0;
-    private int aspectY = 0;
-    private int quality = 100;
-    private int angle = 0;
-    private Boolean forceAngle;
-    private int videoQuality = 1;
-    private int videoDurationLimit = 0;
-    WritableMap response;
+
+    // Options
+    private Boolean mNoData;
+    private Boolean mTmpImage;
+    private Boolean mAllowEditing;
+    private Boolean mPickVideo;
+    private Boolean mSavePrivate;
+    private String mPath;
+    private int mMaxWidth;
+    private int mMaxHeight;
+    private int mAspectX;
+    private int mAspectY;
+    private int mQuality;
+    private int mAngle;
+    private Boolean mForceAngle;
+    private int mVideoQuality;
+    private int mVideoDurationLimit;
+
+    private WritableMap mResponse;
 
     public ImagePickerModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -69,16 +72,16 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     @ReactMethod
     public void showImagePicker(final ReadableMap options, final Callback callback) {
         Activity currentActivity = getCurrentActivity();
-        response = Arguments.createMap();
+        mResponse = Arguments.createMap();
 
         if (currentActivity == null) {
-            response.putString("error", "can't find current Activity");
-            callback.invoke(response);
+            mResponse.putString("error", "can't find current Activity");
+            callback.invoke(mResponse);
             return;
         }
 
-        List<String> mTitles = new ArrayList<String>();
-        List<String> mActions = new ArrayList<String>();
+        List<String> mTitles = new ArrayList<>();
+        List<String> mActions = new ArrayList<>();
 
         String cancelButtonTitle = "Cancel";
 
@@ -88,16 +91,19 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             mTitles.add(options.getString("takePhotoButtonTitle"));
             mActions.add("photo");
         }
+
         if (options.hasKey("chooseFromLibraryButtonTitle")
                 && options.getString("chooseFromLibraryButtonTitle") != null
                 && !options.getString("chooseFromLibraryButtonTitle").isEmpty()) {
             mTitles.add(options.getString("chooseFromLibraryButtonTitle"));
             mActions.add("library");
         }
+
         if (options.hasKey("cancelButtonTitle")
                 && !options.getString("cancelButtonTitle").isEmpty()) {
             cancelButtonTitle = options.getString("cancelButtonTitle");
         }
+
         mTitles.add(cancelButtonTitle);
         mActions.add("cancel");
 
@@ -106,25 +112,28 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
         String[] action = new String[mActions.size()];
         action = mActions.toArray(action);
-        final String[] act = action;
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(currentActivity,
-                android.R.layout.select_dialog_item, option);
         AlertDialog.Builder builder = new AlertDialog.Builder(currentActivity);
         if (options.hasKey("title") && options.getString("title") != null && !options.getString("title").isEmpty()) {
             builder.setTitle(options.getString("title"));
         }
 
+        final String[] act = action;
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(currentActivity, android.R.layout.select_dialog_item, option);
         builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int index) {
                 if (act[index].equals("photo")) {
                     launchCamera(options, callback);
-                } else if (act[index].equals("library")) {
-                    launchImageLibrary(options, callback);
-                } else {
-                    response.putBoolean("didCancel", true);
-                    callback.invoke(response);
+                    return;
                 }
+
+                if (act[index].equals("library")) {
+                    launchImageLibrary(options, callback);
+                    return;
+                }
+
+                mResponse.putBoolean("didCancel", true);
+                callback.invoke(mResponse);
             }
         });
 
@@ -137,8 +146,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             @Override
             public void onCancel(DialogInterface dialog) {
                 dialog.dismiss();
-                response.putBoolean("didCancel", true);
-                callback.invoke(response);
+                mResponse.putBoolean("didCancel", true);
+                callback.invoke(mResponse);
             }
         });
         dialog.show();
@@ -147,25 +156,26 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     // NOTE: Currently not reentrant / doesn't support concurrent requests
     @ReactMethod
     public void launchCamera(final ReadableMap options, final Callback callback) {
-        int requestCode;
-        Intent cameraIntent;
-        response = Arguments.createMap();
+        mResponse = Arguments.createMap();
         Activity currentActivity = getCurrentActivity();
 
         if (currentActivity == null) {
-            response.putString("error", "can't find current Activity");
-            callback.invoke(response);
+            mResponse.putString("error", "can't find current Activity");
+            callback.invoke(mResponse);
             return;
         }
 
         parseOptions(options);
 
-        if (pickVideo) {
+        Intent cameraIntent;
+        int requestCode;
+
+        if (mPickVideo) {
             requestCode = REQUEST_LAUNCH_VIDEO_CAPTURE;
             cameraIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-            cameraIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, videoQuality);
-            if (videoDurationLimit > 0) {
-                cameraIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, videoDurationLimit);
+            cameraIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, mVideoQuality);
+            if (mVideoDurationLimit > 0) {
+                cameraIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, mVideoDurationLimit);
             }
         } else {
             requestCode = REQUEST_LAUNCH_IMAGE_CAPTURE;
@@ -174,30 +184,29 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             // we create a tmp file to save the result
             File imageFile = createOutputFile();
             if (imageFile == null) {
-                response.putString("error", "Cannot create file");
-                callback.invoke(response);
+                mResponse.putString("error", "Cannot create file");
+                callback.invoke(mResponse);
                 return;
             }
 
             mImageURI = Uri.fromFile(imageFile);
             cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(imageFile));
 
-            if (allowEditing) {
+            if (mAllowEditing) {
                 cameraIntent.putExtra("crop", "true");
-                cameraIntent.putExtra("aspectX", aspectX);
-                cameraIntent.putExtra("aspectY", aspectY);
+                cameraIntent.putExtra("aspectX", mAspectX);
+                cameraIntent.putExtra("aspectY", mAspectY);
             }
         }
 
         if (cameraIntent.resolveActivity(mReactContext.getPackageManager()) == null) {
-            response.putString("error", "Cannot launch camera");
-            callback.invoke(response);
+            mResponse.putString("error", "Cannot launch camera");
+            callback.invoke(mResponse);
             return;
         }
 
-        mCallback = callback;
-
         try {
+            mCallback = callback;
             currentActivity.startActivityForResult(cameraIntent, requestCode);
         } catch (ActivityNotFoundException e) {
             e.printStackTrace();
@@ -207,20 +216,21 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     // NOTE: Currently not reentrant / doesn't support concurrent requests
     @ReactMethod
     public void launchImageLibrary(final ReadableMap options, final Callback callback) {
-        int requestCode;
-        Intent libraryIntent;
-        response = Arguments.createMap();
+        mResponse = Arguments.createMap();
         Activity currentActivity = getCurrentActivity();
 
         if (currentActivity == null) {
-            response.putString("error", "can't find current Activity");
-            callback.invoke(response);
+            mResponse.putString("error", "can't find current Activity");
+            callback.invoke(mResponse);
             return;
         }
 
         parseOptions(options);
 
-        if (pickVideo) {
+        Intent libraryIntent;
+        int requestCode;
+
+        if (mPickVideo) {
             requestCode = REQUEST_LAUNCH_VIDEO_LIBRARY;
             libraryIntent = new Intent(Intent.ACTION_PICK);
             libraryIntent.setType("video/*");
@@ -230,92 +240,62 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
                     android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 
             mImageURI = null;
-            if (allowEditing) {
+            if (mAllowEditing) {
                 File imageFile = createOutputFile();
                 if (imageFile == null) {
-                    response.putString("error", "Cannot create file");
-                    callback.invoke(response);
+                    mResponse.putString("error", "Cannot create file");
+                    callback.invoke(mResponse);
                     return;
                 }
 
                 mImageURI = Uri.fromFile(imageFile);
                 libraryIntent.putExtra(MediaStore.EXTRA_OUTPUT, mImageURI);
                 libraryIntent.putExtra("crop", "true");
-                libraryIntent.putExtra("aspectX", aspectX);
-                libraryIntent.putExtra("aspectY", aspectY);
+                libraryIntent.putExtra("aspectX", mAspectX);
+                libraryIntent.putExtra("aspectY", mAspectY);
             }
         }
 
         if (libraryIntent.resolveActivity(mReactContext.getPackageManager()) == null) {
-            response.putString("error", "Cannot launch photo library");
-            callback.invoke(response);
+            mResponse.putString("error", "Cannot launch photo library");
+            callback.invoke(mResponse);
             return;
         }
 
-        mCallback = callback;
-
         try {
+            mCallback = callback;
             currentActivity.startActivityForResult(libraryIntent, requestCode);
         } catch (ActivityNotFoundException e) {
             e.printStackTrace();
         }
     }
 
-    public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
-        //robustness code
-
-        if (mCallback == null || (requestCode != REQUEST_LAUNCH_IMAGE_CAPTURE && requestCode != REQUEST_LAUNCH_IMAGE_LIBRARY
-                && requestCode != REQUEST_LAUNCH_VIDEO_LIBRARY && requestCode != REQUEST_LAUNCH_VIDEO_CAPTURE)) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (isValidResult(requestCode)) {
             return;
         }
 
         // user cancel
         if (resultCode != Activity.RESULT_OK) {
             if (mImageURI != null) {
-                deleteFile(new File(getRealPathFromURI(mImageURI)), requestCode);
+                deleteFile(new File(getPathFromURI(mImageURI)), requestCode);
             }
-            response.putBoolean("didCancel", true);
-            mCallback.invoke(response);
+            mResponse.putBoolean("didCancel", true);
+            mCallback.invoke(mResponse);
             return;
         }
 
-        Uri uri;
-        switch (requestCode) {
-            case REQUEST_LAUNCH_IMAGE_LIBRARY:
-                if (mImageURI == null) {
-                    uri = data.getData();
-
-                    if (!savePrivate) {
-                        break;
-                    }
-
-                    mImageURI = uri;
-                }
-            case REQUEST_LAUNCH_IMAGE_CAPTURE:
-                File outputFile = createNewFile();
-                File tmpFile = new File(getRealPathFromURI(mImageURI));
-                copyFile(tmpFile, outputFile);
-                deleteFile(tmpFile, requestCode);
-                uri = Uri.fromFile(outputFile);
-                break;
-            case REQUEST_LAUNCH_VIDEO_LIBRARY:
-                response.putString("uri", data.getData().toString());
-                mCallback.invoke(response);
-                return;
-            case REQUEST_LAUNCH_VIDEO_CAPTURE:
-                response.putString("uri", data.getData().toString());
-                mCallback.invoke(response);
-                return;
-            default:
-                uri = null;
+        Uri uri = getUriFromResult(requestCode, data);
+        if (uri == null) {
+            return;
         }
 
-        String realPath = getRealPathFromURI(uri);
+        String path = getPathFromURI(uri);
         boolean isUrl = false;
 
-        if (realPath != null) {
+        if (path != null) {
             try {
-                new URL(realPath);
+                new URL(path);
                 isUrl = true;
             } catch (MalformedURLException e) {
                 // not a url
@@ -323,92 +303,153 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         }
 
         // image isn't in memory cache
-        if (realPath == null || isUrl) {
+        if (path == null || isUrl) {
             try {
                 File file = createFileFromURI(uri);
-                realPath = file.getAbsolutePath();
+                path = file.getAbsolutePath();
                 uri = Uri.fromFile(file);
             } catch (Exception e) {
                 // image not in cache
-                response.putString("error", "Could not read photo");
-                response.putString("uri", uri.toString());
-                mCallback.invoke(response);
+                mResponse.putString("error", "Could not read photo");
+                mResponse.putString("uri", uri.toString());
+                mCallback.invoke(mResponse);
                 return;
             }
         }
 
-        int CurrentAngle = 0;
+        int currentAngle = 0;
         try {
-            ExifInterface exif = new ExifInterface(realPath);
+            ExifInterface exif = new ExifInterface(path);
             int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
             boolean isVertical = true;
             switch (orientation) {
                 case ExifInterface.ORIENTATION_ROTATE_270:
                     isVertical = false;
-                    CurrentAngle = 270;
+                    currentAngle = 270;
                     break;
                 case ExifInterface.ORIENTATION_ROTATE_90:
                     isVertical = false;
-                    CurrentAngle = 90;
+                    currentAngle = 90;
                     break;
                 case ExifInterface.ORIENTATION_ROTATE_180:
-                    CurrentAngle = 180;
+                    currentAngle = 180;
                     break;
             }
-            response.putBoolean("isVertical", isVertical);
+            mResponse.putBoolean("isVertical", isVertical);
         } catch (IOException e) {
             e.printStackTrace();
-            deleteFile(new File(getRealPathFromURI(uri)), requestCode);
-            response.putString("error", e.getMessage());
-            mCallback.invoke(response);
+            deleteFile(new File(getPathFromURI(uri)), requestCode);
+            mResponse.putString("error", e.getMessage());
+            mCallback.invoke(mResponse);
             return;
         }
 
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(realPath, options);
+        BitmapFactory.decodeFile(path, options);
         int initialWidth = options.outWidth;
         int initialHeight = options.outHeight;
 
         // don't create a new file if contraint are respected
-        if (((initialWidth < maxWidth && maxWidth > 0) || maxWidth == 0)
-                && ((initialHeight < maxHeight && maxHeight > 0) || maxHeight == 0)
-                && quality == 100 && (!forceAngle || CurrentAngle == angle)) {
-            response.putInt("width", initialWidth);
-            response.putInt("height", initialHeight);
+        if (((initialWidth < mMaxWidth && mMaxWidth > 0) || mMaxWidth == 0)
+                && ((initialHeight < mMaxHeight && mMaxHeight > 0) || mMaxHeight == 0)
+                && mQuality == 100 && (!mForceAngle || currentAngle == mAngle)) {
+            mResponse.putInt("width", initialWidth);
+            mResponse.putInt("height", initialHeight);
         } else {
-            File resized = getResizedImage(getRealPathFromURI(uri), initialWidth, initialHeight);
-            deleteFile(new File(getRealPathFromURI(uri)), requestCode);
-            realPath = resized.getAbsolutePath();
+            File resized = getResizedImage(getPathFromURI(uri), initialWidth, initialHeight);
+            deleteFile(new File(getPathFromURI(uri)), requestCode);
+            path = resized.getAbsolutePath();
             uri = Uri.fromFile(resized);
-            BitmapFactory.decodeFile(realPath, options);
-            response.putInt("width", options.outWidth);
-            response.putInt("height", options.outHeight);
+            BitmapFactory.decodeFile(path, options);
+            mResponse.putInt("width", options.outWidth);
+            mResponse.putInt("height", options.outHeight);
         }
 
-        response.putString("uri", uri.toString());
-        response.putString("path", realPath);
+        mResponse.putString("uri", uri.toString());
+        mResponse.putString("path", path);
 
-        if (!noData) {
-            response.putString("data", getBase64StringFromFile(realPath));
+        if (!mNoData) {
+            mResponse.putString("data", getBase64StringFromFile(path));
         }
 
-        mCallback.invoke(response);
+        mCallback.invoke(mResponse);
     }
 
-    private String getRealPathFromURI(Uri uri) {
-        String result;
+    /**
+     * Checks if returned result from activity is expected
+     * @param requestCode Request code for activity
+     * @return True if valid, otherwise false
+     */
+    private boolean isValidResult(int requestCode) {
+        return mCallback == null || (requestCode != REQUEST_LAUNCH_IMAGE_CAPTURE && requestCode != REQUEST_LAUNCH_IMAGE_LIBRARY
+                && requestCode != REQUEST_LAUNCH_VIDEO_LIBRARY && requestCode != REQUEST_LAUNCH_VIDEO_CAPTURE);
+    }
+
+    /**
+     * Returns uri from activity result
+     * @param requestCode Requested activity code
+     * @param data Data returned by activity
+     * @return Uri, or null if result is handled
+     */
+    private Uri getUriFromResult(int requestCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_LAUNCH_IMAGE_LIBRARY:
+                if (mImageURI == null) {
+                    Uri uri = data.getData();
+
+                    if (!mSavePrivate) {
+                        return uri;
+                    }
+
+                    mImageURI = uri;
+                }
+            case REQUEST_LAUNCH_IMAGE_CAPTURE:
+                File tmpFile = new File(getPathFromURI(mImageURI));
+                File outputFile = createNewFile();
+
+                if (outputFile != null) {
+                    copyFile(tmpFile, outputFile);
+                    deleteFile(tmpFile, requestCode);
+                    return Uri.fromFile(outputFile);
+                }
+
+                deleteFile(tmpFile, requestCode);
+                mResponse.putString("error", "Could create requested photo file");
+                mCallback.invoke(mResponse);
+                return null;
+            case REQUEST_LAUNCH_VIDEO_LIBRARY:
+                mResponse.putString("uri", data.getData().toString());
+                mCallback.invoke(mResponse);
+                return null;
+            case REQUEST_LAUNCH_VIDEO_CAPTURE:
+                mResponse.putString("uri", data.getData().toString());
+                mCallback.invoke(mResponse);
+                return null;
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * Resolves Uri to path
+     * @param uri Uri to resolve
+     * @return Path for given uri
+     */
+    private String getPathFromURI(Uri uri) {
         String[] projection = {MediaStore.Images.Media.DATA};
         Cursor cursor = mReactContext.getContentResolver().query(uri, projection, null, null, null);
+
         if (cursor == null) { // Source is Dropbox or other similar local file path
-            result = uri.getPath();
-        } else {
-            cursor.moveToFirst();
-            int idx = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-            result = cursor.getString(idx);
-            cursor.close();
+            return uri.getPath();
         }
-        return result;
+
+        cursor.moveToFirst();
+        int idx = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        String path = cursor.getString(idx);
+        cursor.close();
+
+        return path;
     }
 
     /**
@@ -442,77 +483,78 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         return file;
     }
 
+    /**
+     * Encodes files content to base64 string
+     * @param absoluteFilePath File to encode
+     * @return Base64 encoded content
+     */
     private String getBase64StringFromFile(String absoluteFilePath) {
-        InputStream inputStream = null;
         try {
-            inputStream = new FileInputStream(absoluteFilePath);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+            InputStream inputStream = new FileInputStream(absoluteFilePath);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-        byte[] bytes;
-        byte[] buffer = new byte[8192];
-        int bytesRead;
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        try {
+            byte[] buffer = new byte[8192];
+            int bytesRead;
             while ((bytesRead = inputStream.read(buffer)) != -1) {
-                output.write(buffer, 0, bytesRead);
+                outputStream.write(buffer, 0, bytesRead);
             }
-        } catch (IOException e) {
+
+            byte[] bytes = outputStream.toByteArray();
+
+            inputStream.close();
+            outputStream.close();
+
+            return Base64.encodeToString(bytes, Base64.NO_WRAP);
+        } catch (Exception e) {
             e.printStackTrace();
+            return "";
         }
-        bytes = output.toByteArray();
-        return Base64.encodeToString(bytes, Base64.NO_WRAP);
     }
 
     /**
      * Create a resized image to fill the maxWidth/maxHeight values,the quality
      * value and the angle value
      *
-     * @param realPath
+     * @param realPath Path of file to resize
      * @param initialWidth
      * @param initialHeight
      * @return resized file
      */
     private File getResizedImage(final String realPath, final int initialWidth, final int initialHeight) {
-        Bitmap photo = BitmapFactory.decodeFile(realPath);
+        if (mMaxWidth == 0) {
+            mMaxWidth = initialWidth;
+        }
 
-        Bitmap scaledphoto;
-        if (maxWidth == 0) {
-            maxWidth = initialWidth;
+        if (mMaxHeight == 0) {
+            mMaxHeight = initialHeight;
         }
-        if (maxHeight == 0) {
-            maxHeight = initialHeight;
-        }
-        double widthRatio = (double) maxWidth / initialWidth;
-        double heightRatio = (double) maxHeight / initialHeight;
+
+        double widthRatio = (double) mMaxWidth / initialWidth;
+        double heightRatio = (double) mMaxHeight / initialHeight;
 
         double ratio = (widthRatio < heightRatio)
                 ? widthRatio
                 : heightRatio;
 
         Matrix matrix = new Matrix();
-        matrix.postRotate(angle);
+        matrix.postRotate(mAngle);
         matrix.postScale((float) ratio, (float) ratio);
 
-        scaledphoto = Bitmap.createBitmap(photo, 0, 0, photo.getWidth(), photo.getHeight(), matrix, true);
+        Bitmap photo = BitmapFactory.decodeFile(realPath);
+        Bitmap scaledPhoto = Bitmap.createBitmap(photo, 0, 0, photo.getWidth(), photo.getHeight(), matrix, true);
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        scaledphoto.compress(Bitmap.CompressFormat.JPEG, quality, bytes);
+        scaledPhoto.compress(Bitmap.CompressFormat.JPEG, mQuality, bytes);
 
         File f = createNewFile();
-        FileOutputStream fo;
+
         try {
-            fo = new FileOutputStream(f);
-            try {
-                fo.write(bytes.toByteArray());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } catch (FileNotFoundException e) {
+            FileOutputStream fo = new FileOutputStream(f);
+            fo.write(bytes.toByteArray());
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
-        scaledphoto.recycle();
+        scaledPhoto.recycle();
         photo.recycle();
 
         return f;
@@ -546,18 +588,18 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
      */
     private File createNewFile() {
         String filename = String.format("%s.jpg", UUID.randomUUID().toString());
-        File directory;
 
-        if (tmpImage) {
+        File directory;
+        if (mTmpImage) {
             directory = mReactContext.getCacheDir();
-        } else if (savePrivate) {
+        } else if (mSavePrivate) {
             directory = mReactContext.getFilesDir();
         } else {
             directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
         }
 
-        if (!TextUtils.isEmpty(path)) {
-            directory = new File(directory, path);
+        if (!TextUtils.isEmpty(mPath)) {
+            directory = new File(directory, mPath);
             if (!directory.exists() && !directory.mkdirs()) {
                 return null;
             }
@@ -578,34 +620,36 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     }
 
     /**
-     * Deletes file if allowed
-     * @param file
-     * @param pickerType
+     * Delete file if allowed
+     * @param file File to delete
+     * @param pickerType Image capture source
      */
     private void deleteFile(File file, int pickerType) {
-        if (pickerType == REQUEST_LAUNCH_IMAGE_CAPTURE || allowEditing) {
+        if (pickerType == REQUEST_LAUNCH_IMAGE_CAPTURE || mAllowEditing) {
             file.delete();
         }
     }
 
     /**
      * Copies file from src to dest
-     * @param src
-     * @param dst
+     * @param src Source file to copy
+     * @param dst Destination file
+     * @return True if file is copied, false otherwise
      */
     public boolean copyFile(File src, File dst) {
         try {
             InputStream in = new FileInputStream(src);
             OutputStream out = new FileOutputStream(dst);
 
-            // Transfer bytes from in to out
             byte[] buf = new byte[1024];
             int len;
-            while ((len = in.read(buf)) > 0) {
+            while ((len = in.read(buf)) != -1) {
                 out.write(buf, 0, len);
             }
+
             in.close();
             out.close();
+
             return true;
         }catch (IOException e) {
             e.printStackTrace();
@@ -614,64 +658,70 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     }
 
     private void parseOptions(final ReadableMap options) {
-        noData = false;
+        mNoData = false;
         if (options.hasKey("noData")) {
-            noData = options.getBoolean("noData");
+            mNoData = options.getBoolean("noData");
         }
-        maxWidth = 0;
+
+        mMaxWidth = 0;
         if (options.hasKey("maxWidth")) {
-            maxWidth = options.getInt("maxWidth");
+            mMaxWidth = options.getInt("maxWidth");
         }
-        maxHeight = 0;
+
+        mMaxHeight = 0;
         if (options.hasKey("maxHeight")) {
-            maxHeight = options.getInt("maxHeight");
+            mMaxHeight = options.getInt("maxHeight");
         }
-        aspectX = 0;
+
+        mAspectX = 0;
         if (options.hasKey("aspectX")) {
-            aspectX = options.getInt("aspectX");
+            mAspectX = options.getInt("aspectX");
         }
-        aspectY = 0;
+
+        mAspectY = 0;
         if (options.hasKey("aspectY")) {
-            aspectY = options.getInt("aspectY");
+            mAspectY = options.getInt("aspectY");
         }
-        quality = 100;
+
+        mQuality = 100;
         if (options.hasKey("quality")) {
-            quality = (int) (options.getDouble("quality") * 100);
+            mQuality = (int) (options.getDouble("quality") * 100);
         }
-        tmpImage = true;
-        savePrivate = false;
-        path = null;
+
+        mTmpImage = true;
+        mSavePrivate = false;
+        mPath = null;
         if (options.hasKey("storageOptions")) {
-            tmpImage = false;
+            mTmpImage = false;
+
             ReadableMap storageOptions = options.getMap("storageOptions");
             if (storageOptions.hasKey("savePrivate")) {
-                savePrivate = storageOptions.getBoolean("savePrivate");
+                mSavePrivate = storageOptions.getBoolean("savePrivate");
             }
+
             if (storageOptions.hasKey("path")) {
-                path = storageOptions.getString("path");
+                mPath = storageOptions.getString("path");
             }
         }
-        allowEditing = false;
-        if (options.hasKey("allowsEditing")) {
-            allowEditing = options.getBoolean("allowsEditing");
+
+        mAllowEditing = options.hasKey("allowsEditing") && options.getBoolean("allowsEditing");
+
+        mForceAngle = options.hasKey("angle");
+        mAngle = 0;
+        if (mForceAngle) {
+            mAngle = options.getInt("angle");
         }
-        forceAngle = false;
-        angle = 0;
-        if (options.hasKey("angle")) {
-            forceAngle = true;
-            angle = options.getInt("angle");
-        }
-        pickVideo = false;
-        if (options.hasKey("mediaType") && options.getString("mediaType").equals("video")) {
-            pickVideo = true;
-        }
-        videoQuality = 1;
+
+        mPickVideo = options.hasKey("mediaType") && options.getString("mediaType").equals("video");
+
+        mVideoQuality = 1;
         if (options.hasKey("videoQuality") && options.getString("videoQuality").equals("low")) {
-            videoQuality = 0;
+            mVideoQuality = 0;
         }
-        videoDurationLimit = 0;
+
+        mVideoDurationLimit = 0;
         if (options.hasKey("durationLimit")) {
-            videoDurationLimit = options.getInt("durationLimit");
+            mVideoDurationLimit = options.getInt("durationLimit");
         }
     }
 }
