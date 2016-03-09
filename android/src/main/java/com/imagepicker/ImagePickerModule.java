@@ -501,6 +501,23 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     matrix.postRotate(angle);
     matrix.postScale((float) ratio, (float) ratio);
 
+    ExifInterface exif;
+    try {
+      exif = new ExifInterface(realPath);
+
+      int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 0);
+
+      if (orientation == 6) {
+        matrix.postRotate(90);
+      } else if (orientation == 3) {
+        matrix.postRotate(180);
+      } else if (orientation == 8) {
+        matrix.postRotate(270);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
     scaledphoto = Bitmap.createBitmap(photo, 0, 0, photo.getWidth(), photo.getHeight(), matrix, true);
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     scaledphoto.compress(Bitmap.CompressFormat.JPEG, quality, bytes);
