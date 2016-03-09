@@ -99,21 +99,21 @@ var ImagePickerManager = require('NativeModules').ImagePickerManager;
     durationLimit: 10, // video recording max time in seconds
     maxWidth: 100, // photos only
     maxHeight: 100, // photos only
-    aspectX: 2, // aspectX:aspectY, the cropping image's ratio of width to height
-    aspectY: 1, // aspectX:aspectY, the cropping image's ratio of width to height
-    quality: 0.2, // photos only
-    angle: 0, // photos only
-    allowsEditing: false, // Built in functionality to resize/reposition the image
+    aspectX: 2, // android only - aspectX:aspectY, the cropping image's ratio of width to height
+    aspectY: 1, // android only - aspectX:aspectY, the cropping image's ratio of width to height
+    quality: 0.2, // 0 to 1, photos only
+    angle: 0, // android only, photos only
+    allowsEditing: false, // Built in functionality to resize/reposition the image after selection
     noData: false, // photos only - disables the base64 `data` field from being generated (greatly improves performance on large photos)
-    storageOptions: { // if this key is provided, the image will get saved in the documents/pictures directory (rather than a temporary directory)
-      skipBackup: true, // image will NOT be backed up to icloud
-      path: 'images' // will save image at /Documents/images rather than the root
+    storageOptions: { // if this key is provided, the image will get saved in the documents directory on ios, and the pictures directory on android (rather than a temporary directory)
+      skipBackup: true, // ios only - image will NOT be backed up to icloud
+      path: 'images' // ios only - will save image at /Documents/images rather than the root
     }
   };
 
   /**
    * The first arg will be the options object for customization, the second is
-   * your callback which sends bool: didCancel, object: response.
+   * your callback which sends object: response.
    *
    * response.didCancel will inform you if the user cancelled the process
    * response.error will contain an error message, if there is one
@@ -183,10 +183,10 @@ title | OK | OK
 cancelButtonTitle | OK | OK
 takePhotoButtonTitle | OK | OK
 chooseFromLibraryButtonTitle | OK | OK
-customButtons | OK | -
+customButtons | OK | OK
 cameraType | OK | -
 mediaType | OK | OK
-videoQuality | OK | 'low' or 'high'
+videoQuality | 'low', 'medium', or 'high' | 'low' or 'high'
 durationLimit | - | OK
 angle | - | OK
 aspectX | - | OK
@@ -196,4 +196,4 @@ maxHeight | OK | OK
 quality | OK | OK
 allowsEditing | OK | OK
 noData | OK | OK
-storageOptions | OK | if this key is provided, the image will get saved in the pictures directory
+storageOptions | OK | OK

@@ -1,43 +1,44 @@
 package com.imagepicker;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.database.Cursor;
 import android.util.Base64;
-import android.app.AlertDialog;
 import android.widget.ArrayAdapter;
-import android.content.DialogInterface;
-import android.graphics.BitmapFactory;
-import android.graphics.Bitmap;
-import android.media.ExifInterface;
-import android.graphics.Matrix;
 
+import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.bridge.ActivityEventListener;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.FileInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
 import java.io.OutputStream;
-import java.util.List;
-import java.util.ArrayList;
-import java.io.FileOutputStream;
-import java.util.UUID;
-import java.net.URL;
 import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public class ImagePickerModule extends ReactContextBaseJavaModule implements ActivityEventListener {
 
@@ -90,39 +91,46 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       return;
     }
 
-    List<String> mTitles = new ArrayList<String>();
-    List<String> mActions = new ArrayList<String>();
+    final List<String> titles = new ArrayList<String>();
+    final List<String> actions = new ArrayList<String>();
 
-    String cancelButtonTitle = "Cancel";
+    String cancelButtonTitle = getReactApplicationContext().getString(android.R.string.cancel);
 
     if (options.hasKey("takePhotoButtonTitle")
             && options.getString("takePhotoButtonTitle") != null
             && !options.getString("takePhotoButtonTitle").isEmpty()) {
-      mTitles.add(options.getString("takePhotoButtonTitle"));
-      mActions.add("photo");
+      titles.add(options.getString("takePhotoButtonTitle"));
+      actions.add("photo");
     }
     if (options.hasKey("chooseFromLibraryButtonTitle")
             && options.getString("chooseFromLibraryButtonTitle") != null
             && !options.getString("chooseFromLibraryButtonTitle").isEmpty()) {
-      mTitles.add(options.getString("chooseFromLibraryButtonTitle"));
-      mActions.add("library");
+      titles.add(options.getString("chooseFromLibraryButtonTitle"));
+      actions.add("library");
     }
     if (options.hasKey("cancelButtonTitle")
             && !options.getString("cancelButtonTitle").isEmpty()) {
       cancelButtonTitle = options.getString("cancelButtonTitle");
     }
-    mTitles.add(cancelButtonTitle);
-    mActions.add("cancel");
 
-    String[] option = new String[mTitles.size()];
-    option = mTitles.toArray(option);
+    if (options.hasKey("customButtons")) {
+      ReadableMap buttons = options.getMap("customButtons");
+      ReadableMapKeySetIterator it = buttons.keySetIterator();
+      // Keep the current size as the iterator returns the keys in the reverse order they are defined
+      int currentIndex = titles.size();
+      while (it.hasNextKey()) {
+        String key = it.nextKey();
 
-    String[] action = new String[mActions.size()];
-    action = mActions.toArray(action);
-    final String[] act = action;
+        titles.add(currentIndex, key);
+        actions.add(currentIndex, buttons.getString(key));
+      }
+    }
+
+    titles.add(cancelButtonTitle);
+    actions.add("cancel");
 
     ArrayAdapter<String> adapter = new ArrayAdapter<String>(currentActivity,
-            android.R.layout.select_dialog_item, option);
+            android.R.layout.select_dialog_item, titles);
     AlertDialog.Builder builder = new AlertDialog.Builder(currentActivity);
     if (options.hasKey("title") && options.getString("title") != null && !options.getString("title").isEmpty()) {
       builder.setTitle(options.getString("title"));
@@ -130,13 +138,22 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
     builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int index) {
-        if (act[index].equals("photo")) {
-          launchCamera(options, callback);
-        } else if (act[index].equals("library")) {
-          launchImageLibrary(options, callback);
-        } else {
-          response.putBoolean("didCancel", true);
-          callback.invoke(response);
+        String action = actions.get(index);
+
+        switch (action) {
+          case "photo":
+            launchCamera(options, callback);
+            break;
+          case "library":
+            launchImageLibrary(options, callback);
+            break;
+          case "cancel":
+            response.putBoolean("didCancel", true);
+            callback.invoke(response);
+            break;
+          default: // custom button
+            response.putString("customButton", action);
+            callback.invoke(response);
         }
       }
     });
