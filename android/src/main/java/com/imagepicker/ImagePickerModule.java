@@ -1,43 +1,29 @@
 package com.imagepicker;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.database.Cursor;
+import android.text.TextUtils;
 import android.util.Base64;
-import android.app.AlertDialog;
 import android.widget.ArrayAdapter;
-import android.content.DialogInterface;
-import android.graphics.BitmapFactory;
-import android.graphics.Bitmap;
-import android.media.ExifInterface;
-import android.graphics.Matrix;
+import com.facebook.react.bridge.*;
 
-import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.Callback;
-import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContextBaseJavaModule;
-import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.bridge.ActivityEventListener;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.FileInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.OutputStream;
-import java.util.List;
-import java.util.ArrayList;
-import java.io.FileOutputStream;
-import java.util.UUID;
-import java.net.URL;
+import java.io.*;
 import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public class ImagePickerModule extends ReactContextBaseJavaModule implements ActivityEventListener {
 
@@ -48,20 +34,21 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
   private final ReactApplicationContext mReactContext;
 
-  private Uri mCameraCaptureURI;
-  private Uri mCropImagedUri;
+  private Uri mImageURI;
   private Callback mCallback;
   private Boolean noData = false;
   private Boolean tmpImage;
   private Boolean allowEditing = false;
   private Boolean pickVideo = false;
+  private Boolean savePrivate;
+  private String path;
   private int maxWidth = 0;
   private int maxHeight = 0;
   private int aspectX = 0;
   private int aspectY = 0;
   private int quality = 100;
   private int angle = 0;
-  private Boolean forceAngle = false;
+  private Boolean forceAngle;
   private int videoQuality = 1;
   private int videoDurationLimit = 0;
   WritableMap response;
@@ -173,7 +160,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
     parseOptions(options);
 
-    if (pickVideo == true) {
+    if (pickVideo) {
       requestCode = REQUEST_LAUNCH_VIDEO_CAPTURE;
       cameraIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
       cameraIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, videoQuality);
@@ -185,11 +172,17 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
       // we create a tmp file to save the result
-      File imageFile = createNewFile(true);
-      mCameraCaptureURI = Uri.fromFile(imageFile);
+      File imageFile = createOutputFile();
+      if (imageFile == null) {
+        response.putString("error", "Cannot create file");
+        callback.invoke(response);
+        return;
+      }
+
+      mImageURI = Uri.fromFile(imageFile);
       cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(imageFile));
 
-      if (allowEditing == true) {
+      if (allowEditing) {
         cameraIntent.putExtra("crop", "true");
         cameraIntent.putExtra("aspectX", aspectX);
         cameraIntent.putExtra("aspectY", aspectY);
@@ -227,7 +220,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
     parseOptions(options);
 
-    if (pickVideo == true) {
+    if (pickVideo) {
       requestCode = REQUEST_LAUNCH_VIDEO_LIBRARY;
       libraryIntent = new Intent(Intent.ACTION_PICK);
       libraryIntent.setType("video/*");
@@ -236,12 +229,17 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       libraryIntent = new Intent(Intent.ACTION_PICK,
         android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 
-      mCropImagedUri = null;
-      if (allowEditing == true) {
-        // create a file to save the croped image
-        File imageFile = createNewFile(true);
-        mCropImagedUri = Uri.fromFile(imageFile);
-        libraryIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCropImagedUri);
+      mImageURI = null;
+      if (allowEditing) {
+        File imageFile = createOutputFile();
+        if (imageFile == null) {
+          response.putString("error", "Cannot create file");
+          callback.invoke(response);
+          return;
+        }
+
+        mImageURI = Uri.fromFile(imageFile);
+        libraryIntent.putExtra(MediaStore.EXTRA_OUTPUT, mImageURI);
         libraryIntent.putExtra("crop", "true");
         libraryIntent.putExtra("aspectX", aspectX);
         libraryIntent.putExtra("aspectY", aspectY);
@@ -265,14 +263,17 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
   public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
     //robustness code
-    if (mCallback == null || (mCameraCaptureURI == null && requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE)
-            || (requestCode != REQUEST_LAUNCH_IMAGE_CAPTURE && requestCode != REQUEST_LAUNCH_IMAGE_LIBRARY
+
+    if (mCallback == null || (requestCode != REQUEST_LAUNCH_IMAGE_CAPTURE && requestCode != REQUEST_LAUNCH_IMAGE_LIBRARY
             && requestCode != REQUEST_LAUNCH_VIDEO_LIBRARY && requestCode != REQUEST_LAUNCH_VIDEO_CAPTURE)) {
       return;
     }
 
     // user cancel
     if (resultCode != Activity.RESULT_OK) {
+      if (mImageURI != null) {
+        deleteFile(new File(getRealPathFromURI(mImageURI)), requestCode);
+      }
       response.putBoolean("didCancel", true);
       mCallback.invoke(response);
       return;
@@ -280,15 +281,22 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
     Uri uri;
     switch (requestCode) {
-      case REQUEST_LAUNCH_IMAGE_CAPTURE:
-        uri = mCameraCaptureURI;
-        break;
       case REQUEST_LAUNCH_IMAGE_LIBRARY:
-        if (mCropImagedUri == null) {
+        if (mImageURI == null) {
           uri = data.getData();
-        } else {
-          uri = mCropImagedUri;
+
+          if (!savePrivate) {
+            break;
+          }
+
+          mImageURI = uri;
         }
+      case REQUEST_LAUNCH_IMAGE_CAPTURE:
+        File outputFile = createNewFile();
+        File tmpFile = new File(getRealPathFromURI(mImageURI));
+        copyFile(tmpFile, outputFile);
+        deleteFile(tmpFile, requestCode);
+        uri = Uri.fromFile(outputFile);
         break;
       case REQUEST_LAUNCH_VIDEO_LIBRARY:
         response.putString("uri", data.getData().toString());
@@ -307,7 +315,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
     if (realPath != null) {
       try {
-        URL url = new URL(realPath);
+        new URL(realPath);
         isUrl = true;
       } catch (MalformedURLException e) {
         // not a url
@@ -350,6 +358,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       response.putBoolean("isVertical", isVertical);
     } catch (IOException e) {
       e.printStackTrace();
+      deleteFile(new File(getRealPathFromURI(uri)), requestCode);
       response.putString("error", e.getMessage());
       mCallback.invoke(response);
       return;
@@ -357,21 +366,22 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
     BitmapFactory.Options options = new BitmapFactory.Options();
     options.inJustDecodeBounds = true;
-    Bitmap photo = BitmapFactory.decodeFile(realPath, options);
+    BitmapFactory.decodeFile(realPath, options);
     int initialWidth = options.outWidth;
     int initialHeight = options.outHeight;
 
     // don't create a new file if contraint are respected
     if (((initialWidth < maxWidth && maxWidth > 0) || maxWidth == 0)
             && ((initialHeight < maxHeight && maxHeight > 0) || maxHeight == 0)
-            && quality == 100 && (!forceAngle || (forceAngle && CurrentAngle == angle))) {
+            && quality == 100 && (!forceAngle || CurrentAngle == angle)) {
       response.putInt("width", initialWidth);
       response.putInt("height", initialHeight);
     } else {
       File resized = getResizedImage(getRealPathFromURI(uri), initialWidth, initialHeight);
+      deleteFile(new File(getRealPathFromURI(uri)), requestCode);
       realPath = resized.getAbsolutePath();
       uri = Uri.fromFile(resized);
-      photo = BitmapFactory.decodeFile(realPath, options);
+      BitmapFactory.decodeFile(realPath, options);
       response.putInt("width", options.outWidth);
       response.putInt("height", options.outHeight);
     }
@@ -382,6 +392,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     if (!noData) {
       response.putString("data", getBase64StringFromFile(realPath));
     }
+
     mCallback.invoke(response);
   }
 
@@ -412,7 +423,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
    * @throws Exception
    */
   private File createFileFromURI(Uri uri) throws Exception {
-    File file = new File(mReactContext.getCacheDir(), "photo-" + uri.getLastPathSegment());
+    File file = new File(mReactContext.getCacheDir(), uri.getLastPathSegment());
     InputStream input = mReactContext.getContentResolver().openInputStream(uri);
     OutputStream output = new FileOutputStream(file);
 
@@ -466,7 +477,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   private File getResizedImage(final String realPath, final int initialWidth, final int initialHeight) {
     Bitmap photo = BitmapFactory.decodeFile(realPath);
 
-    Bitmap scaledphoto = null;
+    Bitmap scaledphoto;
     if (maxWidth == 0) {
       maxWidth = initialWidth;
     }
@@ -488,7 +499,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     scaledphoto.compress(Bitmap.CompressFormat.JPEG, quality, bytes);
 
-    File f = createNewFile(false);
+    File f = createNewFile();
     FileOutputStream fo;
     try {
       fo = new FileOutputStream(f);
@@ -501,37 +512,104 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       e.printStackTrace();
     }
 
-    // recycle to avoid java.lang.OutOfMemoryError
-    if (photo != null) {
-      scaledphoto.recycle();
-      photo.recycle();
-      scaledphoto = null;
-      photo = null;
-    }
+    scaledphoto.recycle();
+    photo.recycle();
+
     return f;
   }
 
   /**
-   * Create a new file
-   *
-   * @return an empty file
+   * Creates output file for camera or edited image
+   * @return Empty file
    */
-  private File createNewFile(final boolean forcePictureDirectory) {
-    String filename = "image-" + UUID.randomUUID().toString() + ".jpg";
-    if (tmpImage && forcePictureDirectory != true) {
-      return new File(mReactContext.getCacheDir(), filename);
-    } else {
-      File path = Environment.getExternalStoragePublicDirectory(
-              Environment.DIRECTORY_PICTURES);
-      File f = new File(path, filename);
+  private File createOutputFile() {
+    String filename = String.format("%s.jpg", UUID.randomUUID().toString());
+    File directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
 
-      try {
-        path.mkdirs();
-        f.createNewFile();
-      } catch (IOException e) {
-        e.printStackTrace();
+    File file = new File(directory, filename);
+
+    try {
+      if (!file.createNewFile()) {
+        return null;
       }
-      return f;
+    } catch (IOException e) {
+      e.printStackTrace();
+      return null;
+    }
+
+    return file;
+  }
+
+  /**
+   * Creates new file requested by action options
+   * @return Empty file
+   */
+  private File createNewFile() {
+    String filename = String.format("%s.jpg", UUID.randomUUID().toString());
+    File directory;
+
+    if (tmpImage) {
+      directory = mReactContext.getCacheDir();
+    } else if (savePrivate) {
+      directory = mReactContext.getFilesDir();
+    } else {
+      directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+    }
+
+    if (!TextUtils.isEmpty(path)) {
+      directory = new File(directory, path);
+      if (!directory.exists() && !directory.mkdirs()) {
+        return null;
+      }
+    }
+
+    File file = new File(directory, filename);
+
+    try {
+      if (!file.createNewFile()) {
+        return null;
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+      return null;
+    }
+
+    return file;
+  }
+
+  /**
+   * Deletes file if allowed
+   * @param file
+   * @param pickerType
+   */
+  private void deleteFile(File file, int pickerType) {
+    if (pickerType == REQUEST_LAUNCH_IMAGE_CAPTURE || allowEditing) {
+      file.delete();
+    }
+  }
+
+  /**
+   * Copies file from src to dest
+   * @param src
+   * @param dst
+   */
+  public boolean copyFile(File src, File dst) {
+    try {
+      InputStream in = new FileInputStream(src);
+      OutputStream out = new FileOutputStream(dst);
+
+      // Transfer bytes from in to out
+      byte[] buf = new byte[1024];
+      int len;
+      while ((len = in.read(buf)) > 0) {
+        out.write(buf, 0, len);
+      }
+      in.close();
+      out.close();
+      return true;
+    }catch (IOException e) {
+      e.printStackTrace();
+      return false;
     }
   }
 
@@ -561,8 +639,17 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       quality = (int) (options.getDouble("quality") * 100);
     }
     tmpImage = true;
+    savePrivate = false;
+    path = null;
     if (options.hasKey("storageOptions")) {
       tmpImage = false;
+      ReadableMap storageOptions = options.getMap("storageOptions");
+      if (storageOptions.hasKey("savePrivate")) {
+        savePrivate = storageOptions.getBoolean("savePrivate");
+      }
+      if (storageOptions.hasKey("path")) {
+        path = storageOptions.getString("path");
+      }
     }
     allowEditing = false;
     if (options.hasKey("allowsEditing")) {
