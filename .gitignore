@@ -24,6 +24,9 @@ DerivedData
 *.xcuserstate
 project.xcworkspace
 
+# Android
+*.iml
+
 # OS X
 .DS_Store
 
