@@ -16,9 +16,23 @@ import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.widget.ArrayAdapter;
-import com.facebook.react.bridge.*;
+import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContextBaseJavaModule;
+import com.facebook.react.bridge.ActivityEventListener;
+import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.ReadableMapKeySetIterator;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
+import java.io.ByteArrayOutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -282,7 +296,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (isValidResult(requestCode)) {
+        if (!isValidResult(requestCode)) {
             return;
         }
 
@@ -393,8 +407,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
      * @return True if valid, otherwise false
      */
     private boolean isValidResult(int requestCode) {
-        return mCallback == null || (requestCode != REQUEST_LAUNCH_IMAGE_CAPTURE && requestCode != REQUEST_LAUNCH_IMAGE_LIBRARY
-                && requestCode != REQUEST_LAUNCH_VIDEO_LIBRARY && requestCode != REQUEST_LAUNCH_VIDEO_CAPTURE);
+        return mCallback != null && (requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE || requestCode == REQUEST_LAUNCH_IMAGE_LIBRARY
+                || requestCode == REQUEST_LAUNCH_VIDEO_LIBRARY || requestCode == REQUEST_LAUNCH_VIDEO_CAPTURE);
     }
 
     /**
