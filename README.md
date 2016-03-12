@@ -107,7 +107,7 @@ var ImagePickerManager = require('NativeModules').ImagePickerManager;
     noData: false, // photos only - disables the base64 `data` field from being generated (greatly improves performance on large photos)
     storageOptions: { // if this key is provided, the image will get saved in the documents directory on ios, and the pictures directory on android (rather than a temporary directory)
       skipBackup: true, // ios only - image will NOT be backed up to icloud
-      path: 'images', // ios will save image at /Documents/images rather than the root, android will save under /Photos/images or /data/data/<APP_PACKAGE>/files/images if `savePrivate`
+      path: 'images', // ios will save image at /Documents/images rather than the root, android will save under /Pictures/images or /data/data/<APP_PACKAGE>/files/images if `savePrivate`
       savePrivate: true // android only - will save image at /data/data/<APP_PACKAGE>/files on android
     }
   };
