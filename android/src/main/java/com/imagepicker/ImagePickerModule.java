@@ -80,60 +80,71 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             return;
         }
 
-        List<String> mTitles = new ArrayList<>();
-        List<String> mActions = new ArrayList<>();
+        final List<String> titles = new ArrayList<>();
+        final List<String> actions = new ArrayList<>();
 
-        String cancelButtonTitle = "Cancel";
+        String cancelButtonTitle = getReactApplicationContext().getString(android.R.string.cancel);
 
         if (options.hasKey("takePhotoButtonTitle")
                 && options.getString("takePhotoButtonTitle") != null
                 && !options.getString("takePhotoButtonTitle").isEmpty()) {
-            mTitles.add(options.getString("takePhotoButtonTitle"));
-            mActions.add("photo");
+            titles.add(options.getString("takePhotoButtonTitle"));
+            actions.add("photo");
         }
-
         if (options.hasKey("chooseFromLibraryButtonTitle")
                 && options.getString("chooseFromLibraryButtonTitle") != null
                 && !options.getString("chooseFromLibraryButtonTitle").isEmpty()) {
-            mTitles.add(options.getString("chooseFromLibraryButtonTitle"));
-            mActions.add("library");
+            titles.add(options.getString("chooseFromLibraryButtonTitle"));
+            actions.add("library");
         }
-
         if (options.hasKey("cancelButtonTitle")
                 && !options.getString("cancelButtonTitle").isEmpty()) {
             cancelButtonTitle = options.getString("cancelButtonTitle");
         }
 
-        mTitles.add(cancelButtonTitle);
-        mActions.add("cancel");
+        if (options.hasKey("customButtons")) {
+            ReadableMap buttons = options.getMap("customButtons");
+            ReadableMapKeySetIterator it = buttons.keySetIterator();
+            // Keep the current size as the iterator returns the keys in the reverse order they are defined
+            int currentIndex = titles.size();
+            while (it.hasNextKey()) {
+                String key = it.nextKey();
 
-        String[] option = new String[mTitles.size()];
-        option = mTitles.toArray(option);
+                titles.add(currentIndex, key);
+                actions.add(currentIndex, buttons.getString(key));
+            }
+        }
 
-        String[] action = new String[mActions.size()];
-        action = mActions.toArray(action);
+        titles.add(cancelButtonTitle);
+        actions.add("cancel");
 
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(currentActivity, android.R.layout.select_dialog_item, titles);
         AlertDialog.Builder builder = new AlertDialog.Builder(currentActivity);
-        if (options.hasKey("title") && options.getString("title") != null && !options.getString("title").isEmpty()) {
+        if (options.hasKey("title")
+                && options.getString("title") != null
+                && !options.getString("title").isEmpty()) {
             builder.setTitle(options.getString("title"));
         }
 
-        final String[] act = action;
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(currentActivity, android.R.layout.select_dialog_item, option);
         builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int index) {
-                if (act[index].equals("photo")) {
-                    launchCamera(options, callback);
-                    return;
-                }
+                String action = actions.get(index);
 
-                if (act[index].equals("library")) {
-                    launchImageLibrary(options, callback);
-                    return;
+                switch (action) {
+                    case "photo":
+                        launchCamera(options, callback);
+                        break;
+                    case "library":
+                        launchImageLibrary(options, callback);
+                        break;
+                    case "cancel":
+                        mResponse.putBoolean("didCancel", true);
+                        callback.invoke(mResponse);
+                        break;
+                    default: // custom button
+                        mResponse.putString("customButton", action);
+                        callback.invoke(mResponse);
                 }
-
-                mResponse.putBoolean("didCancel", true);
-                callback.invoke(mResponse);
             }
         });
 
@@ -475,6 +486,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
                 output.write(buffer, 0, read);
             }
             output.flush();
+        } catch(Exception e) {
+            e.printStackTrace();
         } finally {
             output.close();
             input.close();

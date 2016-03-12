@@ -17,11 +17,13 @@ class Example extends React.Component {
   state = {
     avatarSource: null,
     videoSource: null
-  }
+  };
 
   selectPhotoTapped() {
     const options = {
       title: 'Photo Picker',
+      takePhotoButtonTitle: 'Take Photo...',
+      chooseFromLibraryButtonTitle: 'Choose from Library...',
       quality: 0.5,
       maxWidth: 300,
       maxHeight: 300,
@@ -45,7 +47,7 @@ class Example extends React.Component {
       else {
         // You can display the image using either:
         //const source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
-        const source = {uri: response.uri.replace('file://', ''), isStatic: true};
+        const source = {uri: response.uri, isStatic: true};
 
         this.setState({
           avatarSource: source
@@ -85,7 +87,7 @@ class Example extends React.Component {
   render() {
     return (
       <View style={styles.container}>
-        <TouchableOpacity onPress={::this.selectPhotoTapped}>
+        <TouchableOpacity onPress={this.selectPhotoTapped.bind(this)}>
           <View style={[styles.avatar, styles.avatarContainer, {marginBottom: 20}]}>
           { this.state.avatarSource === null ? <Text>Select a Photo</Text> :
             <Image style={styles.avatar} source={this.state.avatarSource} />
@@ -93,7 +95,7 @@ class Example extends React.Component {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={::this.selectVideoTapped}>
+        <TouchableOpacity onPress={this.selectVideoTapped.bind(this)}>
           <View style={[styles.avatar, styles.avatarContainer]}>
             <Text>Select a Video</Text>
           </View>
