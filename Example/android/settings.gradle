@@ -1,0 +1,6 @@
+rootProject.name = 'Example'
+
+include ':app'
+
+include ':react-native-image-picker'
+project(':react-native-image-picker').projectDir = new File(settingsDir, '../../android')
