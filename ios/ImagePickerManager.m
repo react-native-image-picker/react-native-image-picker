@@ -332,8 +332,17 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                         [response setObject:dataString forKey:@"data"];
                     }
                     
-                    NSString *fileURL = [[NSURL fileURLWithPath:path] absoluteString];
-                    [response setObject:fileURL forKey:@"uri"];
+                    NSURL *fileURL = [NSURL fileURLWithPath:path];
+                    [response setObject:[fileURL absoluteString] forKey:@"uri"];
+                    
+                    NSNumber *fileSizeValue = nil;
+                    NSError *fileSizeError = nil;
+                    [fileURL getResourceValue:&fileSizeValue
+                                       forKey:NSURLFileSizeKey
+                                        error:&fileSizeError];
+                    if (fileSizeValue){
+                        [response setObject:fileSizeValue forKey:@"size"];
+                    }
                     
                     self.callback(@[response]);
                 } failureBlock:^(NSError *error) {
@@ -371,9 +380,18 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             
             BOOL vertical = (image.size.width < image.size.height) ? YES : NO;
             [response setObject:@(vertical) forKey:@"isVertical"];
-            
-            NSString *filePath = [[NSURL fileURLWithPath:path] absoluteString];
+            NSURL *fileURL = [NSURL fileURLWithPath:path];
+            NSString *filePath = [fileURL absoluteString];
             [response setObject:filePath forKey:@"uri"];
+            
+            NSNumber *fileSizeValue = nil;
+            NSError *fileSizeError = nil;
+            [fileURL getResourceValue:&fileSizeValue
+                               forKey:NSURLFileSizeKey
+                                error:&fileSizeError];
+            if (fileSizeValue){
+                [response setObject:fileSizeValue forKey:@"size"];
+            }
             
             [response setObject:@(image.size.width) forKey:@"width"];
             [response setObject:@(image.size.height) forKey:@"height"];
