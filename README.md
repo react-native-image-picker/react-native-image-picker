@@ -121,6 +121,7 @@ var ImagePickerManager = require('NativeModules').ImagePickerManager;
    * response.uri is the uri to the local file asset on the device (photo or video)
    * response.isVertical will be true if the image is vertically oriented
    * response.width & response.height give you the image dimensions
+   * response.size give you the image file size (ios only)
    */
 
   ImagePickerManager.showImagePicker(options, (response) => {
