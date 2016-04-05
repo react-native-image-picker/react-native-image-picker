@@ -7,6 +7,7 @@
     "adb-reverse": "adb reverse tcp:8081 tcp:8081"
   },
   "dependencies": {
-    "react-native": "^0.21.0"
+    "react": "^0.14.8",
+    "react-native": "^0.22.0"
   }
 }
