@@ -6,13 +6,13 @@ iOS | Android
 <img title="iOS" src="https://github.com/marcshilling/react-native-image-picker/blob/master/images/ios-image.png"> | <img title="Android" src="https://github.com/marcshilling/react-native-image-picker/blob/master/images/android-image.png">
 
 ## Table of contents
-- [Install](https://github.com/marcshilling/react-native-image-picker#install)
-  - [iOS](https://github.com/marcshilling/react-native-image-picker#ios)
-  - [Android](https://github.com/marcshilling/react-native-image-picker#android)
-- [Usage](https://github.com/marcshilling/react-native-image-picker#usage)
-- [Direct launch](https://github.com/marcshilling/react-native-image-picker#directly-launching-the-camera-or-image-library)
-- [Options](https://github.com/marcshilling/react-native-image-picker#options)
-- [Response object](https://github.com/marcshilling/react-native-image-picker#the-response-object)
+- [Install](#install)
+  - [iOS](#ios)
+  - [Android](#android)
+- [Usage](#usage)
+- [Direct launch](#directly-launching-the-camera-or-image-library)
+- [Options](#options)
+- [Response object](#the-response-object)
 
 ## Install
 
