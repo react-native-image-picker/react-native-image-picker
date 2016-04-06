@@ -196,7 +196,7 @@ storageOptions | OK | OK
 ### The Response Object
 
 key | iOS | Android | Description
------- | ---- | -------
+------ | ---- | ------- | ----------------------
 didCancel | OK | OK | Informs you if the user cancelled the process
 error | OK | OK | Contains an error message, if there is one
 data | OK | OK | The base64 encoded image data (photos only)
