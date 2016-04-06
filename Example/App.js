@@ -7,6 +7,7 @@ const {
   PixelRatio,
   TouchableOpacity,
   Image,
+  Platform,
   NativeModules: {
     ImagePickerManager
   }
@@ -48,7 +49,12 @@ export default class App extends React.Component {
       else {
         // You can display the image using either:
         //const source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
-        const source = {uri: response.uri.replace('file://', ''), isStatic: true};
+        var source;
+        if (Platform.OS === 'android') {
+          source = {uri: response.uri, isStatic: true};
+        } else {
+          source = {uri: response.uri.replace('file://', ''), isStatic: true};
+        }
 
         this.setState({
           avatarSource: source
