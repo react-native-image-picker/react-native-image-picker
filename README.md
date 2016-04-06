@@ -170,8 +170,8 @@ var ImagePickerManager = require('NativeModules').ImagePickerManager;
     // Same code as in above section!
   });
   ```
-  
- 
+
+
 #### Note
 On iOS, don't assume that the absolute uri returned will persist. See [#107](/../../issues/107)
 
@@ -187,7 +187,7 @@ customButtons | OK | OK
 cameraType | OK | -
 mediaType | OK | OK
 videoQuality | 'low', 'medium', or 'high' | 'low' or 'high'
-durationLimit | - | OK
+durationLimit | OK | OK
 angle | - | OK
 aspectX | - | OK
 aspectY | - | OK
