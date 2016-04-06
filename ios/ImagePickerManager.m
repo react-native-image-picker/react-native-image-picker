@@ -225,6 +225,12 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         else {
             self.picker.videoQuality = UIImagePickerControllerQualityTypeMedium;
         }
+
+        id durationLimit = [self.options objectForKey:@"durationLimit"];
+        if (durationLimit) {
+            self.picker.videoMaximumDuration = [durationLimit doubleValue];
+        }
+
     }
     else {
         self.picker.mediaTypes = @[(NSString *)kUTTypeImage];
