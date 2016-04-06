@@ -83,9 +83,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   @ReactMethod
   public void showImagePicker(final ReadableMap options, final Callback callback) {
     Activity currentActivity = getCurrentActivity();
-    response = Arguments.createMap();
 
     if (currentActivity == null) {
+      response = Arguments.createMap();
       response.putString("error", "can't find current Activity");
       callback.invoke(response);
       return;
@@ -139,6 +139,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int index) {
         String action = actions.get(index);
+        response = Arguments.createMap();
 
         switch (action) {
           case "photo":
@@ -166,6 +167,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
       @Override
       public void onCancel(DialogInterface dialog) {
+        response = Arguments.createMap();
         dialog.dismiss();
         response.putBoolean("didCancel", true);
         callback.invoke(response);
@@ -225,6 +227,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       currentActivity.startActivityForResult(cameraIntent, requestCode);
     } catch (ActivityNotFoundException e) {
       e.printStackTrace();
+      response = Arguments.createMap();
+      response.putString("error", "Cannot launch camera");
+      callback.invoke(response);
     }
   }
 
@@ -233,10 +238,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   public void launchImageLibrary(final ReadableMap options, final Callback callback) {
     int requestCode;
     Intent libraryIntent;
-    response = Arguments.createMap();
     Activity currentActivity = getCurrentActivity();
 
     if (currentActivity == null) {
+      response = Arguments.createMap();
       response.putString("error", "can't find current Activity");
       callback.invoke(response);
       return;
@@ -266,6 +271,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     }
 
     if (libraryIntent.resolveActivity(mReactContext.getPackageManager()) == null) {
+      response = Arguments.createMap();
       response.putString("error", "Cannot launch photo library");
       callback.invoke(response);
       return;
@@ -277,9 +283,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       currentActivity.startActivityForResult(libraryIntent, requestCode);
     } catch (ActivityNotFoundException e) {
       e.printStackTrace();
+      response = Arguments.createMap();
+      response.putString("error", "Cannot launch photo library");
+      callback.invoke(response);
     }
   }
 
+  @Override
   public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
     //robustness code
     if (mCallback == null || (mCameraCaptureURI == null && requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE)
@@ -287,6 +297,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             && requestCode != REQUEST_LAUNCH_VIDEO_LIBRARY && requestCode != REQUEST_LAUNCH_VIDEO_CAPTURE)) {
       return;
     }
+
+    response = Arguments.createMap();
 
     // user cancel
     if (resultCode != Activity.RESULT_OK) {
@@ -385,12 +397,16 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       response.putInt("width", initialWidth);
       response.putInt("height", initialHeight);
     } else {
-      File resized = getResizedImage(getRealPathFromURI(uri), initialWidth, initialHeight);
-      realPath = resized.getAbsolutePath();
-      uri = Uri.fromFile(resized);
-      photo = BitmapFactory.decodeFile(realPath, options);
-      response.putInt("width", options.outWidth);
-      response.putInt("height", options.outHeight);
+      File resized = getResizedImage(realPath, initialWidth, initialHeight);
+      if (resized == null) {
+        response.putString("error", "Can't resize the image");
+      } else {
+         realPath = resized.getAbsolutePath();
+         uri = Uri.fromFile(resized);
+         photo = BitmapFactory.decodeFile(realPath, options);
+         response.putInt("width", options.outWidth);
+         response.putInt("height", options.outHeight);
+      }
     }
 
     response.putString("uri", uri.toString());
@@ -482,6 +498,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
    */
   private File getResizedImage(final String realPath, final int initialWidth, final int initialHeight) {
     Bitmap photo = BitmapFactory.decodeFile(realPath);
+
+    if (photo == null) {
+        return null;
+    }
 
     Bitmap scaledphoto = null;
     if (maxWidth == 0) {
