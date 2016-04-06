@@ -115,12 +115,7 @@ var ImagePickerManager = require('NativeModules').ImagePickerManager;
    * The first arg will be the options object for customization, the second is
    * your callback which sends object: response.
    *
-   * response.didCancel will inform you if the user cancelled the process
-   * response.error will contain an error message, if there is one
-   * response.data is the base64 encoded image data (photos only)
-   * response.uri is the uri to the local file asset on the device (photo or video)
-   * response.isVertical will be true if the image is vertically oriented
-   * response.width & response.height give you the image dimensions
+   * See the README for info about the response
    */
 
   ImagePickerManager.showImagePicker(options, (response) => {
@@ -197,3 +192,16 @@ quality | OK | OK
 allowsEditing | OK | OK
 noData | OK | OK
 storageOptions | OK | OK
+
+### The Response Object
+
+key | iOS | Android | Description
+------ | ---- | -------
+didCancel | OK | OK | Informs you if the user cancelled the process
+error | OK | OK | Contains an error message, if there is one
+data | OK | OK | The base64 encoded image data (photos only)
+uri | OK | OK | The uri to the local file asset on the device (photo or video)
+isVertical | OK | OK | Will be true if the image is vertically oriented
+width | OK | OK | Image dimensions
+height | OK | OK | Image dimensions
+fileSize | OK | - | The file size (photos only)
