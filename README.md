@@ -1,13 +1,18 @@
 # react-native-image-picker
 A React Native module that allows you to use native UI to select a photo/video from the device library or directly from the camera, like so:
 
-### iOS
+iOS | Android
+------- | ---- 
+<img title="iOS" src="https://github.com/marcshilling/react-native-image-picker/blob/master/images/ios-image.png"> | <img title="Android" src="https://github.com/marcshilling/react-native-image-picker/blob/master/images/android-image.png">
 
-<img title="iOS" src="https://github.com/marcshilling/react-native-image-picker/blob/master/images/ios-image.png" width="50%">
-
-### Android
-
-<img title="Android" src="https://github.com/marcshilling/react-native-image-picker/blob/master/images/android-image.png" width="50%">
+## Table of contents
+- [Install](https://github.com/marcshilling/react-native-image-picker#install)
+  - [iOS](https://github.com/marcshilling/react-native-image-picker#ios-1)
+  - [Android](https://github.com/marcshilling/react-native-image-picker#android-1)
+- [Usage](https://github.com/marcshilling/react-native-image-picker#usage)
+- [Direct launch](https://github.com/marcshilling/react-native-image-picker#directly-launching-the-camera-or-image-library)
+- [Options](https://github.com/marcshilling/react-native-image-picker#options)
+- [Response object](https://github.com/marcshilling/react-native-image-picker#the-response-object)
 
 ## Install
 
