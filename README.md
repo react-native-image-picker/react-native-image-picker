@@ -7,8 +7,8 @@ iOS | Android
 
 ## Table of contents
 - [Install](https://github.com/marcshilling/react-native-image-picker#install)
-  - [iOS](https://github.com/marcshilling/react-native-image-picker#ios-1)
-  - [Android](https://github.com/marcshilling/react-native-image-picker#android-1)
+  - [iOS](https://github.com/marcshilling/react-native-image-picker#ios)
+  - [Android](https://github.com/marcshilling/react-native-image-picker#android)
 - [Usage](https://github.com/marcshilling/react-native-image-picker#usage)
 - [Direct launch](https://github.com/marcshilling/react-native-image-picker#directly-launching-the-camera-or-image-library)
 - [Options](https://github.com/marcshilling/react-native-image-picker#options)
