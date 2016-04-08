@@ -313,10 +313,16 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         uri = mCameraCaptureURI;
         break;
       case REQUEST_LAUNCH_IMAGE_LIBRARY:
-        if (mCropImagedUri == null) {
-          uri = data.getData();
-        } else {
+        if (mCropImagedUri != null) {
           uri = mCropImagedUri;
+
+          // we check if we get the uri in response if we get it the crop failed so mCropImagedUri point to
+          // an empty file
+          Uri uriTmp = data.getData();
+          if (uriTmp != null)
+            uri = uriTmp;
+        } else {
+          uri = data.getData();
         }
         break;
       case REQUEST_LAUNCH_VIDEO_LIBRARY:
