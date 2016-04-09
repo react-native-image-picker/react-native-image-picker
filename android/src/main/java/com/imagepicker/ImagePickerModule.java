@@ -15,6 +15,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.widget.ArrayAdapter;
+import android.webkit.MimeTypeMap;
 
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Arguments;
@@ -421,6 +422,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     if (!noData) {
       response.putString("data", getBase64StringFromFile(realPath));
     }
+
+    putExtraFileInfo(realPath, response);
+
     mCallback.invoke(response);
   }
 
@@ -592,6 +596,23 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         e.printStackTrace();
       }
       return f;
+    }
+  }
+
+  private void putExtraFileInfo(final String path, WritableMap response) {
+    // size && filename
+    try {
+      File f = new File(path);
+      response.putDouble("fileSize", f.length());
+      response.putString("fileName", f.getName());
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    // type
+    String extension = MimeTypeMap.getFileExtensionFromUrl(path);
+    if (extension != null) {
+      response.putString("type", MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension));
     }
   }
 

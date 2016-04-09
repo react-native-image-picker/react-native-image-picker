@@ -209,4 +209,7 @@ uri | OK | OK | The uri to the local file asset on the device (photo or video)
 isVertical | OK | OK | Will be true if the image is vertically oriented
 width | OK | OK | Image dimensions
 height | OK | OK | Image dimensions
-fileSize | OK | - | The file size (photos only)
+fileSize | OK | OK | The file size (photos only)
+type | - | OK | The file type (photos only)
+fileName | - | OK | The file name (photos only)
+path | - | OK | The file path (photos only)
