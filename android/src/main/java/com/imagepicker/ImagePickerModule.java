@@ -16,6 +16,7 @@ import android.provider.MediaStore;
 import android.util.Base64;
 import android.widget.ArrayAdapter;
 import android.webkit.MimeTypeMap;
+import android.content.pm.PackageManager;
 
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Arguments;
@@ -99,7 +100,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
     if (options.hasKey("takePhotoButtonTitle")
             && options.getString("takePhotoButtonTitle") != null
-            && !options.getString("takePhotoButtonTitle").isEmpty()) {
+            && !options.getString("takePhotoButtonTitle").isEmpty()
+            && isCameraAvailable()) {
       titles.add(options.getString("takePhotoButtonTitle"));
       actions.add("photo");
     }
@@ -426,6 +428,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     putExtraFileInfo(realPath, response);
 
     mCallback.invoke(response);
+  }
+
+  private boolean isCameraAvailable() {
+    return mReactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
   }
 
   private String getRealPathFromURI(Uri uri) {
