@@ -337,6 +337,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       realPath = getRealPathFromURI(uri);
     }else if(response.hasKey("path")){
       realPath = response.getString("path");
+      uri = Uri.fromFile(new File(realPath));
     }
 
     if (realPath != null) {
@@ -355,22 +356,29 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       }
     }
 
+	// image isn't in memory cache and if we're using SAF we can't pass those content uris around.. so we need to download the file
+	if (realPath == null || isUrl) {
+	  try {
+          File file;
+          if(response.hasKey("fileName")) {
+            file = createFileFromURI(uri, Uri.parse(response.getString("fileName")).getLastPathSegment());
+          }else{
+            file = createFileFromURI(uri);
+          }
+		  realPath = file.getAbsolutePath();
+		  uri = Uri.fromFile(file);
+	  } catch (Exception e) {
+		  // image not in cache
+		  response.putString("error", "Could not read file");
+		  response.putString("uri", uri.toString());
+		  mCallback.invoke(response);
+		  return;
+	  }
+	}
+
     if(response.hasKey("type") && (response.getString("type").startsWith("image/") || response.getString("type").startsWith("video/"))){
 
-      // image isn't in memory cache
-      if (realPath == null || isUrl) {
-        try {
-          File file = createFileFromURI(uri);
-          realPath = file.getAbsolutePath();
-          uri = Uri.fromFile(file);
-        } catch (Exception e) {
-          // image not in cache
-          response.putString("error", "Could not read file");
-          response.putString("uri", uri.toString());
-          mCallback.invoke(response);
-          return;
-        }
-      }
+
 
       int CurrentAngle = 0;
       try {
@@ -446,6 +454,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     mCallback.invoke(response);
   }
 
+  @ReactMethod
   public void readUri(final String uriString, final Callback callback) {
     Uri uri = Uri.parse(uriString);
 
@@ -460,6 +469,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       response.putString("error", e.getMessage());
       callback.invoke(response);
     }
+  }
+
+  @ReactMethod
+  public void openFileURI(final String uri, final String mime){
+    Intent intent = new Intent(Intent.ACTION_VIEW);
+    intent.setDataAndType(Uri.parse(uri), mime);
+    getCurrentActivity().startActivity(intent);
   }
 
   private boolean isCameraAvailable() {
@@ -482,6 +498,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     return result;
   }
 
+
+  private File createFileFromURI(Uri uri) throws Exception {
+    return createFileFromURI(uri, uri.getLastPathSegment());
+  }
+
   /**
    * Create a file from uri to allow image picking of image in disk cache
    * (Exemple: facebook image, google image etc..)
@@ -493,8 +514,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
    * @return File
    * @throws Exception
    */
-  private File createFileFromURI(Uri uri) throws Exception {
-    File file = new File(mReactContext.getCacheDir(), "file-" + uri.getLastPathSegment());
+  private File createFileFromURI(Uri uri, String name) throws Exception {
+    File file = new File(mReactContext.getCacheDir(), "file-" + name);
+    file.setReadable(true, false); // World readable so we can pass the file to VIEW_ACTION
     InputStream input = mReactContext.getContentResolver().openInputStream(uri);
     OutputStream output = new FileOutputStream(file);
 
