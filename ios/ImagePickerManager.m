@@ -27,6 +27,7 @@ RCT_EXPORT_MODULE();
             @"cancelButtonTitle": @"Cancel",
             @"takePhotoButtonTitle": @"Take Photo…",
             @"chooseFromLibraryButtonTitle": @"Choose from Library…",
+            @"chooseFromDocumentProvider": @"Choose from File...",
             @"quality" : @0.2, // 1.0 best to 0.0 worst
             @"allowsEditing" : @NO
         };
@@ -64,6 +65,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     }
     NSString *takePhotoButtonTitle = [self.options valueForKey:@"takePhotoButtonTitle"];
     NSString *chooseFromLibraryButtonTitle = [self.options valueForKey:@"chooseFromLibraryButtonTitle"];
+    NSString *chooseFromDocumentProviderTitle = [self.options valueForKey:@"chooseFromDocumentProvider"];
 
     if ([UIAlertController class] && [UIAlertAction class]) { // iOS 8+
         self.alertController = [UIAlertController alertControllerWithTitle:title message:nil preferredStyle:UIAlertControllerStyleActionSheet];
@@ -85,7 +87,13 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             }];
             [self.alertController addAction:chooseFromLibraryAction];
         }
-
+        if (![chooseFromDocumentProviderTitle isEqual:[NSNull null]] && chooseFromDocumentProviderTitle.length > 0) {
+            UIAlertAction *chooseFromDocumentProviderAction = [UIAlertAction actionWithTitle:chooseFromDocumentProviderTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+                [self launchDocumentPicker];
+            }];
+            [self.alertController addAction:chooseFromDocumentProviderAction];
+        }
+        
         // Add custom buttons to action sheet
         if ([self.options objectForKey:@"customButtons"] && [[self.options objectForKey:@"customButtons"] isKindOfClass:[NSDictionary class]]) {
             self.customButtons = [self.options objectForKey:@"customButtons"];
@@ -246,6 +254,25 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
         while (root.presentedViewController != nil) {
           root = root.presentedViewController;
+        }
+        [root presentViewController:self.picker animated:YES completion:nil];
+    });
+}
+
+- (void)launchDocumentPicker
+{
+    self.picker = [[UIDocumentMenuViewController alloc] initWithDocumentTypes:@[@"public.image"] inMode:UIDocumentPickerModeImport];
+    
+    if ([[self.options objectForKey:@"allowsEditing"] boolValue]) {
+        self.picker.allowsEditing = true;
+    }
+    //self.picker.modalPresentationStyle = UIModalPresentationCurrentContext;
+    self.picker.delegate = self;
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
+        while (root.presentedViewController != nil) {
+            root = root.presentedViewController;
         }
         [root presentViewController:self.picker animated:YES completion:nil];
     });
