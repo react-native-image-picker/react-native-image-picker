@@ -12,6 +12,7 @@
 @property (nonatomic, strong) NSDictionary *defaultOptions;
 @property (nonatomic, retain) NSMutableDictionary *options;
 @property (nonatomic, strong) NSDictionary *customButtons;
+@property (nonatomic, strong) UIDocumentMenuViewController *documentMenu;
 
 @end
 
@@ -261,20 +262,28 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 
 - (void)launchDocumentPicker
 {
-    self.picker = [[UIDocumentMenuViewController alloc] initWithDocumentTypes:@[@"public.image"] inMode:UIDocumentPickerModeImport];
-    
-    if ([[self.options objectForKey:@"allowsEditing"] boolValue]) {
-        self.picker.allowsEditing = true;
-    }
-    //self.picker.modalPresentationStyle = UIModalPresentationCurrentContext;
-    self.picker.delegate = self;
+    self.documentMenu = [[UIDocumentMenuViewController alloc] initWithDocumentTypes:@[@"public.image"] inMode:UIDocumentPickerModeImport];
+    self.documentMenu.delegate = self;
     
     dispatch_async(dispatch_get_main_queue(), ^{
         UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
         while (root.presentedViewController != nil) {
             root = root.presentedViewController;
         }
-        [root presentViewController:self.picker animated:YES completion:nil];
+        [root presentViewController:self.documentMenu animated:YES completion:nil];
+    });
+}
+
+- (void)documentMenu:(UIDocumentMenuViewController *)documentMenu didPickDocumentPicker:(UIDocumentPickerViewController *)documentPicker
+{
+    documentPicker.delegate = self;
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
+        while (root.presentedViewController != nil) {
+            root = root.presentedViewController;
+        }
+        [root presentViewController:documentPicker animated:YES completion:nil];
     });
 }
 
