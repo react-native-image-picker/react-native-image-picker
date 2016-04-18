@@ -13,6 +13,7 @@
 @property (nonatomic, retain) NSMutableDictionary *options;
 @property (nonatomic, strong) NSDictionary *customButtons;
 @property (nonatomic, strong) UIDocumentMenuViewController *documentMenu;
+@property (nonatomic, strong) NSURL *documentUrl;
 
 @end
 
@@ -265,6 +266,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 {
     self.documentMenu = [[UIDocumentMenuViewController alloc] initWithDocumentTypes:@[@"public.image"] inMode:UIDocumentPickerModeImport];
     self.documentMenu.delegate = self;
+    self.documentMenu.modalPresentationStyle = UIModalPresentationOverFullScreen;
     
     dispatch_async(dispatch_get_main_queue(), ^{
         UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
@@ -286,6 +288,35 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         }
         [root presentViewController:documentPicker animated:YES completion:nil];
     });
+}
+
+- (void)documentPicker:(UIDocumentPickerViewController *)controller didPickDocumentAtURL:(nonnull NSURL *)url
+{
+    self.documentUrl = url;
+    NSMutableDictionary *response = [self createDocumentResponse:url];
+    self.callback(@[response]);
+}
+
+- (NSMutableDictionary*)createDocumentResponse:(NSURL *)url
+{
+    NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
+    [response setObject:[url absoluteString] forKey:@"uri"];
+    [response setObject:[url lastPathComponent] forKey:@"fileName"];
+    
+    if (![[self.options objectForKey:@"noData"] boolValue]) {
+        NSData *data = [[NSData alloc] initWithContentsOfURL:url];
+        NSString *dataString = [data base64EncodedStringWithOptions:0];
+        [response setObject:dataString forKey:@"data"];
+    }
+    
+    NSNumber *fileSizeValue = nil;
+    NSError *fileSizeError = nil;
+    [url getResourceValue:&fileSizeValue forKey:NSURLFileSizeKey error:&fileSizeError];
+    if (fileSizeValue){
+        [response setObject:fileSizeValue forKey:@"fileSize"];
+    }
+    
+    return response;
 }
 
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
