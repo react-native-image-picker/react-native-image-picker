@@ -153,6 +153,27 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     }
 }
 
+RCT_EXPORT_METHOD(readUri:(NSString *)uriString callback:(RCTResponseSenderBlock)callback)
+{
+    NSURL *url = [[NSURL alloc] initWithString:uriString];
+    NSMutableDictionary *response = [self createDocumentResponse:url];
+    callback(@[response]);
+}
+
+RCT_EXPORT_METHOD(openFileURI:(NSString *)uri mime:(NSString *)mime)
+{
+    NSURL *url = [[NSURL alloc] initWithString:uri];
+    UIDocumentInteractionController *viewer = [UIDocumentInteractionController interactionControllerWithURL:url];
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
+        while (root.presentedViewController != nil) {
+            root = root.presentedViewController;
+        }
+        [root presentViewController:viewer animated:YES completion:nil];
+    });
+}
+
 // iOS 7 Handler
 - (void)actionSheet:(UIActionSheet *)popup clickedButtonAtIndex:(NSInteger)buttonIndex
 {
