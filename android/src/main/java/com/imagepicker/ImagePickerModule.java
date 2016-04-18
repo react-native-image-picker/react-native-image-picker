@@ -185,8 +185,14 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     int requestCode;
     Intent cameraIntent;
     response = Arguments.createMap();
-    Activity currentActivity = getCurrentActivity();
 
+    if (!isCameraAvailable()) {
+        response.putString("error", "Camera not available");
+        callback.invoke(response);
+        return;
+    }
+
+    Activity currentActivity = getCurrentActivity();
     if (currentActivity == null) {
       response.putString("error", "can't find current Activity");
       callback.invoke(response);
