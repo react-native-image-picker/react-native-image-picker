@@ -30,7 +30,8 @@ RCT_EXPORT_MODULE();
             @"chooseFromLibraryButtonTitle": @"Choose from Library…",
             @"chooseFromDocumentProvider": @"Choose from File...",
             @"quality" : @0.2, // 1.0 best to 0.0 worst
-            @"allowsEditing" : @NO
+            @"allowsEditing" : @NO,
+            @"allowsDocumentSelection" : @NO
         };
     }
     return self;
@@ -88,7 +89,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             }];
             [self.alertController addAction:chooseFromLibraryAction];
         }
-        if (![chooseFromDocumentProviderTitle isEqual:[NSNull null]] && chooseFromDocumentProviderTitle.length > 0) {
+        if ([[self.options objectForKey:@"allowsDocumentSelection"] boolValue] && ![chooseFromDocumentProviderTitle isEqual:[NSNull null]] && chooseFromDocumentProviderTitle.length > 0) {
             UIAlertAction *chooseFromDocumentProviderAction = [UIAlertAction actionWithTitle:chooseFromDocumentProviderTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
                 [self launchDocumentPicker];
             }];
