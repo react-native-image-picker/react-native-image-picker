@@ -387,6 +387,9 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             NSURL *fileURL = [NSURL fileURLWithPath:path];
             NSString *filePath = [fileURL absoluteString];
             [response setObject:filePath forKey:@"uri"];
+            // add ref to asset library version for color grabber
+            NSString *origURL = [imageURL absoluteString];
+            [response setObject:origURL forKey:@"origURI"];
 
             NSNumber *fileSizeValue = nil;
             NSError *fileSizeError = nil;
