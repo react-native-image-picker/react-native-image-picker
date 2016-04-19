@@ -13,6 +13,7 @@
 @property (nonatomic, retain) NSMutableDictionary *options;
 @property (nonatomic, strong) NSDictionary *customButtons;
 @property (nonatomic, strong) UIDocumentMenuViewController *documentMenu;
+@property (nonatomic, strong) UIDocumentInteractionController *documentInteractionUI;
 @property (nonatomic, strong) NSURL *documentUrl;
 
 @end
@@ -163,15 +164,25 @@ RCT_EXPORT_METHOD(readUri:(NSString *)uriString callback:(RCTResponseSenderBlock
 RCT_EXPORT_METHOD(openFileURI:(NSString *)uri mime:(NSString *)mime)
 {
     NSURL *url = [[NSURL alloc] initWithString:uri];
-    UIDocumentInteractionController *viewer = [UIDocumentInteractionController interactionControllerWithURL:url];
+    self.documentInteractionUI = [UIDocumentInteractionController interactionControllerWithURL:url];
+    self.documentInteractionUI.delegate = self;
 
     dispatch_async(dispatch_get_main_queue(), ^{
         UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
         while (root.presentedViewController != nil) {
             root = root.presentedViewController;
         }
-        [root presentViewController:viewer animated:YES completion:nil];
+        [self.documentInteractionUI presentPreviewAnimated:true];
     });
+}
+
+- (UIViewController *)documentInteractionControllerViewControllerForPreview:(UIDocumentInteractionController *)interactionController
+{
+    UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
+    while (root.presentedViewController != nil) {
+        root = root.presentedViewController;
+    }
+    return root;
 }
 
 // iOS 7 Handler
@@ -285,7 +296,7 @@ RCT_EXPORT_METHOD(openFileURI:(NSString *)uri mime:(NSString *)mime)
 
 - (void)launchDocumentPicker
 {
-    self.documentMenu = [[UIDocumentMenuViewController alloc] initWithDocumentTypes:@[@"public.image"] inMode:UIDocumentPickerModeImport];
+    self.documentMenu = [[UIDocumentMenuViewController alloc] initWithDocumentTypes:@[@"public.image",@"public.content"] inMode:UIDocumentPickerModeImport];
     self.documentMenu.delegate = self;
     self.documentMenu.modalPresentationStyle = UIModalPresentationOverFullScreen;
     
@@ -323,6 +334,9 @@ RCT_EXPORT_METHOD(openFileURI:(NSString *)uri mime:(NSString *)mime)
     NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
     [response setObject:[url absoluteString] forKey:@"uri"];
     [response setObject:[url lastPathComponent] forKey:@"fileName"];
+    if ([url isFileURL]){
+        [response setObject:[url path] forKey:@"path"];
+    }
     
     if (![[self.options objectForKey:@"noData"] boolValue]) {
         NSData *data = [[NSData alloc] initWithContentsOfURL:url];
@@ -395,6 +409,8 @@ RCT_EXPORT_METHOD(openFileURI:(NSString *)uri mime:(NSString *)mime)
 
         // Create the response object
         NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
+        [response setObject:fileName forKey:@"fileName"];
+
 
         if ([mediaType isEqualToString:(NSString *)kUTTypeImage]) { // PHOTOS
             UIImage *image;
