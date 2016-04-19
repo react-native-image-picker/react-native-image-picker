@@ -12,6 +12,9 @@
 @property (nonatomic, strong) NSDictionary *defaultOptions;
 @property (nonatomic, retain) NSMutableDictionary *options;
 @property (nonatomic, strong) NSDictionary *customButtons;
+@property (nonatomic, strong) UIDocumentMenuViewController *documentMenu;
+@property (nonatomic, strong) UIDocumentInteractionController *documentInteractionUI;
+@property (nonatomic, strong) NSURL *documentUrl;
 
 @end
 
@@ -27,8 +30,10 @@ RCT_EXPORT_MODULE();
             @"cancelButtonTitle": @"Cancel",
             @"takePhotoButtonTitle": @"Take Photo…",
             @"chooseFromLibraryButtonTitle": @"Choose from Library…",
+            @"chooseFromDocumentProviderTitle": @"Choose from File...",
             @"quality" : @0.2, // 1.0 best to 0.0 worst
-            @"allowsEditing" : @NO
+            @"allowsEditing" : @NO,
+            @"allowsDocumentSelection" : @NO
         };
     }
     return self;
@@ -64,6 +69,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     }
     NSString *takePhotoButtonTitle = [self.options valueForKey:@"takePhotoButtonTitle"];
     NSString *chooseFromLibraryButtonTitle = [self.options valueForKey:@"chooseFromLibraryButtonTitle"];
+    NSString *chooseFromDocumentProviderTitle = [self.options valueForKey:@"chooseFromDocumentProviderTitle"];
 
     if ([UIAlertController class] && [UIAlertAction class]) { // iOS 8+
         self.alertController = [UIAlertController alertControllerWithTitle:title message:nil preferredStyle:UIAlertControllerStyleActionSheet];
@@ -85,7 +91,13 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             }];
             [self.alertController addAction:chooseFromLibraryAction];
         }
-
+        if ([[self.options objectForKey:@"allowsDocumentSelection"] boolValue] && ![chooseFromDocumentProviderTitle isEqual:[NSNull null]] && chooseFromDocumentProviderTitle.length > 0) {
+            UIAlertAction *chooseFromDocumentProviderAction = [UIAlertAction actionWithTitle:chooseFromDocumentProviderTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+                [self launchDocumentPicker];
+            }];
+            [self.alertController addAction:chooseFromDocumentProviderAction];
+        }
+        
         // Add custom buttons to action sheet
         if ([self.options objectForKey:@"customButtons"] && [[self.options objectForKey:@"customButtons"] isKindOfClass:[NSDictionary class]]) {
             self.customButtons = [self.options objectForKey:@"customButtons"];
@@ -140,6 +152,37 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             [popup showInView:root.view];
         });
     }
+}
+
+RCT_EXPORT_METHOD(readUri:(NSString *)uriString callback:(RCTResponseSenderBlock)callback)
+{
+    NSURL *url = [[NSURL alloc] initWithString:uriString];
+    NSMutableDictionary *response = [self createDocumentResponse:url];
+    callback(@[response]);
+}
+
+RCT_EXPORT_METHOD(openFileURI:(NSString *)uri mime:(NSString *)mime)
+{
+    NSURL *url = [[NSURL alloc] initWithString:uri];
+    self.documentInteractionUI = [UIDocumentInteractionController interactionControllerWithURL:url];
+    self.documentInteractionUI.delegate = self;
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
+        while (root.presentedViewController != nil) {
+            root = root.presentedViewController;
+        }
+        [self.documentInteractionUI presentPreviewAnimated:true];
+    });
+}
+
+- (UIViewController *)documentInteractionControllerViewControllerForPreview:(UIDocumentInteractionController *)interactionController
+{
+    UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
+    while (root.presentedViewController != nil) {
+        root = root.presentedViewController;
+    }
+    return root;
 }
 
 // iOS 7 Handler
@@ -251,6 +294,66 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     });
 }
 
+- (void)launchDocumentPicker
+{
+    self.documentMenu = [[UIDocumentMenuViewController alloc] initWithDocumentTypes:@[@"public.image",@"public.content"] inMode:UIDocumentPickerModeImport];
+    self.documentMenu.delegate = self;
+    self.documentMenu.modalPresentationStyle = UIModalPresentationOverFullScreen;
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
+        while (root.presentedViewController != nil) {
+            root = root.presentedViewController;
+        }
+        [root presentViewController:self.documentMenu animated:YES completion:nil];
+    });
+}
+
+- (void)documentMenu:(UIDocumentMenuViewController *)documentMenu didPickDocumentPicker:(UIDocumentPickerViewController *)documentPicker
+{
+    documentPicker.delegate = self;
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
+        while (root.presentedViewController != nil) {
+            root = root.presentedViewController;
+        }
+        [root presentViewController:documentPicker animated:YES completion:nil];
+    });
+}
+
+- (void)documentPicker:(UIDocumentPickerViewController *)controller didPickDocumentAtURL:(nonnull NSURL *)url
+{
+    self.documentUrl = url;
+    NSMutableDictionary *response = [self createDocumentResponse:url];
+    self.callback(@[response]);
+}
+
+- (NSMutableDictionary*)createDocumentResponse:(NSURL *)url
+{
+    NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
+    [response setObject:[url absoluteString] forKey:@"uri"];
+    [response setObject:[url lastPathComponent] forKey:@"fileName"];
+    if ([url isFileURL]){
+        [response setObject:[url path] forKey:@"path"];
+    }
+    
+    if (![[self.options objectForKey:@"noData"] boolValue]) {
+        NSData *data = [[NSData alloc] initWithContentsOfURL:url];
+        NSString *dataString = [data base64EncodedStringWithOptions:0];
+        [response setObject:dataString forKey:@"data"];
+    }
+    
+    NSNumber *fileSizeValue = nil;
+    NSError *fileSizeError = nil;
+    [url getResourceValue:&fileSizeValue forKey:NSURLFileSizeKey error:&fileSizeError];
+    if (fileSizeValue){
+        [response setObject:fileSizeValue forKey:@"fileSize"];
+    }
+    
+    return response;
+}
+
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
 {
     dispatch_block_t dismissCompletionBlock = ^{
@@ -306,6 +409,8 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 
         // Create the response object
         NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
+        [response setObject:fileName forKey:@"fileName"];
+
 
         if ([mediaType isEqualToString:(NSString *)kUTTypeImage]) { // PHOTOS
             UIImage *image;
