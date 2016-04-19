@@ -2,7 +2,7 @@
 A React Native module that allows you to use native UI to select a photo/video from the device library or directly from the camera, like so:
 
 iOS | Android
-------- | ---- 
+------- | ----
 <img title="iOS" src="https://github.com/marcshilling/react-native-image-picker/blob/master/images/ios-image.png"> | <img title="Android" src="https://github.com/marcshilling/react-native-image-picker/blob/master/images/android-image.png">
 
 ## Table of contents
@@ -206,6 +206,7 @@ didCancel | OK | OK | Informs you if the user cancelled the process
 error | OK | OK | Contains an error message, if there is one
 data | OK | OK | The base64 encoded image data (photos only)
 uri | OK | OK | The uri to the local file asset on the device (photo or video)
+origURL | OK | - | The URL of the original asset in photo library, if it exists
 isVertical | OK | OK | Will be true if the image is vertically oriented
 width | OK | OK | Image dimensions
 height | OK | OK | Image dimensions
@@ -213,4 +214,3 @@ fileSize | OK | OK | The file size (photos only)
 type | - | OK | The file type (photos only)
 fileName | - | OK | The file name (photos only)
 path | - | OK | The file path (photos only)
-origURL | OK | - | A reference to the asset library
