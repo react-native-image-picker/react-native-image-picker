@@ -17,6 +17,7 @@ import android.util.Base64;
 import android.widget.ArrayAdapter;
 import android.webkit.MimeTypeMap;
 import android.content.pm.PackageManager;
+import android.provider.OpenableColumns;
 
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Arguments;
@@ -48,6 +49,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   static final int REQUEST_LAUNCH_IMAGE_LIBRARY = 2;
   static final int REQUEST_LAUNCH_VIDEO_LIBRARY = 3;
   static final int REQUEST_LAUNCH_VIDEO_CAPTURE = 4;
+  static final int READ_REQUEST_SAF = 42;
+
+
 
   private final ReactApplicationContext mReactContext;
 
@@ -67,6 +71,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   private Boolean forceAngle = false;
   private int videoQuality = 1;
   private int videoDurationLimit = 0;
+  private String mimeFilter = null;
   WritableMap response;
 
   public ImagePickerModule(ReactApplicationContext reactContext) {
@@ -263,20 +268,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       libraryIntent = new Intent(Intent.ACTION_PICK);
       libraryIntent.setType("video/*");
     } else {
-      requestCode = REQUEST_LAUNCH_IMAGE_LIBRARY;
-      libraryIntent = new Intent(Intent.ACTION_PICK,
-        android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-
-      mCropImagedUri = null;
-      if (allowEditing == true) {
-        // create a file to save the croped image
-        File imageFile = createNewFile(true);
-        mCropImagedUri = Uri.fromFile(imageFile);
-        libraryIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCropImagedUri);
-        libraryIntent.putExtra("crop", "true");
-        libraryIntent.putExtra("aspectX", aspectX);
-        libraryIntent.putExtra("aspectY", aspectY);
-      }
+      requestCode = READ_REQUEST_SAF;
+      libraryIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+      libraryIntent.addCategory(Intent.CATEGORY_OPENABLE);
+      libraryIntent.setType(mimeFilter);
     }
 
     if (libraryIntent.resolveActivity(mReactContext.getPackageManager()) == null) {
@@ -303,7 +298,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     //robustness code
     if (mCallback == null || (mCameraCaptureURI == null && requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE)
             || (requestCode != REQUEST_LAUNCH_IMAGE_CAPTURE && requestCode != REQUEST_LAUNCH_IMAGE_LIBRARY
-            && requestCode != REQUEST_LAUNCH_VIDEO_LIBRARY && requestCode != REQUEST_LAUNCH_VIDEO_CAPTURE)) {
+            && requestCode != REQUEST_LAUNCH_VIDEO_LIBRARY && requestCode != REQUEST_LAUNCH_VIDEO_CAPTURE  && requestCode != READ_REQUEST_SAF)) {
       return;
     }
 
@@ -317,22 +312,16 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     }
 
     Uri uri;
+    Uri orginalUri = null;
+
     switch (requestCode) {
       case REQUEST_LAUNCH_IMAGE_CAPTURE:
         uri = mCameraCaptureURI;
         break;
-      case REQUEST_LAUNCH_IMAGE_LIBRARY:
-        if (mCropImagedUri != null) {
-          uri = mCropImagedUri;
-
-          // we check if we get the uri in response if we get it the crop failed so mCropImagedUri point to
-          // an empty file
-          Uri uriTmp = data.getData();
-          if (uriTmp != null)
-            uri = uriTmp;
-        } else {
-          uri = data.getData();
-        }
+      case READ_REQUEST_SAF:
+        orginalUri = uri = data.getData();
+        putExtraFileInfoSAF(orginalUri, response);
+        response.putString("uriOrginal", uri.toString());
         break;
       case REQUEST_LAUNCH_VIDEO_LIBRARY:
         response.putString("uri", data.getData().toString());
@@ -346,94 +335,153 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         uri = null;
     }
 
-    String realPath = getRealPathFromURI(uri);
+    String realPath = null;
+    URL url = null;
     boolean isUrl = false;
+
+    if(requestCode != READ_REQUEST_SAF){
+      realPath = getRealPathFromURI(uri);
+    }else if(response.hasKey("path")){
+      realPath = response.getString("path");
+      uri = Uri.fromFile(new File(realPath));
+    }
 
     if (realPath != null) {
       try {
-        URL url = new URL(realPath);
+        url = new URL(realPath);
         isUrl = true;
       } catch (MalformedURLException e) {
         // not a url
       }
     }
 
-    // image isn't in memory cache
-    if (realPath == null || isUrl) {
+    if(!response.hasKey("type")){
+      String extension = MimeTypeMap.getFileExtensionFromUrl(uri.getLastPathSegment());
+      if (extension != null) {
+        response.putString("type", MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension));
+      }
+    }
+
+	// image isn't in memory cache and if we're using SAF we can't pass those content uris around.. so we need to download the file
+	if (realPath == null || isUrl) {
+	  try {
+          File file;
+          if(response.hasKey("fileName")) {
+            file = createFileFromURI(uri, Uri.parse(response.getString("fileName")).getLastPathSegment());
+          }else{
+            file = createFileFromURI(uri);
+          }
+		  realPath = file.getAbsolutePath();
+		  uri = Uri.fromFile(file);
+	  } catch (Exception e) {
+		  // image not in cache
+		  response.putString("error", "Could not read file");
+		  response.putString("uri", uri.toString());
+		  mCallback.invoke(response);
+		  return;
+	  }
+	}
+
+    if(response.hasKey("type") && (response.getString("type").startsWith("image/") || response.getString("type").startsWith("video/"))){
+
+
+
+      int CurrentAngle = 0;
       try {
-        File file = createFileFromURI(uri);
-        realPath = file.getAbsolutePath();
-        uri = Uri.fromFile(file);
-      } catch (Exception e) {
-        // image not in cache
-        response.putString("error", "Could not read photo");
-        response.putString("uri", uri.toString());
+        ExifInterface exif = new ExifInterface(realPath);
+        int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+        boolean isVertical = true;
+        switch (orientation) {
+          case ExifInterface.ORIENTATION_ROTATE_270:
+            isVertical = false;
+            CurrentAngle = 270;
+            break;
+          case ExifInterface.ORIENTATION_ROTATE_90:
+            isVertical = false;
+            CurrentAngle = 90;
+            break;
+          case ExifInterface.ORIENTATION_ROTATE_180:
+            CurrentAngle = 180;
+            break;
+        }
+        response.putBoolean("isVertical", isVertical);
+      } catch (IOException e) {
+        e.printStackTrace();
+        response.putString("error", e.getMessage());
         mCallback.invoke(response);
         return;
       }
-    }
 
-    int CurrentAngle = 0;
-    try {
-      ExifInterface exif = new ExifInterface(realPath);
-      int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
-      boolean isVertical = true;
-      switch (orientation) {
-        case ExifInterface.ORIENTATION_ROTATE_270:
-          isVertical = false;
-          CurrentAngle = 270;
-          break;
-        case ExifInterface.ORIENTATION_ROTATE_90:
-          isVertical = false;
-          CurrentAngle = 90;
-          break;
-        case ExifInterface.ORIENTATION_ROTATE_180:
-          CurrentAngle = 180;
-          break;
-      }
-      response.putBoolean("isVertical", isVertical);
-    } catch (IOException e) {
-      e.printStackTrace();
-      response.putString("error", e.getMessage());
-      mCallback.invoke(response);
-      return;
-    }
+      BitmapFactory.Options options = new BitmapFactory.Options();
+      options.inJustDecodeBounds = true;
+      Bitmap photo = BitmapFactory.decodeFile(realPath, options);
+      int initialWidth = options.outWidth;
+      int initialHeight = options.outHeight;
 
-    BitmapFactory.Options options = new BitmapFactory.Options();
-    options.inJustDecodeBounds = true;
-    Bitmap photo = BitmapFactory.decodeFile(realPath, options);
-    int initialWidth = options.outWidth;
-    int initialHeight = options.outHeight;
-
-    // don't create a new file if contraint are respected
-    if (((initialWidth < maxWidth && maxWidth > 0) || maxWidth == 0)
-            && ((initialHeight < maxHeight && maxHeight > 0) || maxHeight == 0)
-            && quality == 100 && (!forceAngle || (forceAngle && CurrentAngle == angle))) {
-      response.putInt("width", initialWidth);
-      response.putInt("height", initialHeight);
-    } else {
-      File resized = getResizedImage(realPath, initialWidth, initialHeight);
-      if (resized == null) {
-        response.putString("error", "Can't resize the image");
+      // don't create a new file if contraint are respected
+      if (((initialWidth < maxWidth && maxWidth > 0) || maxWidth == 0)
+              && ((initialHeight < maxHeight && maxHeight > 0) || maxHeight == 0)
+              && quality == 100 && (!forceAngle || (forceAngle && CurrentAngle == angle))) {
+        response.putInt("width", initialWidth);
+        response.putInt("height", initialHeight);
       } else {
-         realPath = resized.getAbsolutePath();
-         uri = Uri.fromFile(resized);
-         photo = BitmapFactory.decodeFile(realPath, options);
-         response.putInt("width", options.outWidth);
-         response.putInt("height", options.outHeight);
+        File resized = getResizedImage(realPath, initialWidth, initialHeight);
+        if (resized == null) {
+          response.putString("error", "Can't resize the image");
+        } else {
+           realPath = resized.getAbsolutePath();
+           uri = Uri.fromFile(resized);
+           photo = BitmapFactory.decodeFile(realPath, options);
+           response.putInt("width", options.outWidth);
+           response.putInt("height", options.outHeight);
+        }
+      }
+
+      if (!noData) {
+        response.putString("data", getBase64StringFromFile(realPath));
+      }
+    }else if(!noData){
+      try {
+        response.putString("data", getBase64StringFromFile(createFileFromURI(uri).getAbsolutePath()));
+      }catch(Exception e){
+        e.printStackTrace();
       }
     }
 
     response.putString("uri", uri.toString());
     response.putString("path", realPath);
 
-    if (!noData) {
-      response.putString("data", getBase64StringFromFile(realPath));
+
+
+    if(requestCode != READ_REQUEST_SAF) {
+      putExtraFileInfo(realPath, response);
     }
 
-    putExtraFileInfo(realPath, response);
-
     mCallback.invoke(response);
+  }
+
+  @ReactMethod
+  public void readUri(final String uriString, final Callback callback) {
+    Uri uri = Uri.parse(uriString);
+
+    try{
+      callback.invoke(
+              getBase64StringFromFile(
+                      createFileFromURI(uri).getAbsolutePath()
+              )
+      );
+    }catch(Exception e){
+      response = Arguments.createMap();
+      response.putString("error", e.getMessage());
+      callback.invoke(response);
+    }
+  }
+
+  @ReactMethod
+  public void openFileURI(final String uri, final String mime){
+    Intent intent = new Intent(Intent.ACTION_VIEW);
+    intent.setDataAndType(Uri.parse(uri), mime);
+    getCurrentActivity().startActivity(intent);
   }
 
   private boolean isCameraAvailable() {
@@ -452,7 +500,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       result = cursor.getString(idx);
       cursor.close();
     }
+
     return result;
+  }
+
+
+  private File createFileFromURI(Uri uri) throws Exception {
+    return createFileFromURI(uri, uri.getLastPathSegment());
   }
 
   /**
@@ -466,8 +520,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
    * @return File
    * @throws Exception
    */
-  private File createFileFromURI(Uri uri) throws Exception {
-    File file = new File(mReactContext.getCacheDir(), "photo-" + uri.getLastPathSegment());
+  private File createFileFromURI(Uri uri, String name) throws Exception {
+    File file = new File(mReactContext.getCacheDir(), "file-" + name);
+    file.setReadable(true, false); // World readable so we can pass the file to VIEW_ACTION
     InputStream input = mReactContext.getContentResolver().openInputStream(uri);
     OutputStream output = new FileOutputStream(file);
 
@@ -486,10 +541,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     return file;
   }
 
-  private String getBase64StringFromFile(String absoluteFilePath) {
+  private String getBase64StringFromFile(String absolutepath) {
     InputStream inputStream = null;
     try {
-      inputStream = new FileInputStream(absoluteFilePath);
+      inputStream = new FileInputStream(absolutepath);
     } catch (FileNotFoundException e) {
       e.printStackTrace();
     }
@@ -620,11 +675,40 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
 
-    // type
-    String extension = MimeTypeMap.getFileExtensionFromUrl(path);
-    if (extension != null) {
-      response.putString("type", MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension));
+  private void putExtraFileInfoSAF(Uri uri, WritableMap response) {
+    Cursor cursor = mReactContext.getContentResolver().query(uri, null, null, null, null);
+
+    try {
+      if (cursor != null && cursor.moveToFirst()) {
+        for(int i=0; i<cursor.getColumnCount();i++){
+          switch(cursor.getColumnName(i)){
+            case "mime_type":
+              response.putString("type", cursor.getString(i));
+              break;
+
+            case "_size": // Google drive
+            case "size":
+              response.putString("fileSize", cursor.getString(i));
+              break;
+
+            case "_display_name": // Google drive
+            case "display_name":
+              response.putString("fileName", cursor.getString(i));
+              break;
+
+            case "path":
+            case "filePath":
+              response.putString("path", cursor.getString(i));
+              break;
+          }
+          //response.putString("cursor_" + cursor.getColumnName(i), cursor.getString(i));
+        }
+      }
+    } catch (Exception e) {
+      response.putString("error", e.getMessage());
+      e.printStackTrace();
     }
   }
 
@@ -670,6 +754,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     pickVideo = false;
     if (options.hasKey("mediaType") && options.getString("mediaType").equals("video")) {
       pickVideo = true;
+    }
+    mimeFilter = "image/*";
+    if(options.hasKey("mimeFilter")){
+      mimeFilter = options.getString("mimeFilter");
     }
     videoQuality = 1;
     if (options.hasKey("videoQuality") && options.getString("videoQuality").equals("low")) {
