@@ -4,7 +4,7 @@
     "type": "git",
     "url": "https://github.com/marcshilling/react-native-image-picker.git"
   },
-  "version": "0.18.14",
+  "version": "0.18.15",
   "description": "A React Native module that allows you to use native UI to select media from the device library or directly from the camera",
   "author": "Marc Shilling (marcshilling)",
   "contributors": [
