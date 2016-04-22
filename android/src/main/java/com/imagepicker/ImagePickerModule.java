@@ -208,6 +208,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       if (videoDurationLimit > 0) {
         cameraIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, videoDurationLimit);
       }
+
+      // we create a tmp file to save the result
+      File videoFile = createNewFile(true, true);
+      mCameraCaptureURI = Uri.fromFile(videoFile);
+      cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(videoFile));
     } else {
       requestCode = REQUEST_LAUNCH_IMAGE_CAPTURE;
       cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -593,7 +598,16 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
    * @return an empty file
    */
   private File createNewFile(final boolean forcePictureDirectory) {
-    String filename = "image-" + UUID.randomUUID().toString() + ".jpg";
+    return createNewFile(forcePictureDirectory, false);
+  }
+
+  private File createNewFile(final boolean forcePictureDirectory, boolean video) {
+    String filename;
+    if (video) {
+      filename = "video-" + UUID.randomUUID().toString() + ".mp4";
+    } else {
+      filename = "image-" + UUID.randomUUID().toString() + ".jpg";
+    }
     if (tmpImage && forcePictureDirectory != true) {
       return new File(mReactContext.getCacheDir(), filename);
     } else {
