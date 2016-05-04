@@ -242,6 +242,17 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     }
   }
 
+  //http://stackoverflow.com/a/20937610/6080171
+  public static Bitmap rotateImage(Bitmap src, float degree) {
+          // create new matrix
+          Matrix matrix = new Matrix();
+          // setup rotation degree
+          matrix.postRotate(degree);
+          Bitmap bmp = Bitmap.createBitmap(src, 0, 0, src.getWidth(), src.getHeight(), matrix, true);
+          return bmp;
+  }
+
+
   // NOTE: Currently not reentrant / doesn't support concurrent requests
   @ReactMethod
   public void launchImageLibrary(final ReadableMap options, final Callback callback) {
@@ -391,7 +402,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
           CurrentAngle = 180;
           break;
       }
+
       response.putBoolean("isVertical", isVertical);
+      response.putInt("rotation", CurrentAngle);
+
     } catch (IOException e) {
       e.printStackTrace();
       response.putString("error", e.getMessage());
@@ -404,6 +418,18 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     Bitmap photo = BitmapFactory.decodeFile(realPath, options);
     int initialWidth = options.outWidth;
     int initialHeight = options.outHeight;
+
+
+    if(!isVertical){
+      photo = rotateImage(photo, CurrentAngle);
+      // http://stackoverflow.com/a/9224180/6080171
+      ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+      photo.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+      byte[] byteArray = byteArrayOutputStream .toByteArray();
+      String encodedPhoto = Base64.encodeToString(byteArray, Base64.DEFAULT);
+      //
+      response.putString("rotatedData", encodedPhoto);
+    }
 
     // don't create a new file if contraint are respected
     if (((initialWidth < maxWidth && maxWidth > 0) || maxWidth == 0)
