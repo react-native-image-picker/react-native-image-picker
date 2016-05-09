@@ -1,3 +1,6 @@
+#### * Before you open an issue *
+No, this library does not support multiple image selection. This is because it is built on top of the native iOS `UIImagePickerController`, which only supports single image selection. It could be accomplished by using a 3rd party or custom image picker library, but I wanted this library to simply expose native functionality. It _is_ possible on Android, but then we would lose parity with iOS. Please fork and roll-your-own solution if you need multi-select. Landscape support is tricky on iOS for this same reason - `UIImagePickerController` only supports portrait.
+
 # react-native-image-picker
 A React Native module that allows you to use native UI to select a photo/video from the device library or directly from the camera, like so:
 
@@ -16,16 +19,18 @@ iOS | Android
 
 ## Install
 
+`npm install react-native-image-picker@latest --save`
+
+Use [rnpm](https://github.com/rnpm/rnpm) to automatically complete the installation, or link manually like so:
+
 ### iOS
-1. `npm install react-native-image-picker@latest --save`
-2. In the XCode's "Project navigator", right click on your project's Libraries folder ➜ `Add Files to <...>`
-3. Go to `node_modules` ➜ `react-native-image-picker` ➜ `ios` ➜ select `RNImagePicker.xcodeproj`
-4. Add `RNImagePicker.a` to `Build Phases -> Link Binary With Libraries`
-5. Compile and have fun
+
+1. In the XCode's "Project navigator", right click on your project's Libraries folder ➜ `Add Files to <...>`
+2. Go to `node_modules` ➜ `react-native-image-picker` ➜ `ios` ➜ select `RNImagePicker.xcodeproj`
+3. Add `RNImagePicker.a` to `Build Phases -> Link Binary With Libraries`
+4. Compile and have fun
 
 ### Android
-1. `npm install react-native-image-picker@latest --save`
-
 ```gradle
 // file: android/settings.gradle
 ...
