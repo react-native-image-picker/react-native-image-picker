@@ -191,7 +191,7 @@ takePhotoButtonTitle | OK | OK
 chooseFromLibraryButtonTitle | OK | OK
 customButtons | OK | OK
 cameraType | OK | -
-mediaType | OK | OK
+mediaType | 'video' or 'photo' | 'video' or 'photo'
 videoQuality | 'low', 'medium', or 'high' | 'low' or 'high'
 durationLimit | OK | OK
 angle | - | OK
