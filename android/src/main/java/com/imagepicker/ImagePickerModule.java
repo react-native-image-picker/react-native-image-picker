@@ -437,7 +437,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   }
 
   private boolean isCameraAvailable() {
-    return mReactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
+    return mReactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)
+      || mReactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
   }
 
   private String getRealPathFromURI(Uri uri) {
