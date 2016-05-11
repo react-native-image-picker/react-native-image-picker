@@ -219,4 +219,4 @@ height | OK | OK | Image dimensions
 fileSize | OK | OK | The file size (photos only)
 type | - | OK | The file type (photos only)
 fileName | - | OK | The file name (photos only)
-path | - | OK | The file path (photos only)
+path | - | OK | The file path
