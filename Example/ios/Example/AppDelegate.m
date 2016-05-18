@@ -33,7 +33,7 @@
   if (TARGET_IPHONE_SIMULATOR) {
     jsCodeLocation = [NSURL URLWithString:@"http://localhost:8081/index.ios.bundle?platform=ios&dev=true"];
   } else {
-    jsCodeLocation = [NSURL URLWithString:@"http://10.1.100.2:8081/index.ios.bundle?platform=ios&dev=true"]; // Change this to your IP if you want to test on device
+    jsCodeLocation = [NSURL URLWithString:@"http://192.168.1.32:8081/index.ios.bundle?platform=ios&dev=true"]; // Change this to your IP if you want to test on device
   }
 
   /**
