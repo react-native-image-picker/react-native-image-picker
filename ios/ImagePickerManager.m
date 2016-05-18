@@ -407,21 +407,24 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         else { // VIDEO
             NSURL *videoURL = info[UIImagePickerControllerMediaURL];
             NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
+            
+            // iOS automatically copies the selected video to the /tmp/ directory. So only move it if the user specified storageOptions
 
-            NSFileManager *fileManager = [NSFileManager defaultManager];
-
-            // Delete file if it already exists
-            if ([fileManager fileExistsAtPath:videoDestinationURL.path]) {
-                [fileManager removeItemAtURL:videoDestinationURL error:nil];
+            if ([videoURL.URLByResolvingSymlinksInPath.path isEqualToString:videoDestinationURL.URLByResolvingSymlinksInPath.path] == NO) {
+                NSFileManager *fileManager = [NSFileManager defaultManager];
+                
+                // Delete file if it already exists
+                if ([fileManager fileExistsAtPath:videoDestinationURL.path]) {
+                    [fileManager removeItemAtURL:videoDestinationURL error:nil];
+                }
+                
+                NSError *error = nil;
+                [fileManager moveItemAtURL:videoURL toURL:videoDestinationURL error:&error];
+                if (error) {
+                    self.callback(@[@{@"error": error.localizedFailureReason}]);
+                    return;
+                }
             }
-
-            NSError *error = nil;
-            [fileManager moveItemAtURL:videoURL toURL:videoDestinationURL error:&error];
-            if (error) {
-                self.callback(@[@{@"error": error.localizedFailureReason}]);
-                return;
-            }
-
             [response setObject:videoDestinationURL.absoluteString forKey:@"uri"];
         }
 
