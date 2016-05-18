@@ -409,11 +409,12 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
 
             NSFileManager *fileManager = [NSFileManager defaultManager];
-            if ([fileName isEqualToString:@"capturedvideo.MOV"]) {
-                if ([fileManager fileExistsAtPath:videoDestinationURL.path]) {
-                    [fileManager removeItemAtURL:videoDestinationURL error:nil];
-                }
+
+            // Delete file if it already exists
+            if ([fileManager fileExistsAtPath:videoDestinationURL.path]) {
+                [fileManager removeItemAtURL:videoDestinationURL error:nil];
             }
+
             NSError *error = nil;
             [fileManager moveItemAtURL:videoURL toURL:videoDestinationURL error:&error];
             if (error) {
