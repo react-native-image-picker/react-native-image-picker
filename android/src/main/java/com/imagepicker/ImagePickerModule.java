@@ -378,6 +378,17 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     int CurrentAngle = 0;
     try {
       ExifInterface exif = new ExifInterface(realPath);
+      
+      // extract lat, long, and timestamp and add to the response
+      float[] latlng = new float[2];
+      exif.getLatLong(latlng);
+      String latitude = Float.toString(latlng[0]);
+      String longitude = Float.toString(latlng[1]);
+      response.putString("latitude", latitude);
+      response.putString("longitude", longitude);
+      String timestamp = exif.getAttribute(ExifInterface.TAG_DATETIME);
+      response.putString("timestamp", timestamp);
+      
       int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
       boolean isVertical = true;
       switch (orientation) {
