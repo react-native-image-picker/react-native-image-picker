@@ -1,5 +1,6 @@
 package com.imagepicker;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
@@ -13,6 +14,7 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.util.Base64;
 import android.widget.ArrayAdapter;
 import android.webkit.MimeTypeMap;
@@ -199,6 +201,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       return;
     }
 
+    if (!permissionsCheck(currentActivity)) {
+      return;
+    }
+
     parseOptions(options);
 
     if (pickVideo == true) {
@@ -253,6 +259,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       response = Arguments.createMap();
       response.putString("error", "can't find current Activity");
       callback.invoke(response);
+      return;
+    }
+
+    if (!permissionsCheck(currentActivity)) {
       return;
     }
 
@@ -449,6 +459,21 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     mCallback.invoke(response);
   }
 
+  private boolean permissionsCheck(Activity activity) {
+    int writePermission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+    int cameraPermission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.CAMERA);
+    if (writePermission != PackageManager.PERMISSION_GRANTED || cameraPermission != PackageManager.PERMISSION_GRANTED) {
+      String[] PERMISSIONS = {
+              Manifest.permission.WRITE_EXTERNAL_STORAGE,
+              Manifest.permission.CAMERA
+      };
+      ActivityCompat.requestPermissions(activity, PERMISSIONS, 1);
+      return false;
+    }
+    return true;
+  }
+
+
   private boolean isCameraAvailable() {
     return mReactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)
       || mReactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
@@ -503,7 +528,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   private String getBase64StringFromFile(String absoluteFilePath) {
     InputStream inputStream = null;
     try {
-      inputStream = new FileInputStream(absoluteFilePath);
+      inputStream = new FileInputStream(new File(absoluteFilePath));
     } catch (FileNotFoundException e) {
       e.printStackTrace();
     }
