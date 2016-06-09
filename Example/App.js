@@ -1,17 +1,16 @@
-import React from 'react-native';
-
-const {
+import React from 'react';
+import {
+  AppRegistry,
   StyleSheet,
   Text,
   View,
   PixelRatio,
   TouchableOpacity,
   Image,
-  Platform,
-  NativeModules: {
-    ImagePickerManager
-  }
-} = React;
+  Platform
+} from 'react-native';
+
+import ImagePicker from 'react-native-image-picker';
 
 export default class App extends React.Component {
 
@@ -28,20 +27,21 @@ export default class App extends React.Component {
       quality: 0.5,
       maxWidth: 300,
       maxHeight: 300,
+      allowsEditing: true,
       storageOptions: {
         skipBackup: true
       },
       allowsEditing: true
     };
 
-    ImagePickerManager.showImagePicker(options, (response) => {
+    ImagePicker.showImagePicker(options, (response) => {
       console.log('Response = ', response);
 
       if (response.didCancel) {
         console.log('User cancelled photo picker');
       }
       else if (response.error) {
-        console.log('ImagePickerManager Error: ', response.error);
+        console.log('ImagePicker Error: ', response.error);
       }
       else if (response.customButton) {
         console.log('User tapped custom button: ', response.customButton);
@@ -71,14 +71,14 @@ export default class App extends React.Component {
       videoQuality: 'medium'
     };
 
-    ImagePickerManager.showImagePicker(options, (response) => {
+    ImagePicker.showImagePicker(options, (response) => {
       console.log('Response = ', response);
 
       if (response.didCancel) {
         console.log('User cancelled video picker');
       }
       else if (response.error) {
-        console.log('ImagePickerManager Error: ', response.error);
+        console.log('ImagePicker Error: ', response.error);
       }
       else if (response.customButton) {
         console.log('User tapped custom button: ', response.customButton);
@@ -136,5 +136,3 @@ const styles = StyleSheet.create({
     height: 150
   }
 });
-
-React.AppRegistry.registerComponent('Example', () => Example);
