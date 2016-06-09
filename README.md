@@ -1,4 +1,4 @@
-#### *** Before you open an issue ***
+#### _Before you open an issue_
 This library started as a basic bridge of the native iOS image picker, and I want to keep it that way. As such, functionality beyond what the native `UIImagePickerController` supports will not be supported here. **Multiple image selection, more control over the crop tool, and landscape support** are things missing from the native iOS functionality - **not issues with my library**. If you need these things, [react-native-image-crop-picker](https://github.com/ivpusic/react-native-image-crop-picker) might be a better choice for you.    
 As for Android, I want to keep it in parity with iOS. So while you may have better luck with cropping/landscape, we will not support multiple image selection there either.
 
@@ -87,95 +87,90 @@ public class MainActivity extends ReactActivity {
 
 ```
 ## Usage
-1. In your React Native javascript code, bring in the native module:
 
-  ```javascript
-var ImagePickerManager = require('NativeModules').ImagePickerManager;
-  ```
-2. Use it like so:
+```javascript
+var ImagePicker = require('react-native-image-picker');
 
-  When you want to display the picker:
-  ```javascript
-  var options = {
-    title: 'Select Avatar', // specify null or empty string to remove the title
-    cancelButtonTitle: 'Cancel',
-    takePhotoButtonTitle: 'Take Photo...', // specify null or empty string to remove this button
-    chooseFromLibraryButtonTitle: 'Choose from Library...', // specify null or empty string to remove this button
-    customButtons: {
-      'Choose Photo from Facebook': 'fb', // [Button Text] : [String returned upon selection]
-    },
-    cameraType: 'back', // 'front' or 'back'
-    mediaType: 'photo', // 'photo' or 'video'
-    videoQuality: 'high', // 'low', 'medium', or 'high'
-    durationLimit: 10, // video recording max time in seconds
-    maxWidth: 100, // photos only
-    maxHeight: 100, // photos only
-    aspectX: 2, // android only - aspectX:aspectY, the cropping image's ratio of width to height
-    aspectY: 1, // android only - aspectX:aspectY, the cropping image's ratio of width to height
-    quality: 0.2, // 0 to 1, photos only
-    angle: 0, // android only, photos only
-    allowsEditing: false, // Built in functionality to resize/reposition the image after selection
-    noData: false, // photos only - disables the base64 `data` field from being generated (greatly improves performance on large photos)
-    storageOptions: { // if this key is provided, the image will get saved in the documents directory on ios, and the pictures directory on android (rather than a temporary directory)
-      skipBackup: true, // ios only - image will NOT be backed up to icloud
-      path: 'images' // ios only - will save image at /Documents/images rather than the root
-    }
-  };
+var options = {
+  title: 'Select Avatar', // specify null or empty string to remove the title
+  cancelButtonTitle: 'Cancel',
+  takePhotoButtonTitle: 'Take Photo...', // specify null or empty string to remove this button
+  chooseFromLibraryButtonTitle: 'Choose from Library...', // specify null or empty string to remove this button
+  customButtons: {
+    'Choose Photo from Facebook': 'fb', // [Button Text] : [String returned upon selection]
+  },
+  cameraType: 'back', // 'front' or 'back'
+  mediaType: 'photo', // 'photo' or 'video'
+  videoQuality: 'high', // 'low', 'medium', or 'high'
+  durationLimit: 10, // video recording max time in seconds
+  maxWidth: 100, // photos only
+  maxHeight: 100, // photos only
+  aspectX: 2, // android only - aspectX:aspectY, the cropping image's ratio of width to height
+  aspectY: 1, // android only - aspectX:aspectY, the cropping image's ratio of width to height
+  quality: 0.2, // 0 to 1, photos only
+  angle: 0, // android only, photos only
+  allowsEditing: false, // Built in functionality to resize/reposition the image after selection
+  noData: false, // photos only - disables the base64 `data` field from being generated (greatly improves performance on large photos)
+  storageOptions: { // if this key is provided, the image will get saved in the documents directory on ios, and the pictures directory on android (rather than a temporary directory)
+    skipBackup: true, // ios only - image will NOT be backed up to icloud
+    path: 'images' // ios only - will save image at /Documents/images rather than the root
+  }
+};
 
-  /**
-   * The first arg will be the options object for customization, the second is
-   * your callback which sends object: response.
-   *
-   * See the README for info about the response
-   */
+/**
+ * The first arg will be the options object for customization, the second is
+ * your callback which sends object: response.
+ *
+ * See the README for info about the response
+ */
 
-  ImagePickerManager.showImagePicker(options, (response) => {
-    console.log('Response = ', response);
+ImagePicker.showImagePicker(options, (response) => {
+  console.log('Response = ', response);
 
-    if (response.didCancel) {
-      console.log('User cancelled image picker');
-    }
-    else if (response.error) {
-      console.log('ImagePickerManager Error: ', response.error);
-    }
-    else if (response.customButton) {
-      console.log('User tapped custom button: ', response.customButton);
-    }
-    else {
-      // You can display the image using either data:
-      const source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
+  if (response.didCancel) {
+    console.log('User cancelled image picker');
+  }
+  else if (response.error) {
+    console.log('ImagePicker Error: ', response.error);
+  }
+  else if (response.customButton) {
+    console.log('User tapped custom button: ', response.customButton);
+  }
+  else {
+    // You can display the image using either data:
+    const source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
 
-      // uri (on iOS)
-      const source = {uri: response.uri.replace('file://', ''), isStatic: true};
-      // uri (on android)
-      const source = {uri: response.uri, isStatic: true};
+    // uri (on iOS)
+    const source = {uri: response.uri.replace('file://', ''), isStatic: true};
+    // uri (on android)
+    const source = {uri: response.uri, isStatic: true};
 
-      this.setState({
-        avatarSource: source
-      });
-    }
-  });
-  ```
-  Then later, if you want to display this image in your render() method:
-  ```javascript
-  <Image source={this.state.avatarSource} style={styles.uploadAvatar} />
-  ```
+    this.setState({
+      avatarSource: source
+    });
+  }
+});
+```
+Then later, if you want to display this image in your render() method:
+```javascript
+<Image source={this.state.avatarSource} style={styles.uploadAvatar} />
+```
 
 ### Directly Launching the Camera or Image Library
 
-  To Launch the Camera or Image Library directly (skipping the alert dialog) you can
-  do the following:
-  ```javascript
-  // Launch Camera:
-  ImagePickerManager.launchCamera(options, (response)  => {
-    // Same code as in above section!
-  });
+To Launch the Camera or Image Library directly (skipping the alert dialog) you can
+do the following:
+```javascript
+// Launch Camera:
+ImagePicker.launchCamera(options, (response)  => {
+  // Same code as in above section!
+});
 
-  // Open Image Library:
-  ImagePickerManager.launchImageLibrary(options, (response)  => {
-    // Same code as in above section!
-  });
-  ```
+// Open Image Library:
+ImagePicker.launchImageLibrary(options, (response)  => {
+  // Same code as in above section!
+});
+```
 
 
 #### Note
