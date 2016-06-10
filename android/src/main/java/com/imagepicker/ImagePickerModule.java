@@ -40,8 +40,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.UUID;
 
 public class ImagePickerModule extends ReactContextBaseJavaModule implements ActivityEventListener {
@@ -275,7 +280,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     } else {
       requestCode = REQUEST_LAUNCH_IMAGE_LIBRARY;
       libraryIntent = new Intent(Intent.ACTION_PICK,
-        android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+      android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 
       mCropImagedUri = null;
       if (allowEditing == true) {
@@ -388,17 +393,21 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     int CurrentAngle = 0;
     try {
       ExifInterface exif = new ExifInterface(realPath);
-      
+
       // extract lat, long, and timestamp and add to the response
       float[] latlng = new float[2];
       exif.getLatLong(latlng);
-      String latitude = Float.toString(latlng[0]);
-      String longitude = Float.toString(latlng[1]);
-      response.putString("latitude", latitude);
-      response.putString("longitude", longitude);
+      float latitude = latlng[0];
+      float longitude = latlng[1];
+      response.putDouble("latitude", latitude);
+      response.putDouble("longitude", longitude);
+
+      String subSecs = exif.getAttribute("SubSecTime");
       String timestamp = exif.getAttribute(ExifInterface.TAG_DATETIME);
+      long dateTime = parseTimestamp(timestamp, subSecs);
       response.putString("timestamp", timestamp);
-      
+      response.putInt("timestamp_epoch_millis", (int) dateTime);
+
       int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
       boolean isVertical = true;
       switch (orientation) {
@@ -457,6 +466,41 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     putExtraFileInfo(realPath, response);
 
     mCallback.invoke(response);
+  }
+
+  /**
+   * Returns number of milliseconds since Jan. 1, 1970, midnight local time.
+   * Returns -1 if the date time information if not available.
+   * copied from ExifInterface.java
+   * @hide
+   */
+  public long parseTimestamp(String dateTimeString, String subSecs) {
+    if (dateTimeString == null) return -1;
+
+    SimpleDateFormat sFormatter = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.getDefault());
+    sFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+    ParsePosition pos = new ParsePosition(0);
+    try {
+      // The exif field is in local time. Parsing it as if it is UTC will yield time
+      // since 1/1/1970 local time
+      Date datetime = sFormatter.parse(dateTimeString, pos);
+      if (datetime == null) return -1;
+      long msecs = datetime.getTime();
+
+      if (subSecs != null) {
+        try {
+          long sub = Long.valueOf(subSecs);
+          while (sub > 1000) {
+            sub /= 10;
+          }
+          msecs += sub;
+        } catch (NumberFormatException e) {
+        }
+      }
+      return msecs;
+    } catch (IllegalArgumentException ex) {
+      return -1;
+    }
   }
 
   private boolean permissionsCheck(Activity activity) {
