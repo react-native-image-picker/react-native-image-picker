@@ -40,6 +40,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -404,10 +406,16 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         response.putDouble("longitude", longitude);
       }
 
-      String subSecs = exif.getAttribute("SubSecTime");
       String timestamp = exif.getAttribute(ExifInterface.TAG_DATETIME);
-      long dateTime = parseTimestamp(timestamp, subSecs);
-      response.putInt("timestamp", (int) dateTime);
+      SimpleDateFormat exifDatetimeFormat = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss");
+
+      DateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+      isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+      try {
+        String isoFormatString = isoFormat.format(exifDatetimeFormat.parse(timestamp)) + "Z";
+        response.putString("timestamp", isoFormatString);
+      } catch (ParseException e) {}
 
       int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
       boolean isVertical = true;
