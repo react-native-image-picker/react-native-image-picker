@@ -399,14 +399,15 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       exif.getLatLong(latlng);
       float latitude = latlng[0];
       float longitude = latlng[1];
-      response.putDouble("latitude", latitude);
-      response.putDouble("longitude", longitude);
+      if(latitude != 0f || longitude != 0f) {
+        response.putDouble("latitude", latitude);
+        response.putDouble("longitude", longitude);
+      }
 
       String subSecs = exif.getAttribute("SubSecTime");
       String timestamp = exif.getAttribute(ExifInterface.TAG_DATETIME);
       long dateTime = parseTimestamp(timestamp, subSecs);
-      response.putString("timestamp", timestamp);
-      response.putInt("timestamp_epoch_millis", (int) dateTime);
+      response.putInt("timestamp", (int) dateTime);
 
       int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
       boolean isVertical = true;
@@ -474,7 +475,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
    * copied from ExifInterface.java
    * @hide
    */
-  public long parseTimestamp(String dateTimeString, String subSecs) {
+  private static long parseTimestamp(String dateTimeString, String subSecs) {
     if (dateTimeString == null) return -1;
 
     SimpleDateFormat sFormatter = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.getDefault());
@@ -495,6 +496,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
           }
           msecs += sub;
         } catch (NumberFormatException e) {
+          //expected
         }
       }
       return msecs;
