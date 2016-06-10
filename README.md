@@ -215,3 +215,6 @@ fileSize | OK | OK | The file size (photos only)
 type | - | OK | The file type (photos only)
 fileName | - | OK | The file name (photos only)
 path | - | OK | The file path
+latitude | - | OK | Latitude metadata, if available
+longitude | - | OK | Longitude metadata, if available
+timestamp | - | OK | Timestamp metadata, if available, in ISO8601 UTC format
