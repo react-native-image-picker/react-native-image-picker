@@ -233,7 +233,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 
     }
     else {
-        self.picker.mediaTypes = @[(NSString *)kUTTypeImage];
+        self.picker.mediaTypes = @[(NSString*)kUTTypeImage, (NSString*)kUTTypeVideo, (NSString*)kUTTypeMovie];
     }
 
     if ([[self.options objectForKey:@"allowsEditing"] boolValue]) {
