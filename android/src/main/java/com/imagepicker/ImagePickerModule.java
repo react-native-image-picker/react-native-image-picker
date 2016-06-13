@@ -415,7 +415,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       try {
         String isoFormatString = isoFormat.format(exifDatetimeFormat.parse(timestamp)) + "Z";
         response.putString("timestamp", isoFormatString);
-      } catch (ParseException e) {}
+      } catch (Exception e) {}
 
       int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
       boolean isVertical = true;
