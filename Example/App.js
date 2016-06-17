@@ -30,8 +30,7 @@ export default class App extends React.Component {
       allowsEditing: true,
       storageOptions: {
         skipBackup: true
-      },
-      allowsEditing: true
+      }
     };
 
     ImagePicker.showImagePicker(options, (response) => {
