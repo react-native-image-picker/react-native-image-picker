@@ -218,3 +218,19 @@ path | - | OK | The file path
 latitude | - | OK | Latitude metadata, if available
 longitude | - | OK | Longitude metadata, if available
 timestamp | - | OK | Timestamp metadata, if available, in ISO8601 UTC format
+
+
+
+### Troubleshooting
+
+#### Android
+ There were numerous times users that used other Android react-native modules such as https://github.com/facebook/react-native-fbsdk reported problems (such as `onActivityResult` not getting called, and thus taking a photo on an Android doing nothing in our javascript code). (Check https://github.com/marcshilling/react-native-image-picker/issues/243)
+
+ The way to resolve this is by going to your react-native app `MainActivity`, find the `onActivityResult` method, and add the following line: `super.onActivityResult(requestCode, resultCode, data);` before calling the `mCallbackManager.onActivityResult` like so:
+```javascript
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        mCallbackManager.onActivityResult(requestCode, resultCode, data);
+    }
+```
