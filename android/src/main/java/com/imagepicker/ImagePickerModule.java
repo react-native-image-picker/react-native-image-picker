@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapFactory.Options;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
@@ -612,7 +613,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
    * @return resized file
    */
   private File getResizedImage(final String realPath, final int initialWidth, final int initialHeight) {
-    Bitmap photo = BitmapFactory.decodeFile(realPath);
+    Options options = new BitmapFactory.Options();
+    options.inScaled = false;
+    Bitmap photo = BitmapFactory.decodeFile(realPath, options);
 
     if (photo == null) {
         return null;
