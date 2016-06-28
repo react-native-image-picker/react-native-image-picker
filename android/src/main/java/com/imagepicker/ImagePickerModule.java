@@ -106,8 +106,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     final List<String> titles = new ArrayList<String>();
     final List<String> actions = new ArrayList<String>();
 
-    String cancelButtonTitle = getReactApplicationContext().getString(android.R.string.cancel);
-
     if (options.hasKey("takePhotoButtonTitle")
             && options.getString("takePhotoButtonTitle") != null
             && !options.getString("takePhotoButtonTitle").isEmpty()
@@ -121,11 +119,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       titles.add(options.getString("chooseFromLibraryButtonTitle"));
       actions.add("library");
     }
-    if (options.hasKey("cancelButtonTitle")
-            && !options.getString("cancelButtonTitle").isEmpty()) {
-      cancelButtonTitle = options.getString("cancelButtonTitle");
-    }
 
+    String cancelButtonTitle = options.getString("cancelButtonTitle");
     if (options.hasKey("customButtons")) {
       ReadableMap buttons = options.getMap("customButtons");
       ReadableMapKeySetIterator it = buttons.keySetIterator();

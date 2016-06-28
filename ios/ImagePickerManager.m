@@ -19,21 +19,6 @@
 
 RCT_EXPORT_MODULE();
 
-- (instancetype)init
-{
-    if (self = [super init]) {
-        self.defaultOptions = @{
-            @"title": @"Select a Photo",
-            @"cancelButtonTitle": @"Cancel",
-            @"takePhotoButtonTitle": @"Take Photo…",
-            @"chooseFromLibraryButtonTitle": @"Choose from Library…",
-            @"quality" : @0.2, // 1.0 best to 0.0 worst
-            @"allowsEditing" : @NO
-        };
-    }
-    return self;
-}
-
 RCT_EXPORT_METHOD(launchCamera:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
 {
     self.callback = callback;
@@ -49,19 +34,13 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
 {
     self.callback = callback; // Save the callback so we can use it from the delegate methods
-    self.options = [NSMutableDictionary dictionaryWithDictionary:self.defaultOptions]; // Set default options
-    for (NSString *key in options.keyEnumerator) { // Replace default options
-        [self.options setValue:options[key] forKey:key];
-    }
+    self.options = options;
 
     NSString *title = [self.options valueForKey:@"title"];
     if ([title isEqual:[NSNull null]] || title.length == 0) {
         title = nil; // A more visually appealing UIAlertControl is displayed with a nil title rather than title = @""
     }
     NSString *cancelTitle = [self.options valueForKey:@"cancelButtonTitle"];
-    if ([cancelTitle isEqual:[NSNull null]] || cancelTitle.length == 0) {
-        cancelTitle = self.defaultOptions[@"cancelButtonTitle"]; // Don't allow null or empty string cancel button title
-    }
     NSString *takePhotoButtonTitle = [self.options valueForKey:@"takePhotoButtonTitle"];
     NSString *chooseFromLibraryButtonTitle = [self.options valueForKey:@"chooseFromLibraryButtonTitle"];
 
@@ -184,10 +163,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 
 - (void)launchImagePicker:(RNImagePickerTarget)target options:(NSDictionary *)options
 {
-    self.options = [NSMutableDictionary dictionaryWithDictionary:self.defaultOptions]; // Set default options
-    for (NSString *key in options.keyEnumerator) { // Replace default options
-        [self.options setValue:options[key] forKey:key];
-    }
+    self.options = options;
     [self launchImagePicker:target];
 }
 
@@ -407,17 +383,17 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         else { // VIDEO
             NSURL *videoURL = info[UIImagePickerControllerMediaURL];
             NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
-            
+
             // iOS automatically copies the selected video to the /tmp/ directory. So only move it if the user specified storageOptions
 
             if ([videoURL.URLByResolvingSymlinksInPath.path isEqualToString:videoDestinationURL.URLByResolvingSymlinksInPath.path] == NO) {
                 NSFileManager *fileManager = [NSFileManager defaultManager];
-                
+
                 // Delete file if it already exists
                 if ([fileManager fileExistsAtPath:videoDestinationURL.path]) {
                     [fileManager removeItemAtURL:videoDestinationURL error:nil];
                 }
-                
+
                 NSError *error = nil;
                 [fileManager moveItemAtURL:videoURL toURL:videoDestinationURL error:&error];
                 if (error) {
