@@ -91,39 +91,22 @@ public class MainActivity extends ReactActivity {
 ```javascript
 var ImagePicker = require('react-native-image-picker');
 
+// More info on all the options is below in the README...just some common use cases shown here
 var options = {
-  title: 'Select Avatar', // specify null or empty string to remove the title
-  cancelButtonTitle: 'Cancel',
-  takePhotoButtonTitle: 'Take Photo...', // specify null or empty string to remove this button
-  chooseFromLibraryButtonTitle: 'Choose from Library...', // specify null or empty string to remove this button
+  title: 'Select Avatar',
   customButtons: {
-    'Choose Photo from Facebook': 'fb', // [Button Text] : [String returned upon selection]
+    'Choose Photo from Facebook': 'fb',
   },
-  cameraType: 'back', // 'front' or 'back'
-  mediaType: 'photo', // 'photo' or 'video'
-  videoQuality: 'high', // 'low', 'medium', or 'high'
-  durationLimit: 10, // video recording max time in seconds
-  maxWidth: 100, // photos only
-  maxHeight: 100, // photos only
-  aspectX: 2, // android only - aspectX:aspectY, the cropping image's ratio of width to height
-  aspectY: 1, // android only - aspectX:aspectY, the cropping image's ratio of width to height
-  quality: 0.2, // 0 to 1, photos only
-  angle: 0, // android only, photos only
-  allowsEditing: false, // Built in functionality to resize/reposition the image after selection
-  noData: false, // photos only - disables the base64 `data` field from being generated (greatly improves performance on large photos)
-  storageOptions: { // if this key is provided, the image will get saved in the documents directory on ios, and the pictures directory on android (rather than a temporary directory)
-    skipBackup: true, // ios only - image will NOT be backed up to icloud
-    path: 'images' // ios only - will save image at /Documents/images rather than the root
+  storageOptions: { 
+    skipBackup: true, 
+    path: 'images'
   }
 };
 
 /**
- * The first arg will be the options object for customization, the second is
- * your callback which sends object: response.
- *
- * See the README for info about the response
+ * The first arg is the options object for customization (it can also be null or omitted for default options), 
+ * The second arg is the callback which sends object: response (more info below in README)
  */
-
 ImagePicker.showImagePicker(options, (response) => {
   console.log('Response = ', response);
 
@@ -178,26 +161,28 @@ On iOS, don't assume that the absolute uri returned will persist. See [#107](/..
 
 ### Options
 
-option | iOS  | Android
------- | ---- | -------
-title | OK | OK
-cancelButtonTitle | OK | OK
-takePhotoButtonTitle | OK | OK
-chooseFromLibraryButtonTitle | OK | OK
-customButtons | OK | OK
-cameraType | OK | -
-mediaType | 'video' or 'photo' | 'video' or 'photo'
-videoQuality | 'low', 'medium', or 'high' | 'low' or 'high'
-durationLimit | OK | OK
-angle | - | OK
-aspectX | - | OK
-aspectY | - | OK
-maxWidth | OK | OK
-maxHeight | OK | OK
-quality | OK | OK
-allowsEditing | OK | OK
-noData | OK | OK
-storageOptions | OK | OK
+option | iOS  | Android | Info
+------ | ---- | ------- | ----
+title | OK | OK | Specify `null` or empty string to remove the title
+cancelButtonTitle | OK | OK |
+takePhotoButtonTitle | OK | OK | Specify `null` or empty string to remove this button
+chooseFromLibraryButtonTitle | OK | OK | Specify `null` or empty string to remove this button
+customButtons | OK | OK | An object in the form of `[Button Text] : [String returned upon selection]`
+cameraType | OK | - | 'front' or 'back'
+mediaType | OK | OK | 'video' or 'photo'
+maxWidth | OK | OK | Photos only
+maxHeight | OK | OK | Photos only
+quality | OK | OK | 0 to 1, photos only
+videoQuality | OK |  OK | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android
+durationLimit | OK | OK | Max video recording time, in seconds
+angle | - | OK | Photos only
+aspectX | - | OK | aspectX:aspectY, the crop box's width:height ratio
+aspectY | - | OK | aspectX:aspectY, the crop box's width:height ratio
+allowsEditing | OK | OK | bool - enables built in functionality to resize/reposition the image after selection
+noData | OK | OK | If true, disables the base64 `data` field from being generated (greatly improves performance on large photos)
+storageOptions | OK | OK | If this key is provided, the image will get saved in the Documents directory on iOS, and the Pictures directory on Android (rather than a temporary directory)
+storageOptions.skipBackup | OK | - | If true, the photo will NOT be backed up to iCloud
+storageOptions.path | OK | - | If set, will save image at /Documents/[path] rather than the root
 
 ### The Response Object
 
