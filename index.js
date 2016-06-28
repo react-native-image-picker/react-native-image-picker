@@ -1,29 +1,23 @@
 'use strict'
 
 const { NativeModules } = require('react-native');
-const { ImagePickerManager } = NativeModules
-const SHOW_PICKER_DEFAULT_OPTS = {
+const { ImagePickerManager } = NativeModules;
+const DEFAULT_OPTIONS = {
   title: 'Select a Photo',
   cancelButtonTitle: 'Cancel',
   takePhotoButtonTitle: 'Take Photo…',
   chooseFromLibraryButtonTitle: 'Choose from Library…',
-  quality : 0.2, // 1.0 best to 0.0 worst
-  allowsEditing : false
-}
+  quality: 1.0,
+  allowsEditing: false
+};
 
 module.exports = {
   ...ImagePickerManager,
-  showImagePicker: function showImagePicker (opts, callback) {
-    if (typeof opts === 'function') {
-      callback = opts
-      opts = null
+  showImagePicker: function showImagePicker(options, callback) {
+    if (typeof options === 'function') {
+      callback = options;
+      options = {};
     }
-
-    opts = opts || {}
-    if ('cancelButtonTitle' in opts && !opts.cancelButtonTitle) {
-      throw new Error('empty cancel button not allowed')
-    }
-
-    return ImagePickerManager.showImagePicker({ ...SHOW_PICKER_DEFAULT_OPTS, ...opts }, callback)
+    return ImagePickerManager.showImagePicker({...DEFAULT_OPTIONS, ...options}, callback)
   }
 }

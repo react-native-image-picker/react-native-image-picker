@@ -21,13 +21,10 @@ export default class App extends React.Component {
 
   selectPhotoTapped() {
     const options = {
-      title: 'Photo Picker',
-      takePhotoButtonTitle: 'Take Photo...',
-      chooseFromLibraryButtonTitle: 'Choose from Library...',
       quality: 0.5,
       maxWidth: 300,
       maxHeight: 300,
-      allowsEditing: true,
+      allowsEditing: false,
       storageOptions: {
         skipBackup: true
       }
