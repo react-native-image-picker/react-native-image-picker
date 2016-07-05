@@ -1,6 +1,8 @@
 #import "ImagePickerManager.h"
 #import "RCTConvert.h"
 #import <AssetsLibrary/AssetsLibrary.h>
+#import <AVFoundation/AVFoundation.h>
+#import <Photos/Photos.h>
 
 @import MobileCoreServices;
 
@@ -217,14 +219,38 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     }
     self.picker.modalPresentationStyle = UIModalPresentationCurrentContext;
     self.picker.delegate = self;
-
-    dispatch_async(dispatch_get_main_queue(), ^{
-        UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
-        while (root.presentedViewController != nil) {
-          root = root.presentedViewController;
-        }
-        [root presentViewController:self.picker animated:YES completion:nil];
-    });
+    
+    // Check permissions
+    void (^showPickerViewController)() = ^void() {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
+            while (root.presentedViewController != nil) {
+                root = root.presentedViewController;
+            }
+            [root presentViewController:self.picker animated:YES completion:nil];
+        });
+    };
+    
+    if (target == RNImagePickerTargetCamera) {
+        [self checkCameraPermissions:^(BOOL granted) {
+            if (!granted) {
+                self.callback(@[@{@"error": @"Camera permissions not granted"}]);
+                return;
+            }
+            
+            showPickerViewController();
+        }];
+    }
+    else { // RNImagePickerTargetLibrarySingleImage
+        [self checkPhotosPermissions:^(BOOL granted) {
+            if (!granted) {
+                self.callback(@[@{@"error": @"Photo library permissions not granted"}]);
+                return;
+            }
+            
+            showPickerViewController();
+        }];
+    }
 }
 
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
@@ -427,6 +453,53 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             self.callback(@[@{@"didCancel": @YES}]);
         }];
     });
+}
+
+
+#pragma mark - Helpers
+
+- (void)checkCameraPermissions:(void(^)(BOOL granted))callback
+{
+    AVAuthorizationStatus status = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+    if (status == AVAuthorizationStatusAuthorized) {
+        callback(YES);
+        return;
+    } else if (status == AVAuthorizationStatusNotDetermined){
+        [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
+            callback(granted);
+            return;
+        }];
+    } else {
+        callback(NO);
+    }
+}
+
+- (void)checkPhotosPermissions:(void(^)(BOOL granted))callback
+{
+    if (![PHPhotoLibrary class]) { // iOS 7 support
+        callback(YES);
+        return;
+    }
+    
+    PHAuthorizationStatus status = [PHPhotoLibrary authorizationStatus];
+    if (status == PHAuthorizationStatusAuthorized) {
+        callback(YES);
+        return;
+    } else if (status == PHAuthorizationStatusNotDetermined) {
+        [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
+            if (status == PHAuthorizationStatusAuthorized) {
+                callback(YES);
+                return;
+            }
+            else {
+                callback(NO);
+                return;
+            }
+        }];
+    }
+    else {
+        callback(NO);
+    }
 }
 
 - (UIImage*)downscaleImageIfNecessary:(UIImage*)image maxWidth:(float)maxWidth maxHeight:(float)maxHeight
