@@ -123,14 +123,16 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     String cancelButtonTitle = options.getString("cancelButtonTitle");
     if (options.hasKey("customButtons")) {
       ReadableMap buttons = options.getMap("customButtons");
-      ReadableMapKeySetIterator it = buttons.keySetIterator();
-      // Keep the current size as the iterator returns the keys in the reverse order they are defined
-      int currentIndex = titles.size();
-      while (it.hasNextKey()) {
-        String key = it.nextKey();
+      if (buttons != null) {
+        ReadableMapKeySetIterator it = buttons.keySetIterator();
+        // Keep the current size as the iterator returns the keys in the reverse order they are defined
+        int currentIndex = titles.size();
+        while (it.hasNextKey()) {
+          String key = it.nextKey();
 
-        titles.add(currentIndex, key);
-        actions.add(currentIndex, buttons.getString(key));
+          titles.add(currentIndex, key);
+          actions.add(currentIndex, buttons.getString(key));
+        }
       }
     }
 
