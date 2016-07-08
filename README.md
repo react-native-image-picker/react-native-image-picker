@@ -89,6 +89,7 @@ public class MainActivity extends ReactActivity {
 ## Usage
 
 ```javascript
+var Platform = require('react-native').Platform;
 var ImagePicker = require('react-native-image-picker');
 
 // More info on all the options is below in the README...just some common use cases shown here
@@ -120,13 +121,15 @@ ImagePicker.showImagePicker(options, (response) => {
     console.log('User tapped custom button: ', response.customButton);
   }
   else {
-    // You can display the image using either data:
+    // You can display the image using either data...
     const source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
-
-    // uri (on iOS)
-    const source = {uri: response.uri.replace('file://', ''), isStatic: true};
-    // uri (on android)
-    const source = {uri: response.uri, isStatic: true};
+    
+    // or a reference to the platform specific asset location
+    if (Platform.OS === 'ios') {
+      const source = {uri: response.uri.replace('file://', ''), isStatic: true};
+    } else {
+      const source = {uri: response.uri, isStatic: true};
+    }
 
     this.setState({
       avatarSource: source
