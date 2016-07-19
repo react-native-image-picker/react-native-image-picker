@@ -191,8 +191,8 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         self.picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
     }
 
-    if ([[self.options objectForKey:@"mediaType"] isEqualToString:@"video"]) {
-        self.picker.mediaTypes = @[(NSString *)kUTTypeMovie];
+    if ([[self.options objectForKey:@"mediaType"] isEqualToString:@"video"]
+        || [[self.options objectForKey:@"mediaType"] isEqualToString:@"mixed"]) {
 
         if ([[self.options objectForKey:@"videoQuality"] isEqualToString:@"high"]) {
             self.picker.videoQuality = UIImagePickerControllerQualityTypeHigh;
@@ -207,10 +207,14 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         id durationLimit = [self.options objectForKey:@"durationLimit"];
         if (durationLimit) {
             self.picker.videoMaximumDuration = [durationLimit doubleValue];
+            self.picker.allowsEditing = YES;
         }
-
     }
-    else {
+    if ([[self.options objectForKey:@"mediaType"] isEqualToString:@"video"]) {
+        self.picker.mediaTypes = @[(NSString *)kUTTypeMovie];
+    } else if ([[self.options objectForKey:@"mediaType"] isEqualToString:@"mixed"]) {
+        self.picker.mediaTypes = @[(NSString *)kUTTypeMovie, (NSString *)kUTTypeImage];
+    } else {
         self.picker.mediaTypes = @[(NSString *)kUTTypeImage];
     }
 
@@ -219,7 +223,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     }
     self.picker.modalPresentationStyle = UIModalPresentationCurrentContext;
     self.picker.delegate = self;
-    
+
     // Check permissions
     void (^showPickerViewController)() = ^void() {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -230,14 +234,14 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             [root presentViewController:self.picker animated:YES completion:nil];
         });
     };
-    
+
     if (target == RNImagePickerTargetCamera) {
         [self checkCameraPermissions:^(BOOL granted) {
             if (!granted) {
                 self.callback(@[@{@"error": @"Camera permissions not granted"}]);
                 return;
             }
-            
+
             showPickerViewController();
         }];
     }
@@ -247,7 +251,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                 self.callback(@[@{@"error": @"Photo library permissions not granted"}]);
                 return;
             }
-            
+
             showPickerViewController();
         }];
     }
@@ -480,7 +484,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         callback(YES);
         return;
     }
-    
+
     PHAuthorizationStatus status = [PHPhotoLibrary authorizationStatus];
     if (status == PHAuthorizationStatusAuthorized) {
         callback(YES);

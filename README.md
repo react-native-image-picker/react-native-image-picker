@@ -167,7 +167,7 @@ takePhotoButtonTitle | OK | OK | Specify `null` or empty string to remove this b
 chooseFromLibraryButtonTitle | OK | OK | Specify `null` or empty string to remove this button
 customButtons | OK | OK | An object in the form of `[Button Text] : [String returned upon selection]`
 cameraType | OK | - | 'front' or 'back'
-mediaType | OK | OK | 'video' or 'photo'
+mediaType | OK | OK | 'photo', 'video', or 'mixed' on iOS, 'photo' or 'video' on Android
 maxWidth | OK | OK | Photos only
 maxHeight | OK | OK | Photos only
 quality | OK | OK | 0 to 1, photos only
