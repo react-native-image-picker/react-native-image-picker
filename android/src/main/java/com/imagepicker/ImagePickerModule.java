@@ -62,19 +62,14 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   private final ReactApplicationContext mReactContext;
 
   private Uri mCameraCaptureURI;
-  private Uri mCropImagedUri;
   private Callback mCallback;
   private Boolean noData = false;
   private Boolean tmpImage;
-  private Boolean allowEditing = false;
   private Boolean pickVideo = false;
   private int maxWidth = 0;
   private int maxHeight = 0;
-  private int aspectX = 0;
-  private int aspectY = 0;
   private int quality = 100;
-  private int angle = 0;
-  private Boolean forceAngle = false;
+  private int rotation = 0;
   private int videoQuality = 1;
   private int videoDurationLimit = 0;
   WritableMap response;
@@ -227,12 +222,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       File imageFile = createNewFile(true);
       mCameraCaptureURI = Uri.fromFile(imageFile);
       cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(imageFile));
-
-      if (allowEditing == true) {
-        cameraIntent.putExtra("crop", "true");
-        cameraIntent.putExtra("aspectX", aspectX);
-        cameraIntent.putExtra("aspectY", aspectY);
-      }
     }
 
     if (cameraIntent.resolveActivity(mReactContext.getPackageManager()) == null) {
@@ -281,17 +270,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       requestCode = REQUEST_LAUNCH_IMAGE_LIBRARY;
       libraryIntent = new Intent(Intent.ACTION_PICK,
       android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-
-      mCropImagedUri = null;
-      if (allowEditing == true) {
-        // create a file to save the croped image
-        File imageFile = createNewFile(true);
-        mCropImagedUri = Uri.fromFile(imageFile);
-        libraryIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCropImagedUri);
-        libraryIntent.putExtra("crop", "true");
-        libraryIntent.putExtra("aspectX", aspectX);
-        libraryIntent.putExtra("aspectY", aspectY);
-      }
     }
 
     if (libraryIntent.resolveActivity(mReactContext.getPackageManager()) == null) {
@@ -337,17 +315,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         uri = mCameraCaptureURI;
         break;
       case REQUEST_LAUNCH_IMAGE_LIBRARY:
-        if (mCropImagedUri != null) {
-          uri = mCropImagedUri;
-
-          // we check if we get the uri in response if we get it the crop failed so mCropImagedUri point to
-          // an empty file
-          Uri uriTmp = data.getData();
-          if (uriTmp != null)
-            uri = uriTmp;
-        } else {
-          uri = data.getData();
-        }
+        uri = data.getData();
         break;
       case REQUEST_LAUNCH_VIDEO_LIBRARY:
         response.putString("uri", data.getData().toString());
@@ -390,7 +358,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       }
     }
 
-    int CurrentAngle = 0;
+    int currentRotation = 0;
     try {
       ExifInterface exif = new ExifInterface(realPath);
 
@@ -420,14 +388,14 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       switch (orientation) {
         case ExifInterface.ORIENTATION_ROTATE_270:
           isVertical = false;
-          CurrentAngle = 270;
+          currentRotation = 270;
           break;
         case ExifInterface.ORIENTATION_ROTATE_90:
           isVertical = false;
-          CurrentAngle = 90;
+          currentRotation = 90;
           break;
         case ExifInterface.ORIENTATION_ROTATE_180:
-          CurrentAngle = 180;
+          currentRotation = 180;
           break;
       }
       response.putBoolean("isVertical", isVertical);
@@ -445,9 +413,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     int initialHeight = options.outHeight;
 
     // don't create a new file if contraint are respected
-    if (((initialWidth < maxWidth && maxWidth > 0) || maxWidth == 0)
-            && ((initialHeight < maxHeight && maxHeight > 0) || maxHeight == 0)
-            && quality == 100 && (!forceAngle || (forceAngle && CurrentAngle == angle))) {
+    if (((initialWidth < maxWidth && maxWidth > 0) || maxWidth == 0) && ((initialHeight < maxHeight && maxHeight > 0) || maxHeight == 0) && quality == 100 && (rotation == 0 || currentRotation == rotation)) {
       response.putInt("width", initialWidth);
       response.putInt("height", initialHeight);
     } else {
@@ -601,8 +567,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   }
 
   /**
-   * Create a resized image to fill the maxWidth/maxHeight values,the quality
-   * value and the angle value
+   * Create a resized image to fulfill the maxWidth/maxHeight, quality and rotation values
    *
    * @param realPath
    * @param initialWidth
@@ -633,7 +598,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             : heightRatio;
 
     Matrix matrix = new Matrix();
-    matrix.postRotate(angle);
+    matrix.postRotate(rotation);
     matrix.postScale((float) ratio, (float) ratio);
 
     ExifInterface exif;
@@ -734,14 +699,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     if (options.hasKey("maxHeight")) {
       maxHeight = options.getInt("maxHeight");
     }
-    aspectX = 0;
-    if (options.hasKey("aspectX")) {
-      aspectX = options.getInt("aspectX");
-    }
-    aspectY = 0;
-    if (options.hasKey("aspectY")) {
-      aspectY = options.getInt("aspectY");
-    }
     quality = 100;
     if (options.hasKey("quality")) {
       quality = (int) (options.getDouble("quality") * 100);
@@ -750,15 +707,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     if (options.hasKey("storageOptions")) {
       tmpImage = false;
     }
-    allowEditing = false;
-    if (options.hasKey("allowsEditing")) {
-      allowEditing = options.getBoolean("allowsEditing");
-    }
-    forceAngle = false;
-    angle = 0;
-    if (options.hasKey("angle")) {
-      forceAngle = true;
-      angle = options.getInt("angle");
+    rotation = 0;
+    if (options.hasKey("rotation")) {
+      rotation = options.getInt("rotation");
     }
     pickVideo = false;
     if (options.hasKey("mediaType") && options.getString("mediaType").equals("video")) {

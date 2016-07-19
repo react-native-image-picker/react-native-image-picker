@@ -64,22 +64,17 @@ dependencies {
     ...
 ```
 ```java
-// file: android/app/src/main/java/com/<...>/MainActivity.java
+// file: android/app/src/main/java/com/<...>/MainApplication.java
 ...
 
-import com.imagepicker.ImagePickerPackage; // import package
+import com.imagepicker.ImagePickerPackage; // <-- add this import
 
-public class MainActivity extends ReactActivity {
-
-   /**
-   * A list of packages used by the app. If the app uses additional views
-   * or modules besides the default ones, add more packages here.
-   */
+public class MainApplication extends Application implements ReactApplication {
     @Override
     protected List<ReactPackage> getPackages() {
         return Arrays.<ReactPackage>asList(
             new MainReactPackage(),
-            new ImagePickerPackage() // Add package
+            new ImagePickerPackage() // <-- add this line
         );
     }
 ...
@@ -98,14 +93,14 @@ var options = {
   customButtons: {
     'Choose Photo from Facebook': 'fb',
   },
-  storageOptions: { 
-    skipBackup: true, 
+  storageOptions: {
+    skipBackup: true,
     path: 'images'
   }
 };
 
 /**
- * The first arg is the options object for customization (it can also be null or omitted for default options), 
+ * The first arg is the options object for customization (it can also be null or omitted for default options),
  * The second arg is the callback which sends object: response (more info below in README)
  */
 ImagePicker.showImagePicker(options, (response) => {
@@ -123,7 +118,7 @@ ImagePicker.showImagePicker(options, (response) => {
   else {
     // You can display the image using either data...
     const source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
-    
+
     // or a reference to the platform specific asset location
     if (Platform.OS === 'ios') {
       const source = {uri: response.uri.replace('file://', ''), isStatic: true};
@@ -178,10 +173,8 @@ maxHeight | OK | OK | Photos only
 quality | OK | OK | 0 to 1, photos only
 videoQuality | OK |  OK | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android
 durationLimit | OK | OK | Max video recording time, in seconds
-angle | - | OK | Photos only
-aspectX | - | OK | aspectX:aspectY, the crop box's width:height ratio
-aspectY | - | OK | aspectX:aspectY, the crop box's width:height ratio
-allowsEditing | OK | OK | bool - enables built in functionality to resize/reposition the image after selection
+rotation | - | OK | Photos only, 0 to 360 degrees of rotation
+allowsEditing | OK | - | bool - enables built in iOS functionality to resize the image after selection
 noData | OK | OK | If true, disables the base64 `data` field from being generated (greatly improves performance on large photos)
 storageOptions | OK | OK | If this key is provided, the image will get saved in the Documents directory on iOS, and the Pictures directory on Android (rather than a temporary directory)
 storageOptions.skipBackup | OK | - | If true, the photo will NOT be backed up to iCloud

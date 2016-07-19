@@ -21,10 +21,9 @@ export default class App extends React.Component {
 
   selectPhotoTapped() {
     const options = {
-      quality: 0.5,
-      maxWidth: 300,
-      maxHeight: 300,
-      allowsEditing: false,
+      quality: 1.0,
+      maxWidth: 500,
+      maxHeight: 500,
       storageOptions: {
         skipBackup: true
       }
