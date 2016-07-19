@@ -1,6 +1,5 @@
 #### _Before you open an issue_
 This library started as a basic bridge of the native iOS image picker, and I want to keep it that way. As such, functionality beyond what the native `UIImagePickerController` supports will not be supported here. **Multiple image selection, more control over the crop tool, and landscape support** are things missing from the native iOS functionality - **not issues with my library**. If you need these things, [react-native-image-crop-picker](https://github.com/ivpusic/react-native-image-crop-picker) might be a better choice for you.    
-As for Android, I want to keep it in parity with iOS. So while you may have better luck with cropping/landscape, we will not support multiple image selection there either.
 
 # react-native-image-picker
 A React Native module that allows you to use native UI to select a photo/video from the device library or directly from the camera, like so:
