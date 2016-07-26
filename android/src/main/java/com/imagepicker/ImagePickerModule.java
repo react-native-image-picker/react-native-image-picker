@@ -60,7 +60,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   static final int REQUEST_LAUNCH_VIDEO_CAPTURE = 4;
 
   private final ReactApplicationContext mReactContext;
-
+  //firegnu
+  private Uri mVideoCaptureURI;
   private Uri mCameraCaptureURI;
   private Callback mCallback;
   private Boolean noData = false;
@@ -118,16 +119,14 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     String cancelButtonTitle = options.getString("cancelButtonTitle");
     if (options.hasKey("customButtons")) {
       ReadableMap buttons = options.getMap("customButtons");
-      if (buttons != null) {
-        ReadableMapKeySetIterator it = buttons.keySetIterator();
-        // Keep the current size as the iterator returns the keys in the reverse order they are defined
-        int currentIndex = titles.size();
-        while (it.hasNextKey()) {
-          String key = it.nextKey();
+      ReadableMapKeySetIterator it = buttons.keySetIterator();
+      // Keep the current size as the iterator returns the keys in the reverse order they are defined
+      int currentIndex = titles.size();
+      while (it.hasNextKey()) {
+        String key = it.nextKey();
 
-          titles.add(currentIndex, key);
-          actions.add(currentIndex, buttons.getString(key));
-        }
+        titles.add(currentIndex, key);
+        actions.add(currentIndex, buttons.getString(key));
       }
     }
 
@@ -210,6 +209,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     if (pickVideo == true) {
       requestCode = REQUEST_LAUNCH_VIDEO_CAPTURE;
       cameraIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+      //firegnu
+        mVideoCaptureURI = getOutputMediaFileUri();
+        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mVideoCaptureURI);
+      //
       cameraIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, videoQuality);
       if (videoDurationLimit > 0) {
         cameraIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, videoDurationLimit);
@@ -330,8 +333,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       default:
         uri = null;
     }
-
+    //firegnu
     String realPath = getRealPathFromURI(uri);
+    response.putString("originpath", realPath);
     boolean isUrl = false;
 
     if (realPath != null) {
@@ -723,5 +727,44 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     if (options.hasKey("durationLimit")) {
       videoDurationLimit = options.getInt("durationLimit");
     }
+  }
+
+
+  //firegnu:create video new file
+  /** Create a file Uri for saving an image or video */
+  private static Uri getOutputMediaFileUri(){
+
+    return Uri.fromFile(getOutputMediaFile());
+  }
+
+  /** Create a File for saving an image or video */
+  private static File getOutputMediaFile(){
+
+    // Check that the SDCard is mounted
+    File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
+            Environment.DIRECTORY_PICTURES), "MyCameraVideo");
+
+    // Create the storage directory(MyCameraVideo) if it does not exist
+    if (! mediaStorageDir.exists()){
+
+      if (! mediaStorageDir.mkdirs()){
+        return null;
+      }
+    }
+
+
+    // Create a media file name
+
+    // For unique file name appending current timeStamp with file name
+    java.util.Date date= new java.util.Date();
+    String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss")
+            .format(date.getTime());
+
+    File mediaFile;
+      // For unique video file name appending current timeStamp with file name
+    mediaFile = new File(mediaStorageDir.getPath() + File.separator +
+              "VID_"+ timeStamp + ".mp4");
+
+    return mediaFile;
   }
 }
