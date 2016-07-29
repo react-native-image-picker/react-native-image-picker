@@ -724,4 +724,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       videoDurationLimit = options.getInt("durationLimit");
     }
   }
+
+  public void onNewIntent(Intent intent) { }
 }
