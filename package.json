@@ -26,5 +26,8 @@
     "native",
     "image",
     "picker"
-  ]
+  ],
+  "scripts": {
+    "prepublish": "rm -rf android/build"
+  }
 }
