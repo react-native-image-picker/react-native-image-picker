@@ -409,6 +409,11 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 
             [response setObject:@(image.size.width) forKey:@"width"];
             [response setObject:@(image.size.height) forKey:@"height"];
+
+            NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
+            if (storageOptions && [[storageOptions objectForKey:@"cameraRoll"] boolValue] == YES) {
+              UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
+            }
         }
         else { // VIDEO
             NSURL *videoURL = info[UIImagePickerControllerMediaURL];
