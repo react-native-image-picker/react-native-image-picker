@@ -4,10 +4,8 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
-import android.content.ClipData;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -19,8 +17,9 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.util.Base64;
-import android.webkit.MimeTypeMap;
 import android.widget.ArrayAdapter;
+import android.webkit.MimeTypeMap;
+import android.content.pm.PackageManager;
 
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Arguments;
@@ -30,10 +29,7 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
-import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.bridge.WritableNativeArray;
-import com.facebook.react.bridge.WritableNativeMap;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -46,6 +42,7 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -81,11 +78,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   private Boolean forceAngle = false;
   private int videoQuality = 1;
   private int videoDurationLimit = 0;
-  private boolean multiple = true;
   WritableMap response;
-  //multi images
-  private Activity currentActivity;
-  //
 
   public ImagePickerModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -102,7 +95,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
   @ReactMethod
   public void showImagePicker(final ReadableMap options, final Callback callback) {
-    currentActivity = getCurrentActivity();
+    Activity currentActivity = getCurrentActivity();
 
     if (currentActivity == null) {
       response = Arguments.createMap();
@@ -291,11 +284,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       requestCode = REQUEST_LAUNCH_IMAGE_LIBRARY;
       libraryIntent = new Intent(Intent.ACTION_PICK,
       android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-      //multi images support
-      libraryIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, multiple);
-      libraryIntent.setAction(Intent.ACTION_GET_CONTENT);
-      libraryIntent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
-      //
+
       mCropImagedUri = null;
       if (allowEditing == true) {
         // create a file to save the croped image
@@ -327,43 +316,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     }
   }
 
-
-
-  private WritableMap getImage(Uri uri, boolean resolvePath) {
-    WritableMap image = new WritableNativeMap();
-    String path = uri.getPath();
-
-    if (resolvePath) {
-      path = RealPathUtil.getRealPathFromURI(currentActivity, uri);
-    }
-
-    BitmapFactory.Options imageOptions = new BitmapFactory.Options();
-    imageOptions.inJustDecodeBounds = true;
-
-    BitmapFactory.decodeFile(path, imageOptions);
-
-    int initialWidth = imageOptions.outWidth;
-    int initialHeight = imageOptions.outHeight;
-
-
-    File resized = getResizedImage(path, initialWidth, initialHeight);
-    if (resized == null) {
-      image.putString("error", "Can't resize the image");
-    } else {
-      path = resized.getAbsolutePath();
-      uri = Uri.fromFile(resized);
-    }
-    image.putString("path", path);
-    image.putString("originpath", path);
-
-    if (!noData) {
-      image.putString("data", getBase64StringFromFile(path));
-    }
-
-    putExtraFileInfo(path, image);
-    return image;
-  }
-
   @Override
   public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
     //robustness code
@@ -382,20 +334,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       return;
     }
 
-    Uri uri = null;
-    //multi images
-    final List<Uri> uriList = new ArrayList<Uri>();
-    WritableArray multiImagesResult = new WritableNativeArray();
-    //
+    Uri uri;
     switch (requestCode) {
       case REQUEST_LAUNCH_IMAGE_CAPTURE:
         uri = mCameraCaptureURI;
-        multiImagesResult.pushMap(getImage(uri, true));
-        response.putArray("multiImagesData", multiImagesResult);
-        mCallback.invoke(response);
-        return;
+        break;
       case REQUEST_LAUNCH_IMAGE_LIBRARY:
-        //we do not consider crop = true temprent edit=true
         if (mCropImagedUri != null) {
           uri = mCropImagedUri;
 
@@ -405,21 +349,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
           if (uriTmp != null)
             uri = uriTmp;
         } else {
-          /////////////////////multi images parse
-          ClipData clipData = data.getClipData();
-          if(clipData == null) {
-            uri = data.getData();
-            multiImagesResult.pushMap(getImage(uri, true));
-          }
-          else {
-            for (int i = 0; i < clipData.getItemCount(); i++) {
-              multiImagesResult.pushMap(getImage(clipData.getItemAt(i).getUri(), true));
-            }
-          }
-          response.putArray("multiImagesData", multiImagesResult);
-          mCallback.invoke(response);
-          return;
-          //////////////////////
+          uri = data.getData();
         }
         break;
       case REQUEST_LAUNCH_VIDEO_LIBRARY:
@@ -435,6 +365,118 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       default:
         uri = null;
     }
+    //firegnu
+    String realPath = getRealPathFromURI(uri);
+    response.putString("originpath", realPath);
+    boolean isUrl = false;
+
+    if (realPath != null) {
+      try {
+        URL url = new URL(realPath);
+        isUrl = true;
+      } catch (MalformedURLException e) {
+        // not a url
+      }
+    }
+
+    // image isn't in memory cache
+    if (realPath == null || isUrl) {
+      try {
+        File file = createFileFromURI(uri);
+        realPath = file.getAbsolutePath();
+        uri = Uri.fromFile(file);
+      } catch (Exception e) {
+        // image not in cache
+        response.putString("error", "Could not read photo");
+        response.putString("uri", uri.toString());
+        mCallback.invoke(response);
+        return;
+      }
+    }
+
+    int CurrentAngle = 0;
+    try {
+      ExifInterface exif = new ExifInterface(realPath);
+
+      // extract lat, long, and timestamp and add to the response
+      float[] latlng = new float[2];
+      exif.getLatLong(latlng);
+      float latitude = latlng[0];
+      float longitude = latlng[1];
+      if(latitude != 0f || longitude != 0f) {
+        response.putDouble("latitude", latitude);
+        response.putDouble("longitude", longitude);
+      }
+
+      String timestamp = exif.getAttribute(ExifInterface.TAG_DATETIME);
+      SimpleDateFormat exifDatetimeFormat = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss");
+
+      DateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+      isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+      try {
+        String isoFormatString = isoFormat.format(exifDatetimeFormat.parse(timestamp)) + "Z";
+        response.putString("timestamp", isoFormatString);
+      } catch (Exception e) {}
+
+      int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+      boolean isVertical = true;
+      switch (orientation) {
+        case ExifInterface.ORIENTATION_ROTATE_270:
+          isVertical = false;
+          CurrentAngle = 270;
+          break;
+        case ExifInterface.ORIENTATION_ROTATE_90:
+          isVertical = false;
+          CurrentAngle = 90;
+          break;
+        case ExifInterface.ORIENTATION_ROTATE_180:
+          CurrentAngle = 180;
+          break;
+      }
+      response.putBoolean("isVertical", isVertical);
+    } catch (IOException e) {
+      e.printStackTrace();
+      response.putString("error", e.getMessage());
+      mCallback.invoke(response);
+      return;
+    }
+
+    BitmapFactory.Options options = new BitmapFactory.Options();
+    options.inJustDecodeBounds = true;
+    Bitmap photo = BitmapFactory.decodeFile(realPath, options);
+    int initialWidth = options.outWidth;
+    int initialHeight = options.outHeight;
+
+    // don't create a new file if contraint are respected
+    if (((initialWidth < maxWidth && maxWidth > 0) || maxWidth == 0)
+            && ((initialHeight < maxHeight && maxHeight > 0) || maxHeight == 0)
+            && quality == 100 && (!forceAngle || (forceAngle && CurrentAngle == angle))) {
+      response.putInt("width", initialWidth);
+      response.putInt("height", initialHeight);
+    } else {
+      File resized = getResizedImage(realPath, initialWidth, initialHeight);
+      if (resized == null) {
+        response.putString("error", "Can't resize the image");
+      } else {
+         realPath = resized.getAbsolutePath();
+         uri = Uri.fromFile(resized);
+         photo = BitmapFactory.decodeFile(realPath, options);
+         response.putInt("width", options.outWidth);
+         response.putInt("height", options.outHeight);
+      }
+    }
+
+    response.putString("uri", uri.toString());
+    response.putString("path", realPath);
+
+    if (!noData) {
+      response.putString("data", getBase64StringFromFile(realPath));
+    }
+
+    putExtraFileInfo(realPath, response);
+
+    mCallback.invoke(response);
   }
 
   /**
