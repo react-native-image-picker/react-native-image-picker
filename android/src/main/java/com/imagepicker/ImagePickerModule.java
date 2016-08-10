@@ -207,7 +207,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
     parseOptions(options);
 
-    if (pickVideo == true) {
+    if (pickVideo) {
       requestCode = REQUEST_LAUNCH_VIDEO_CAPTURE;
       cameraIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
       cameraIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, videoQuality);
@@ -262,7 +262,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
     parseOptions(options);
 
-    if (pickVideo == true) {
+    if (pickVideo) {
       requestCode = REQUEST_LAUNCH_VIDEO_LIBRARY;
       libraryIntent = new Intent(Intent.ACTION_PICK);
       libraryIntent.setType("video/*");
