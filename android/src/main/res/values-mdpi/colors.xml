@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="holo_blue_bright">#ff00ddff</color>
+    <color name="menu_bg">#101F2D</color>
+    <color name="light_gray">#AA808080</color>
+    <color name="gray">#dddddd</color>
+    <color name="tab_bg">#142029</color>
+    <color name="bg_light_blue">#EBF5FF</color>
+    <color name="light_black">#CC000000</color>
+    <color name="light_black_AA">#AA000000</color>
+    <color name="light_black_">#33000000</color>
+    <color name="light_white_">#33FFFFFF</color>
+    <color name="dialog_bg">#f0f0f0</color>
+
+    <drawable name="light_black_">#33000000</drawable>
+
+</resources>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@color/bg_light_blue"
+    android:orientation="vertical" >
+
+    <include
+        android:layout_width="fill_parent"
+        android:layout_height="55dp"
+        layout="@layout/titlebar" />
+    <FrameLayout
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" >
+
+        <GridView
+            android:id="@+id/gridGallery"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:layout_marginBottom="-10dp"
+            android:layout_marginLeft="-10dp"
+            android:layout_marginRight="-10dp"
+            android:layout_marginTop="-10dp"
+            android:horizontalSpacing="-15dp"
+            android:numColumns="3"
+            android:padding="0dp"
+            android:verticalSpacing="-15dp"
+            tools:listitem="@layout/gallery_item" >
+        </GridView>
+
+        <ImageView
+            android:id="@+id/imgNoMedia"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:contentDescription="精准扶贫"
+            android:src="@drawable/no_media" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/llBottomContainer"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="5dp" >
+
+        <Button
+            android:id="@+id/btnGalleryOk"
+            style="@style/btn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="#BD1E22"
+            android:text="确定"
+            android:layout_marginRight="10dp"/>
+        <Button
+            android:id="@+id/btnGalleryCancle"
+            style="@style/btn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="#BD1E22"
+            android:text="取消" />
+    </LinearLayout>
+
+</LinearLayout>
