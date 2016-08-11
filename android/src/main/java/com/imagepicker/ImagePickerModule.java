@@ -3,6 +3,7 @@ package com.imagepicker;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -13,13 +14,20 @@ import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.os.PowerManager;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.util.Base64;
+import android.util.Log;
 import android.webkit.MimeTypeMap;
 import android.widget.ArrayAdapter;
+import android.widget.Toast;
 
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Arguments;
@@ -51,6 +59,13 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
 
+//compress
+import com.netcompss.ffmpeg4android.CommandValidationException;
+import com.netcompss.ffmpeg4android.GeneralUtils;
+import com.netcompss.ffmpeg4android.Prefs;
+import com.netcompss.ffmpeg4android.ProgressCalculator;
+import com.netcompss.loader.LoadJNI;
+
 public class ImagePickerModule extends ReactContextBaseJavaModule implements ActivityEventListener {
 
   static final int REQUEST_LAUNCH_IMAGE_CAPTURE = 1;
@@ -79,6 +94,18 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   private int videoDurationLimit = 0;
   WritableMap response;
   private Activity currentActivity;
+
+  //compress
+  public ProgressDialog progressBar;
+  String workFolder = null;
+  String demoVideoFolder = null;
+  String demoVideoPath = null;
+  String vkLogPath = null;
+  LoadJNI vk;
+  private final int STOP_TRANSCODING_MSG = -1;
+  private final int FINISHED_TRANSCODING_MSG = 0;
+  private boolean commandValidationFailedFlag = false;
+  //////////////////////////////
 
   public ImagePickerModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -368,6 +395,18 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     return image;
   }
 
+  Boolean checkFileSize(String filePath) {
+    File file = new File(filePath);
+    long length = file.length();
+    length = length/1024;
+    if(length > 5000) {
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
+
   @Override
   public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
     //robustness code
@@ -407,11 +446,42 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         mCallback.invoke(response);
         return;
       case REQUEST_LAUNCH_VIDEO_LIBRARY:
+        //compress
+        workFolder = currentActivity.getFilesDir() + "/";
+        //Log.i(Prefs.TAG, "workFolder: " + workFolder);
+        vkLogPath = workFolder + "vk.log";
+        GeneralUtils.copyLicenseFromAssetsToSDIfNeeded(currentActivity, workFolder);
+        ///////GeneralUtils.copyDemoVideoFromAssetsToSDIfNeeded(currentActivity, demoVideoFolder);
+        int rc = GeneralUtils.isLicenseValid(currentActivity, workFolder);
+        Log.i(Prefs.TAG, "License check RC: " + rc);
+        //
+
+
+        if(checkFileSize(getRealPathFromURI(data.getData()))) {
+          //compress this video
+          runTranscoding(data);
+          return;
+        }
         response.putString("uri", data.getData().toString());
         response.putString("path", getRealPathFromURI(data.getData()));
         mCallback.invoke(response);
         return;
       case REQUEST_LAUNCH_VIDEO_CAPTURE:
+        //compress
+        workFolder = currentActivity.getFilesDir() + "/";
+        //Log.i(Prefs.TAG, "workFolder: " + workFolder);
+        vkLogPath = workFolder + "vk.log";
+        GeneralUtils.copyLicenseFromAssetsToSDIfNeeded(currentActivity, workFolder);
+        ///////GeneralUtils.copyDemoVideoFromAssetsToSDIfNeeded(currentActivity, demoVideoFolder);
+        rc = GeneralUtils.isLicenseValid(currentActivity, workFolder);
+        Log.i(Prefs.TAG, "License check RC: " + rc);
+        //
+
+        if(checkFileSize(getRealPathFromURI(data.getData()))) {
+          //compress this video
+          runTranscoding(data);
+          return;
+        }
         response.putString("uri", data.getData().toString());
         response.putString("path", getRealPathFromURI(data.getData()));
         mCallback.invoke(response);
@@ -757,5 +827,156 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
               "VID_"+ timeStamp + ".mp4");
 
     return mediaFile;
+  }
+
+  //compress function
+  private void runTranscodingUsingLoader(final Intent data) {
+    Log.i(Prefs.TAG, "runTranscodingUsingLoader started...");
+
+    PowerManager powerManager = (PowerManager)currentActivity.getSystemService(Activity.POWER_SERVICE);
+    PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "VK_LOCK");
+    Log.d(Prefs.TAG, "Acquire wake lock");
+    wakeLock.acquire();
+
+    MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
+    metaRetriever.setDataSource(getRealPathFromURI(data.getData()));
+    int height = Integer.parseInt(metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT))/2;
+    int width = Integer.parseInt(metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH))/2;
+
+    String deviceResolution = ("" + width) + "x" + ("" + height);
+
+    final String newPath = getRealPathFromURI(data.getData()).split(".mp")[0] + "_compress.mp4";
+
+    String[] complexCommand = {"ffmpeg", "-y", "-i", getRealPathFromURI(data.getData()), "-strict", "experimental", "-s", deviceResolution, "-r", "25", "-vcodec", "mpeg4", "-b", "900k", "-ab", "48000", "-ac", "2", "-ar", "22050", newPath};
+
+    vk = new LoadJNI();
+    try {
+      // running complex command with validation
+      vk.run(complexCommand, workFolder, currentActivity);
+
+      Log.i(Prefs.TAG, "vk.run finished.");
+      // copying vk.log (internal native log) to the videokit folder
+      GeneralUtils.copyFileToFolder(vkLogPath, demoVideoFolder);
+
+    } catch (CommandValidationException e) {
+      Log.e(Prefs.TAG, "vk run exeption.", e);
+      commandValidationFailedFlag = true;
+
+    } catch (Throwable e) {
+      Log.e(Prefs.TAG, "vk run exeption.", e);
+    }
+    finally {
+      if (wakeLock.isHeld()) {
+        wakeLock.release();
+        Log.i(Prefs.TAG, "Wake lock released");
+      }
+      else{
+        Log.i(Prefs.TAG, "Wake lock is already released, doing nothing");
+      }
+    }
+
+    // finished Toast
+    String rc = null;
+    if (commandValidationFailedFlag) {
+      rc = "Command Vaidation Failed";
+    }
+    else {
+      rc = GeneralUtils.getReturnCodeFromLog(vkLogPath);
+    }
+    final String status = rc;
+    currentActivity.runOnUiThread(new Runnable() {
+      public void run() {
+
+        if (status.equals("Transcoding Status: Finished OK")) {
+          Toast.makeText(currentActivity, "压缩成功", Toast.LENGTH_LONG).show();
+          response.putString("uri", data.getData().toString());
+          response.putString("path", newPath);//
+          mCallback.invoke(response);
+        }
+        else if(status.equals("Transcoding Status: Stopped")) {
+          Toast.makeText(currentActivity, "压缩被终止", Toast.LENGTH_LONG).show();
+        }
+        // (status.equals("Transcoding Status: Failed"))
+        else {
+          //Toast.makeText(currentActivity, "Check: " + vkLogPath + " for more information.", Toast.LENGTH_LONG).show();
+          Toast.makeText(currentActivity, "压缩失败", Toast.LENGTH_LONG).show();
+        }
+      }
+    });
+  }
+
+  private Handler handler = new Handler(Looper.getMainLooper()) {
+    @Override
+    public void handleMessage(Message msg) {
+      Log.i(Prefs.TAG, "Handler got message");
+      if (progressBar != null) {
+        progressBar.dismiss();
+
+        // stopping the transcoding native
+        if (msg.what == STOP_TRANSCODING_MSG) {
+          Log.i(Prefs.TAG, "Got cancel message, calling fexit");
+          vk.fExit(currentActivity);
+        }
+      }
+    }
+  };
+
+  public void runTranscoding(final Intent data) {
+    progressBar = new ProgressDialog(currentActivity);
+    progressBar.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+    progressBar.setTitle("视频压缩");
+    progressBar.setMessage("待上传视频过大,正在压缩...");
+    progressBar.setMax(100);
+    progressBar.setProgress(0);
+
+    progressBar.setCancelable(false);
+    progressBar.setButton(DialogInterface.BUTTON_NEGATIVE, "取消", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        handler.sendEmptyMessage(STOP_TRANSCODING_MSG);
+      }
+    });
+
+    progressBar.show();
+
+    new Thread() {
+      public void run() {
+        Log.d(Prefs.TAG,"Worker started");
+        try {
+          //sleep(5000);
+          runTranscodingUsingLoader(data);
+          handler.sendEmptyMessage(FINISHED_TRANSCODING_MSG);
+
+        } catch(Exception e) {
+          Log.e("threadmessage",e.getMessage());
+        }
+      }
+    }.start();
+
+    // Progress update thread
+    new Thread() {
+      ProgressCalculator pc = new ProgressCalculator(vkLogPath);
+      public void run() {
+        Log.d(Prefs.TAG,"Progress update started");
+        int progress = -1;
+        try {
+          while (true) {
+            sleep(300);
+            progress = pc.calcProgress();
+            if (progress != 0 && progress < 100) {
+              progressBar.setProgress(progress);
+            }
+            else if (progress == 100) {
+              Log.i(Prefs.TAG, "==== progress is 100, exiting Progress update thread");
+              pc.initCalcParamsForNextInter();
+              break;
+            }
+          }
+
+        } catch(Exception e) {
+          Log.e("threadmessage",e.getMessage());
+        }
+      }
+    }.start();
   }
 }
