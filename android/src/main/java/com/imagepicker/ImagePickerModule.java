@@ -73,6 +73,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   static final int REQUEST_LAUNCH_VIDEO_LIBRARY = 3;
   static final int REQUEST_LAUNCH_VIDEO_CAPTURE = 4;
 
+  static final  int REQUEST_IMAGE_CROPPING = 5;
+
   private final ReactApplicationContext mReactContext;
   //firegnu
   private Uri mVideoCaptureURI;
@@ -259,9 +261,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(imageFile));
 
       if (allowEditing == true) {
-        cameraIntent.putExtra("crop", "true");
+        /*cameraIntent.putExtra("crop", "true");
         cameraIntent.putExtra("aspectX", aspectX);
-        cameraIntent.putExtra("aspectY", aspectY);
+        cameraIntent.putExtra("aspectY", aspectY);*/
       }
     }
 
@@ -325,11 +327,32 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         callback.invoke(response);
       }
     } else {
-      //multi image pick
-      Intent i = new Intent();//Action.ACTION_MULTIPLE_PICK
-      i.setClass(currentActivity, CustomGalleryActivity.class);
-      mCallback = callback;
-      currentActivity.startActivityForResult(i, 200);
+      if (allowEditing == true) {
+        libraryIntent = new Intent(Intent.ACTION_PICK,
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+
+        if (libraryIntent.resolveActivity(mReactContext.getPackageManager()) == null) {
+          response.putString("error", "Cannot launch photo library");
+          callback.invoke(response);
+          return;
+        }
+
+        mCallback = callback;
+
+        try {
+          currentActivity.startActivityForResult(libraryIntent, REQUEST_LAUNCH_IMAGE_LIBRARY);
+        } catch(ActivityNotFoundException e) {
+          e.printStackTrace();
+        }
+      }
+      else {
+        //multi image pick
+        Intent i = new Intent();//Action.ACTION_MULTIPLE_PICK
+        i.setClass(currentActivity, CustomGalleryActivity.class);
+        mCallback = callback;
+        currentActivity.startActivityForResult(i, 200);
+      }
+
     }
   }
 
@@ -425,9 +448,53 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       return;
     }
 
+
     Uri uri;
+    switch (requestCode)
+    {
+      case REQUEST_LAUNCH_IMAGE_CAPTURE:
+        uri = mCameraCaptureURI;
+        break;
+      case REQUEST_IMAGE_CROPPING:
+        uri = mCropImagedUri;
+        break;
+      default:
+        uri = data.getData();
+    }
+    if (requestCode != REQUEST_IMAGE_CROPPING && allowEditing == true) {
+      Intent cropIntent = new Intent("com.android.camera.action.CROP");
+      cropIntent.setDataAndType(uri, "image/*");
+      cropIntent.putExtra("crop", "true");
+
+      if (aspectX > 0 && aspectY > 0) {
+        // aspectX:aspectY, the ratio of width to height
+        cropIntent.putExtra("aspectX", aspectX);
+        cropIntent.putExtra("aspectY", aspectY);
+        cropIntent.putExtra("scale", true);
+      }
+
+      // we create a file to save the result
+      File imageFile = createNewFile(true);
+      mCropImagedUri = Uri.fromFile(imageFile);
+      cropIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCropImagedUri);
+
+      try {
+        currentActivity.startActivityForResult(cropIntent, REQUEST_IMAGE_CROPPING);
+      } catch(ActivityNotFoundException e) {
+        e.printStackTrace();
+      }
+      return;
+    }
+
+    /////Uri uri;
     WritableArray multiImagesResult = new WritableNativeArray();
     switch (requestCode) {
+      case REQUEST_IMAGE_CROPPING:
+        uri = mCropImagedUri;
+        multiImagesResult.pushMap(getImage(uri, true));
+        response.putArray("multiImagesData", multiImagesResult);
+        mCallback.invoke(response);
+        break;
       case REQUEST_LAUNCH_IMAGE_CAPTURE:
         uri = mCameraCaptureURI;
         multiImagesResult.pushMap(getImage(uri, true));
