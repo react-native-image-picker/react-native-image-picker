@@ -411,7 +411,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             [response setObject:@(image.size.height) forKey:@"height"];
 
             NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
-            if (storageOptions && [[storageOptions objectForKey:@"cameraRoll"] boolValue] == YES) {
+            if (storageOptions && [[storageOptions objectForKey:@"cameraRoll"] boolValue] == YES && self.picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
               UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
             }
         }
@@ -435,6 +435,18 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                     self.callback(@[@{@"error": error.localizedFailureReason}]);
                     return;
                 }
+            }
+            NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
+            if (storageOptions && [[storageOptions objectForKey:@"cameraRoll"] boolValue] == YES && self.picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
+                ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
+                [library writeVideoAtPathToSavedPhotosAlbum:videoDestinationURL completionBlock:^(NSURL *assetURL, NSError *error) {
+                    if (error) {
+                        self.callback(@[@{@"error": error.localizedFailureReason}]);
+                        return;
+                    } else {
+                        NSLog(@"Save video succeed.");
+                    }
+                }];
             }
             [response setObject:videoDestinationURL.absoluteString forKey:@"uri"];
         }
