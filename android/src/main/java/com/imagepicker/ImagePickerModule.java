@@ -20,6 +20,7 @@ import android.util.Base64;
 import android.widget.ArrayAdapter;
 import android.webkit.MimeTypeMap;
 import android.content.pm.PackageManager;
+import android.media.MediaScannerConnection;
 
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Arguments;
@@ -313,6 +314,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     switch (requestCode) {
       case REQUEST_LAUNCH_IMAGE_CAPTURE:
         uri = mCameraCaptureURI;
+        this.fileScan(uri.getPath());
         break;
       case REQUEST_LAUNCH_IMAGE_LIBRARY:
         uri = data.getData();
@@ -325,6 +327,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       case REQUEST_LAUNCH_VIDEO_CAPTURE:
         response.putString("uri", data.getData().toString());
         response.putString("path", getRealPathFromURI(data.getData()));
+        this.fileScan(response.getString("path"));
         mCallback.invoke(response);
         return;
       default:
@@ -723,6 +726,17 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     if (options.hasKey("durationLimit")) {
       videoDurationLimit = options.getInt("durationLimit");
     }
+  }
+  
+  public void fileScan(String path){
+    MediaScannerConnection.scanFile(mReactContext,
+            new String[] { path }, null,
+            new MediaScannerConnection.OnScanCompletedListener() {
+
+              public void onScanCompleted(String path, Uri uri) {
+                Log.i("TAG", "Finished scanning " + path);
+              }
+            });
   }
 
   // Required for RN 0.30+ modules than implement ActivityEventListener
