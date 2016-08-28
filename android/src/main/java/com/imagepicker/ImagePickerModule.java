@@ -29,6 +29,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.WritableMap;
 
@@ -115,23 +116,16 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       titles.add(options.getString("chooseFromLibraryButtonTitle"));
       actions.add("library");
     }
-
-    String cancelButtonTitle = options.getString("cancelButtonTitle");
     if (options.hasKey("customButtons")) {
-      ReadableMap buttons = options.getMap("customButtons");
-      if (buttons != null) {
-        ReadableMapKeySetIterator it = buttons.keySetIterator();
-        // Keep the current size as the iterator returns the keys in the reverse order they are defined
+      ReadableArray customButtons = options.getArray("customButtons");
+      for (int i = 0; i < customButtons.size(); i++) {
+        ReadableMap button = customButtons.getMap(i);
         int currentIndex = titles.size();
-        while (it.hasNextKey()) {
-          String key = it.nextKey();
-
-          titles.add(currentIndex, key);
-          actions.add(currentIndex, buttons.getString(key));
-        }
+        titles.add(currentIndex, button.getString("title"));
+        actions.add(currentIndex, button.getString("name"));
       }
     }
-
+    String cancelButtonTitle = options.getString("cancelButtonTitle");
     titles.add(cancelButtonTitle);
     actions.add("cancel");
 
@@ -727,7 +721,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       videoDurationLimit = options.getInt("durationLimit");
     }
   }
-  
+
   public void fileScan(String path){
     MediaScannerConnection.scanFile(mReactContext,
             new String[] { path }, null,
