@@ -89,9 +89,9 @@ var ImagePicker = require('react-native-image-picker');
 // More info on all the options is below in the README...just some common use cases shown here
 var options = {
   title: 'Select Avatar',
-  customButtons: {
-    'Choose Photo from Facebook': 'fb',
-  },
+  customButtons: [
+    {name: 'fb', title: 'Choose Photo from Facebook'},
+  ],
   storageOptions: {
     skipBackup: true,
     path: 'images'
@@ -164,7 +164,7 @@ title | OK | OK | Specify `null` or empty string to remove the title
 cancelButtonTitle | OK | OK |
 takePhotoButtonTitle | OK | OK | Specify `null` or empty string to remove this button
 chooseFromLibraryButtonTitle | OK | OK | Specify `null` or empty string to remove this button
-customButtons | OK | OK | An object in the form of `[Button Text] : [String returned upon selection]`
+customButtons | OK | OK | An array containing objects with the name and title of buttons
 cameraType | OK | - | 'front' or 'back'
 mediaType | OK | OK | 'photo', 'video', or 'mixed' on iOS, 'photo' or 'video' on Android
 maxWidth | OK | OK | Photos only
