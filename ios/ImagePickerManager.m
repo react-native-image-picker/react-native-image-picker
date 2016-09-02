@@ -156,10 +156,12 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     // If button title is one of the keys in the customButtons dictionary return the value as a callback
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"title==%@", action.title];
     NSArray *results = [self.customButtons filteredArrayUsingPredicate:predicate];
-    NSString *customButtonStr = [[results objectAtIndex:0] objectForKey:@"name"];
-    if (customButtonStr) {
-        self.callback(@[@{@"customButton": customButtonStr}]);
-        return;
+    if (results.count > 0) {
+        NSString *customButtonStr = [[results objectAtIndex:0] objectForKey:@"name"];
+        if (customButtonStr) {
+            self.callback(@[@{@"customButton": customButtonStr}]);
+            return;
+        }
     }
 
     if ([action.title isEqualToString:[self.options valueForKey:@"takePhotoButtonTitle"]]) { // Take photo
