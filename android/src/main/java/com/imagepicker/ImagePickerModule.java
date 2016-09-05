@@ -100,6 +100,15 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       callback.invoke(response);
       return;
     }
+    if (options.hasKey("imageSource")) {
+        String source = options.getString("imageSource");
+        if (source.equals("photo")) {
+            launchCamera(options, callback);
+        } else {
+            launchImageLibrary(options, callback);
+        }
+        return;
+    }
 
     final List<String> titles = new ArrayList<String>();
     final List<String> actions = new ArrayList<String>();
