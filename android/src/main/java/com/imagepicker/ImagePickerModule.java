@@ -215,9 +215,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
       // we create a tmp file to save the result
-      File imageFile = createNewFile(true);
+      File imageFile = createNewFile();
       mCameraCaptureURI = Uri.fromFile(imageFile);
-      cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(imageFile));
+      cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCameraCaptureURI);
     }
 
     if (cameraIntent.resolveActivity(mReactContext.getPackageManager()) == null) {
@@ -265,7 +265,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     } else {
       requestCode = REQUEST_LAUNCH_IMAGE_LIBRARY;
       libraryIntent = new Intent(Intent.ACTION_PICK,
-      android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+      MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
     }
 
     if (libraryIntent.resolveActivity(mReactContext.getPackageManager()) == null) {
@@ -406,7 +406,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
     BitmapFactory.Options options = new BitmapFactory.Options();
     options.inJustDecodeBounds = true;
-    Bitmap photo = BitmapFactory.decodeFile(realPath, options);
     int initialWidth = options.outWidth;
     int initialHeight = options.outHeight;
 
@@ -421,7 +420,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       } else {
          realPath = resized.getAbsolutePath();
          uri = Uri.fromFile(resized);
-         photo = BitmapFactory.decodeFile(realPath, options);
          response.putInt("width", options.outWidth);
          response.putInt("height", options.outHeight);
       }
@@ -522,7 +520,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
    * @throws Exception
    */
   private File createFileFromURI(Uri uri) throws Exception {
-    File file = new File(mReactContext.getCacheDir(), "photo-" + uri.getLastPathSegment());
+    File file = new File(mReactContext.getExternalCacheDir(), "photo-" + uri.getLastPathSegment());
     InputStream input = mReactContext.getContentResolver().openInputStream(uri);
     OutputStream output = new FileOutputStream(file);
 
@@ -620,7 +618,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     scaledphoto.compress(Bitmap.CompressFormat.JPEG, quality, bytes);
 
-    File f = createNewFile(false);
+    File f = createNewFile();
     FileOutputStream fo;
     try {
       fo = new FileOutputStream(f);
@@ -648,23 +646,24 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
    *
    * @return an empty file
    */
-  private File createNewFile(final boolean forcePictureDirectory) {
+  private File createNewFile() {
     String filename = "image-" + UUID.randomUUID().toString() + ".jpg";
-    if (tmpImage && forcePictureDirectory != true) {
-      return new File(mReactContext.getCacheDir(), filename);
+    File path;
+    if (tmpImage) {
+      path = mReactContext.getExternalCacheDir();
     } else {
-      File path = Environment.getExternalStoragePublicDirectory(
-              Environment.DIRECTORY_PICTURES);
-      File f = new File(path, filename);
-
-      try {
-        path.mkdirs();
-        f.createNewFile();
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-      return f;
+      path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
     }
+
+    File f = new File(path, filename);
+    try {
+      path.mkdirs();
+      f.createNewFile();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    return f;
   }
 
   private void putExtraFileInfo(final String path, WritableMap response) {
