@@ -288,7 +288,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   }
 
   @Override
-  public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
+  public void onActivityResult(final Activity activity, final int requestCode, final int resultCode, final Intent data) {
     //robustness code
     if (mCallback == null || (mCameraCaptureURI == null && requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE)
             || (requestCode != REQUEST_LAUNCH_IMAGE_CAPTURE && requestCode != REQUEST_LAUNCH_IMAGE_LIBRARY
