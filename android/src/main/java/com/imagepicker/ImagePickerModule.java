@@ -428,6 +428,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
       } else {
          realPath = resized.getAbsolutePath();
          uri = Uri.fromFile(resized);
+         BitmapFactory.decodeFile(realPath, options);
          response.putInt("width", options.outWidth);
          response.putInt("height", options.outHeight);
       }
