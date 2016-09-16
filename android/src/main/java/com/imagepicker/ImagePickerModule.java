@@ -413,6 +413,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
     BitmapFactory.Options options = new BitmapFactory.Options();
     options.inJustDecodeBounds = true;
+    BitmapFactory.decodeFile(realPath, options);
     int initialWidth = options.outWidth;
     int initialHeight = options.outHeight;
 
