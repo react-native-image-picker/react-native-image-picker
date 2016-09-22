@@ -28,7 +28,8 @@ Use [rnpm](https://github.com/rnpm/rnpm) to automatically complete the installat
 1. In the XCode's "Project navigator", right click on your project's Libraries folder ➜ `Add Files to <...>`
 2. Go to `node_modules` ➜ `react-native-image-picker` ➜ `ios` ➜ select `RNImagePicker.xcodeproj`
 3. Add `RNImagePicker.a` to `Build Phases -> Link Binary With Libraries`
-4. Compile and have fun
+4. For iOS 10+, Add the `NSPhotoLibraryUsageDescription` and `NSCameraUsageDescription` keys to your `Info.plist` with strings describing why your app needs these permissions
+5. Compile and have fun
 
 ### Android
 ```gradle
