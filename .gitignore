@@ -28,3 +28,6 @@ xcuserdata/
 ### Node
 node_modules
 *.log
+
+## Android iml
+*.iml
