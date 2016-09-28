@@ -28,7 +28,6 @@ iOS | Android
 
 **React Native < 0.29**
 `$rnpm link`
-Use [rnpm](https://github.com/rnpm/rnpm) to automatically complete the installation, or link manually like so:
 
 ### Manual Installation
 
