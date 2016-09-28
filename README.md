@@ -1,8 +1,12 @@
+
+# React Native Image Packer [![npm version](https://badge.fury.io/js/react-native-image-picker.svg)](https://badge.fury.io/js/react-native-image-picker) ![MIT](https://img.shields.io/dub/l/vibe-d.svg) ![Platform - Android and iOS](https://img.shields.io/badge/platform-Android%20%7C%20iOS-yellow.svg)
+
+A React Native module that allows you to use native UI to select a photo/video from the device library or directly from the camera, like so:
+
+
 #### _Before you open an issue_
 This library started as a basic bridge of the native iOS image picker, and I want to keep it that way. As such, functionality beyond what the native `UIImagePickerController` supports will not be supported here. **Multiple image selection, more control over the crop tool, and landscape support** are things missing from the native iOS functionality - **not issues with my library**. If you need these things, [react-native-image-crop-picker](https://github.com/ivpusic/react-native-image-crop-picker) might be a better choice for you.    
 
-# react-native-image-picker
-A React Native module that allows you to use native UI to select a photo/video from the device library or directly from the camera, like so:
 
 iOS | Android
 ------- | ----
@@ -10,8 +14,6 @@ iOS | Android
 
 ## Table of contents
 - [Install](#install)
-  - [iOS](#ios)
-  - [Android](#android)
 - [Usage](#usage)
 - [Direct launch](#directly-launching-the-camera-or-image-library)
 - [Options](#options)
