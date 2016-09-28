@@ -58,10 +58,10 @@ interface ActivityResultInterface {
 
 public class ImagePickerModule extends ReactContextBaseJavaModule {
 
-  static final int REQUEST_LAUNCH_IMAGE_CAPTURE = 813881;
-  static final int REQUEST_LAUNCH_IMAGE_LIBRARY = 813882;
-  static final int REQUEST_LAUNCH_VIDEO_LIBRARY = 813883;
-  static final int REQUEST_LAUNCH_VIDEO_CAPTURE = 813884;
+  static final int REQUEST_LAUNCH_IMAGE_CAPTURE = 13001;
+  static final int REQUEST_LAUNCH_IMAGE_LIBRARY = 13002;
+  static final int REQUEST_LAUNCH_VIDEO_LIBRARY = 13003;
+  static final int REQUEST_LAUNCH_VIDEO_CAPTURE = 13004;
 
   private final ReactApplicationContext mReactContext;
   private ImagePickerActivityEventListener mActivityEventListener;
