@@ -28,6 +28,6 @@
     "picker"
   ],
   "scripts": {
-    "prepublish": "rm -rf android/build"
+    "prepublish": "rm -rf android/build Example/android/build Example/android/app/build"
   }
 }
