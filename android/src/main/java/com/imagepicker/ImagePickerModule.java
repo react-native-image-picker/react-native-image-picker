@@ -134,9 +134,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         actions.add(currentIndex, button.getString("name"));
       }
     }
-    String cancelButtonTitle = options.getString("cancelButtonTitle");
-    titles.add(cancelButtonTitle);
-    actions.add("cancel");
+    if (options.hasKey("cancelButtonTitle")
+            && options.getString("cancelButtonTitle") != null
+            && !options.getString("cancelButtonTitle").isEmpty()) {
+      titles.add(options.getString("cancelButtonTitle"));
+      actions.add("cancel");
+    }
 
     ArrayAdapter<String> adapter = new ArrayAdapter<String>(currentActivity,
             android.R.layout.select_dialog_item, titles);
@@ -309,6 +312,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     if (resultCode != Activity.RESULT_OK) {
       response.putBoolean("didCancel", true);
       mCallback.invoke(response);
+      mCallback = null;
       return;
     }
 
@@ -325,12 +329,14 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         response.putString("uri", data.getData().toString());
         response.putString("path", getRealPathFromURI(data.getData()));
         mCallback.invoke(response);
+        mCallback = null;
         return;
       case REQUEST_LAUNCH_VIDEO_CAPTURE:
         response.putString("uri", data.getData().toString());
         response.putString("path", getRealPathFromURI(data.getData()));
         this.fileScan(response.getString("path"));
         mCallback.invoke(response);
+        mCallback = null;
         return;
       default:
         uri = null;
@@ -359,6 +365,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         response.putString("error", "Could not read photo");
         response.putString("uri", uri.toString());
         mCallback.invoke(response);
+        mCallback = null;
         return;
       }
     }
@@ -408,6 +415,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
       e.printStackTrace();
       response.putString("error", e.getMessage());
       mCallback.invoke(response);
+      mCallback = null;
       return;
     }
 
@@ -444,6 +452,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     putExtraFileInfo(realPath, response);
 
     mCallback.invoke(response);
+    mCallback = null;
   }
 
   /**
