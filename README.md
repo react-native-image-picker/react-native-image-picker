@@ -170,7 +170,7 @@ On iOS, don't assume that the absolute uri returned will persist. See [#107](/..
 option | iOS  | Android | Info
 ------ | ---- | ------- | ----
 title | OK | OK | Specify `null` or empty string to remove the title
-cancelButtonTitle | OK | OK |
+cancelButtonTitle | OK | OK | Specify `null` or empty string to remove this button (Android only)
 takePhotoButtonTitle | OK | OK | Specify `null` or empty string to remove this button
 chooseFromLibraryButtonTitle | OK | OK | Specify `null` or empty string to remove this button
 customButtons | OK | OK | An array containing objects with the name and title of buttons
