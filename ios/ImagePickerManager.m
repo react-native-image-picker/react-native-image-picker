@@ -425,6 +425,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             }
         }
         else { // VIDEO
+            NSURL *videoRefURL = info[UIImagePickerControllerReferenceURL];
             NSURL *videoURL = info[UIImagePickerControllerMediaURL];
             NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
 
@@ -458,6 +459,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                 }];
             }
             [response setObject:videoDestinationURL.absoluteString forKey:@"uri"];
+            [response setObject:videoRefURL.absoluteString forKey:@"origURL"];
         }
 
         // If storage options are provided, check the skipBackup flag
