@@ -12,7 +12,7 @@
 @property (nonatomic, strong) UIImagePickerController *picker;
 @property (nonatomic, strong) RCTResponseSenderBlock callback;
 @property (nonatomic, strong) NSDictionary *defaultOptions;
-@property (nonatomic, retain) NSMutableDictionary *options;
+@property (nonatomic, retain) NSMutableDictionary *options, *response;
 @property (nonatomic, strong) NSArray *customButtons;
 
 @end
@@ -420,8 +420,11 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             [response setObject:@(image.size.height) forKey:@"height"];
 
             NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
-            if (storageOptions && [[storageOptions objectForKey:@"cameraRoll"] boolValue] == YES && self.picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
-              UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
+            if ( [[storageOptions objectForKey:@"waitUntilSaved"] boolValue] ) {
+                self.response = response;
+                UIImageWriteToSavedPhotosAlbum(image, self, @selector(savedImage : hasBeenSavedInPhotoAlbumWithError : usingContextInfo :), nil);
+            } else {
+                UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
             }
         }
         else { // VIDEO
@@ -469,6 +472,10 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
           if ([[storageOptions objectForKey:@"skipBackup"] boolValue]) {
             [self addSkipBackupAttributeToItemAtPath:path]; // Don't back up the file to iCloud
           }
+
+          if (![[storageOptions objectForKey:@"waitUntilSaved"] boolValue]) {
+            self.callback(@[response]);
+          }
         }
 
         self.callback(@[response]);
@@ -487,6 +494,14 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     });
 }
 
+- (void)savedImage:(UIImage *)image hasBeenSavedInPhotoAlbumWithError:(NSError *)error usingContextInfo:(void*)ctxInfo {
+    if (error) {
+    NSLog(@"Error while saving picture into photo album");
+  } else {
+    // when the image has been saved in the photo album
+    self.callback(@[self.response]);
+  }
+}
 
 #pragma mark - Helpers
 

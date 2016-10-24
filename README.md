@@ -188,6 +188,7 @@ storageOptions | OK | OK | If this key is provided, the image will get saved in 
 storageOptions.skipBackup | OK | - | If true, the photo will NOT be backed up to iCloud
 storageOptions.path | OK | - | If set, will save image at /Documents/[path] rather than the root
 storageOptions.cameraRoll | OK | - | If true, the cropped photo will be saved to the iOS Camera roll.
+storageOptions.waitUntilSaved | OK | - | If true, will get response when extra images is saved.
 
 ### The Response Object
 
