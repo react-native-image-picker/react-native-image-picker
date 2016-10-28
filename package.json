@@ -29,5 +29,6 @@
   ],
   "scripts": {
     "prepublish": "rm -rf android/build Example/android/build Example/android/app/build"
-  }
+  },
+  "types": "./index.d.ts"
 }
