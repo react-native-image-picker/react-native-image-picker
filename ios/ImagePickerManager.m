@@ -266,7 +266,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     }
 }
 
-- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info
 {
     dispatch_block_t dismissCompletionBlock = ^{
 
@@ -473,20 +473,24 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 
         // If storage options are provided, check the skipBackup flag
         if ([self.options objectForKey:@"storageOptions"] && [[self.options objectForKey:@"storageOptions"] isKindOfClass:[NSDictionary class]]) {
-          NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
+            NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
 
-          if ([[storageOptions objectForKey:@"skipBackup"] boolValue]) {
-            [self addSkipBackupAttributeToItemAtPath:path]; // Don't back up the file to iCloud
-          }
+            if ([[storageOptions objectForKey:@"skipBackup"] boolValue]) {
+                [self addSkipBackupAttributeToItemAtPath:path]; // Don't back up the file to iCloud
+            }
 
-          if (![[storageOptions objectForKey:@"waitUntilSaved"] boolValue]) {
-            self.callback(@[self.response]);
-          }
+            if ([[storageOptions objectForKey:@"waitUntilSaved"] boolValue] == NO ||
+                [[storageOptions objectForKey:@"cameraRoll"] boolValue] == NO ||
+                self.picker.sourceType != UIImagePickerControllerSourceTypeCamera)
+            {
+                self.callback(@[self.response]);
+            }
         }
         else {
             self.callback(@[self.response]);
         }
     };
+    
     dispatch_async(dispatch_get_main_queue(), ^{
         [picker dismissViewControllerAnimated:YES completion:dismissCompletionBlock];
     });
@@ -501,13 +505,14 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     });
 }
 
-- (void)savedImage:(UIImage *)image hasBeenSavedInPhotoAlbumWithError:(NSError *)error usingContextInfo:(void*)ctxInfo {
+- (void)savedImage:(UIImage *)image hasBeenSavedInPhotoAlbumWithError:(NSError *)error usingContextInfo:(void*)ctxInfo
+{
     if (error) {
-    NSLog(@"Error while saving picture into photo album");
-  } else {
-    // when the image has been saved in the photo album
-    self.callback(@[self.response]);
-  }
+        NSLog(@"Error while saving picture into photo album");
+    } else {
+        // when the image has been saved in the photo album
+        self.callback(@[self.response]);
+    }
 }
 
 #pragma mark - Helpers
