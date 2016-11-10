@@ -46,111 +46,64 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     NSString *takePhotoButtonTitle = [self.options valueForKey:@"takePhotoButtonTitle"];
     NSString *chooseFromLibraryButtonTitle = [self.options valueForKey:@"chooseFromLibraryButtonTitle"];
 
-    if ([UIAlertController class] && [UIAlertAction class]) { // iOS 8+
-        self.alertController = [UIAlertController alertControllerWithTitle:title message:nil preferredStyle:UIAlertControllerStyleActionSheet];
 
-        UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:cancelTitle style:UIAlertActionStyleCancel handler:^(UIAlertAction * action) {
-            self.callback(@[@{@"didCancel": @YES}]); // Return callback for 'cancel' action (if is required)
+    self.alertController = [UIAlertController alertControllerWithTitle:title message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+
+    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:cancelTitle style:UIAlertActionStyleCancel handler:^(UIAlertAction * action) {
+        self.callback(@[@{@"didCancel": @YES}]); // Return callback for 'cancel' action (if is required)
+    }];
+    [self.alertController addAction:cancelAction];
+
+    if (![takePhotoButtonTitle isEqual:[NSNull null]] && takePhotoButtonTitle.length > 0) {
+        UIAlertAction *takePhotoAction = [UIAlertAction actionWithTitle:takePhotoButtonTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+            [self actionHandler:action];
         }];
-        [self.alertController addAction:cancelAction];
+        [self.alertController addAction:takePhotoAction];
+    }
+    if (![chooseFromLibraryButtonTitle isEqual:[NSNull null]] && chooseFromLibraryButtonTitle.length > 0) {
+        UIAlertAction *chooseFromLibraryAction = [UIAlertAction actionWithTitle:chooseFromLibraryButtonTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+            [self actionHandler:action];
+        }];
+        [self.alertController addAction:chooseFromLibraryAction];
+    }
 
-        if (![takePhotoButtonTitle isEqual:[NSNull null]] && takePhotoButtonTitle.length > 0) {
-            UIAlertAction *takePhotoAction = [UIAlertAction actionWithTitle:takePhotoButtonTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+    // Add custom buttons to action sheet
+    if ([self.options objectForKey:@"customButtons"] && [[self.options objectForKey:@"customButtons"] isKindOfClass:[NSArray class]]) {
+        self.customButtons = [self.options objectForKey:@"customButtons"];
+        for (NSString *button in self.customButtons) {
+            NSString *title = [button valueForKey:@"title"];
+            UIAlertAction *customAction = [UIAlertAction actionWithTitle:title style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
                 [self actionHandler:action];
             }];
-            [self.alertController addAction:takePhotoAction];
+            [self.alertController addAction:customAction];
         }
-        if (![chooseFromLibraryButtonTitle isEqual:[NSNull null]] && chooseFromLibraryButtonTitle.length > 0) {
-            UIAlertAction *chooseFromLibraryAction = [UIAlertAction actionWithTitle:chooseFromLibraryButtonTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
-                [self actionHandler:action];
-            }];
-            [self.alertController addAction:chooseFromLibraryAction];
-        }
+    }
 
-        // Add custom buttons to action sheet
-        if ([self.options objectForKey:@"customButtons"] && [[self.options objectForKey:@"customButtons"] isKindOfClass:[NSArray class]]) {
-            self.customButtons = [self.options objectForKey:@"customButtons"];
-            for (NSString *button in self.customButtons) {
-                NSString *title = [button valueForKey:@"title"];
-                UIAlertAction *customAction = [UIAlertAction actionWithTitle:title style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
-                    [self actionHandler:action];
-                }];
-                [self.alertController addAction:customAction];
-            }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
+        while (root.presentedViewController != nil) {
+            root = root.presentedViewController;
         }
 
-        dispatch_async(dispatch_get_main_queue(), ^{
-            UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
-            while (root.presentedViewController != nil) {
-                root = root.presentedViewController;
-            }
+        /* On iPad, UIAlertController presents a popover view rather than an action sheet like on iPhone. We must provide the location
+        of the location to show the popover in this case. For simplicity, we'll just display it on the bottom center of the screen
+        to mimic an action sheet */
+        self.alertController.popoverPresentationController.sourceView = root.view;
+        self.alertController.popoverPresentationController.sourceRect = CGRectMake(root.view.bounds.size.width / 2.0, root.view.bounds.size.height, 1.0, 1.0);
 
-            /* On iPad, UIAlertController presents a popover view rather than an action sheet like on iPhone. We must provide the location
-            of the location to show the popover in this case. For simplicity, we'll just display it on the bottom center of the screen
-            to mimic an action sheet */
-            self.alertController.popoverPresentationController.sourceView = root.view;
-            self.alertController.popoverPresentationController.sourceRect = CGRectMake(root.view.bounds.size.width / 2.0, root.view.bounds.size.height, 1.0, 1.0);
-
-            if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
-                self.alertController.popoverPresentationController.permittedArrowDirections = 0;
-                for (id subview in self.alertController.view.subviews) {
-                    if ([subview isMemberOfClass:[UIView class]]) {
-                        ((UIView *)subview).backgroundColor = [UIColor whiteColor];
-                    }
+        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+            self.alertController.popoverPresentationController.permittedArrowDirections = 0;
+            for (id subview in self.alertController.view.subviews) {
+                if ([subview isMemberOfClass:[UIView class]]) {
+                    ((UIView *)subview).backgroundColor = [UIColor whiteColor];
                 }
             }
-
-            [root presentViewController:self.alertController animated:YES completion:nil];
-        });
-    }
-    else { // iOS 7 support
-        UIActionSheet *popup = [[UIActionSheet alloc] initWithTitle:title delegate:self cancelButtonTitle:cancelTitle destructiveButtonTitle:nil otherButtonTitles:takePhotoButtonTitle, chooseFromLibraryButtonTitle, nil];
-
-        if ([self.options objectForKey:@"customButtons"] && [[self.options objectForKey:@"customButtons"] isKindOfClass:[NSArray class]]) {
-            self.customButtons = [self.options objectForKey:@"customButtons"];
-            for (NSString *button in self.customButtons) {
-                NSString *title = [button valueForKey:@"title"];
-                [popup addButtonWithTitle:title];
-            }
         }
 
-        popup.tag = 1;
-        dispatch_async(dispatch_get_main_queue(), ^{
-            UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
-            while (root.presentedViewController != nil) {
-                root = root.presentedViewController;
-            }
-            [popup showInView:root.view];
-        });
-    }
+        [root presentViewController:self.alertController animated:YES completion:nil];
+    });
 }
 
-// iOS 7 Handler
-- (void)actionSheet:(UIActionSheet *)popup clickedButtonAtIndex:(NSInteger)buttonIndex
-{
-    if (popup.tag == 1) {
-        if (buttonIndex == [popup cancelButtonIndex]) {
-            self.callback(@[@{@"didCancel": @YES}]);
-            return;
-        }
-        switch (buttonIndex) {
-            case 0:
-                [self launchImagePicker:RNImagePickerTargetCamera];
-                break;
-            case 1:
-                [self launchImagePicker:RNImagePickerTargetLibrarySingleImage];
-                break;
-                default: {
-                    NSString *customButtonStr = [[self.customButtons objectAtIndex:(buttonIndex - 2)]
-                                                 objectForKey:@"name"];
-                    self.callback(@[@{@"customButton": customButtonStr}]);
-                    break;
-                }
-        }
-    }
-}
-
-// iOS 8+ Handler
 - (void)actionHandler:(UIAlertAction *)action
 {
     // If button title is one of the keys in the customButtons dictionary return the value as a callback
@@ -535,11 +488,6 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 
 - (void)checkPhotosPermissions:(void(^)(BOOL granted))callback
 {
-    if (![PHPhotoLibrary class]) { // iOS 7 support
-        callback(YES);
-        return;
-    }
-
     PHAuthorizationStatus status = [PHPhotoLibrary authorizationStatus];
     if (status == PHAuthorizationStatusAuthorized) {
         callback(YES);
