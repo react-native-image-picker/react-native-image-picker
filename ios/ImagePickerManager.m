@@ -371,6 +371,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 
             [self.response setObject:@(image.size.width) forKey:@"width"];
             [self.response setObject:@(image.size.height) forKey:@"height"];
+            [self.response setObject:@([self getOriginalRotationDegrees:image].integerValue) forKey:@"originalRotation"];
 
             NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
             if (storageOptions && [[storageOptions objectForKey:@"cameraRoll"] boolValue] == YES && self.picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
@@ -539,6 +540,27 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     UIGraphicsEndImageContext();
 
     return newImage;
+}
+
+- (NSNumber *)getOriginalRotationDegrees:(UIImage *)srcImg {
+    NSNumber *result = [NSNumber numberWithInteger:0];
+    
+    switch (srcImg.imageOrientation) {
+        case UIImageOrientationLeft:
+        case UIImageOrientationLeftMirrored:
+            result = [NSNumber numberWithInteger:90];
+            break;
+        case UIImageOrientationDown:
+        case UIImageOrientationDownMirrored:
+            result = [NSNumber numberWithInteger:180];
+            break;
+        case UIImageOrientationRight:
+        case UIImageOrientationRightMirrored:
+            result = [NSNumber numberWithInteger:270];
+            break;
+    }
+    
+    return result;
 }
 
 - (UIImage *)fixOrientation:(UIImage *)srcImg {
