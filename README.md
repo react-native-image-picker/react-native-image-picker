@@ -29,6 +29,8 @@ This library started as a basic bridge of the native iOS image picker, and I wan
 **React Native < 0.29**
 `$rnpm link`
 
+Note: On iOS, you'll still need to perform step 4 of the manual instructions below.
+
 ### Manual Installation
 
 #### iOS
