@@ -598,10 +598,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     }
 
     Bitmap scaledphoto = null;
-    if (maxWidth == 0) {
+    if (maxWidth == 0 || maxWidth > initialWidth) {
       maxWidth = initialWidth;
     }
-    if (maxHeight == 0) {
+    if (maxHeight == 0 || maxWidth > initialHeight) {
       maxHeight = initialHeight;
     }
     double widthRatio = (double) maxWidth / initialWidth;
