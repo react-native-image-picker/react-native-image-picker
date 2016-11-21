@@ -219,13 +219,29 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     }
 }
 
+- (NSString * _Nullable)originalFilenameForAsset:(PHAsset * _Nullable)asset assetType:(PHAssetResourceType)type {
+    if (!asset) { return nil; }
+
+    PHAssetResource *originalResource;
+    // Get the underlying resources for the PHAsset (PhotoKit)
+    NSArray<PHAssetResource *> *pickedAssetResources = [PHAssetResource assetResourcesForAsset:asset];
+
+    // Find the original resource (underlying image) for the asset, which has the desired filename
+    for (PHAssetResource *resource in pickedAssetResources) {
+        if (resource.type == type) {
+            originalResource = resource;
+        }
+    }
+
+    return originalResource.originalFilename;
+}
+
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info
 {
     dispatch_block_t dismissCompletionBlock = ^{
 
         NSURL *imageURL = [info valueForKey:UIImagePickerControllerReferenceURL];
         NSString *mediaType = [info objectForKey:UIImagePickerControllerMediaType];
-
 
         NSString *fileName;
         if ([mediaType isEqualToString:(NSString *)kUTTypeImage]) {
@@ -282,6 +298,19 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             }
             else {
                 image = [info objectForKey:UIImagePickerControllerOriginalImage];
+            }
+
+            if (imageURL) {
+                PHAsset *pickedAsset = [PHAsset fetchAssetsWithALAssetURLs:@[imageURL] options:nil].lastObject;
+                NSString *originalFilename = [self originalFilenameForAsset:pickedAsset assetType:PHAssetResourceTypePhoto];
+                self.response[@"fileName"] = originalFilename ?: [NSNull null];
+                if (pickedAsset.location) {
+                    self.response[@"latitude"] = @(pickedAsset.location.coordinate.latitude);
+                    self.response[@"longitude"] = @(pickedAsset.location.coordinate.longitude);
+                }
+                if (pickedAsset.creationDate) {
+                    self.response[@"timestamp"] = [[ImagePickerManager ISO8601DateFormatter] stringFromDate:pickedAsset.creationDate];
+                }
             }
 
             // GIFs break when resized, so we handle them differently
@@ -374,10 +403,27 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 
             NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
             if (storageOptions && [[storageOptions objectForKey:@"cameraRoll"] boolValue] == YES && self.picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
+                ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
                 if ([[storageOptions objectForKey:@"waitUntilSaved"] boolValue]) {
-                    UIImageWriteToSavedPhotosAlbum(image, self, @selector(savedImage : hasBeenSavedInPhotoAlbumWithError : usingContextInfo :), nil);
+                    [library writeImageToSavedPhotosAlbum:image.CGImage metadata:[info valueForKey:UIImagePickerControllerMediaMetadata] completionBlock:^(NSURL *assetURL, NSError *error) {
+                        if (error) {
+                            NSLog(@"Error while saving picture into photo album");
+                        } else {
+                            // when the image has been saved in the photo album
+                            if (assetURL) {
+                                PHAsset *capturedAsset = [PHAsset fetchAssetsWithALAssetURLs:@[assetURL] options:nil].lastObject;
+                                NSString *originalFilename = [self originalFilenameForAsset:capturedAsset assetType:PHAssetResourceTypePhoto];
+                                self.response[@"fileName"] = originalFilename ?: [NSNull null];
+                                // This implementation will never have a location for the captured image, it needs to be added manually with CoreLocation code here.
+                                if (capturedAsset.creationDate) {
+                                    self.response[@"timestamp"] = [[ImagePickerManager ISO8601DateFormatter] stringFromDate:capturedAsset.creationDate];
+                                }
+                            }
+                            self.callback(@[self.response]);
+                        }
+                    }];
                 } else {
-                    UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
+                    [library writeImageToSavedPhotosAlbum:image.CGImage metadata:[info valueForKey:UIImagePickerControllerMediaMetadata] completionBlock:nil];
                 }
             }
         }
@@ -385,6 +431,19 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             NSURL *videoRefURL = info[UIImagePickerControllerReferenceURL];
             NSURL *videoURL = info[UIImagePickerControllerMediaURL];
             NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
+
+            if (videoRefURL) {
+                PHAsset *pickedAsset = [PHAsset fetchAssetsWithALAssetURLs:@[videoRefURL] options:nil].lastObject;
+                NSString *originalFilename = [self originalFilenameForAsset:pickedAsset assetType:PHAssetResourceTypeVideo];
+                self.response[@"fileName"] = originalFilename ?: [NSNull null];
+                if (pickedAsset.location) {
+                    self.response[@"latitude"] = @(pickedAsset.location.coordinate.latitude);
+                    self.response[@"longitude"] = @(pickedAsset.location.coordinate.longitude);
+                }
+                if (pickedAsset.creationDate) {
+                    self.response[@"timestamp"] = [[ImagePickerManager ISO8601DateFormatter] stringFromDate:pickedAsset.creationDate];
+                }
+            }
 
             if ([videoURL.URLByResolvingSymlinksInPath.path isEqualToString:videoDestinationURL.URLByResolvingSymlinksInPath.path] == NO) {
                 NSFileManager *fileManager = [NSFileManager defaultManager];
@@ -417,6 +476,16 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                     } else {
                         NSLog(@"Save video succeed.");
                         if ([[storageOptions objectForKey:@"waitUntilSaved"] boolValue]) {
+                            if (assetURL) {
+                                PHAsset *capturedAsset = [PHAsset fetchAssetsWithALAssetURLs:@[assetURL] options:nil].lastObject;
+                                NSString *originalFilename = [self originalFilenameForAsset:capturedAsset assetType:PHAssetResourceTypeVideo];
+                                self.response[@"fileName"] = originalFilename ?: [NSNull null];
+                                // This implementation will never have a location for the captured image, it needs to be added manually with CoreLocation code here.
+                                if (capturedAsset.creationDate) {
+                                    self.response[@"timestamp"] = [[ImagePickerManager ISO8601DateFormatter] stringFromDate:capturedAsset.creationDate];
+                                }
+                            }
+
                             self.callback(@[self.response]);
                         }
                     }
@@ -456,16 +525,6 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             self.callback(@[@{@"didCancel": @YES}]);
         }];
     });
-}
-
-- (void)savedImage:(UIImage *)image hasBeenSavedInPhotoAlbumWithError:(NSError *)error usingContextInfo:(void*)ctxInfo
-{
-    if (error) {
-        NSLog(@"Error while saving picture into photo album");
-    } else {
-        // when the image has been saved in the photo album
-        self.callback(@[self.response]);
-    }
 }
 
 #pragma mark - Helpers
@@ -628,6 +687,21 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         NSLog(@"Error setting skip backup attribute: file not found");
         return @NO;
     }
+}
+
+#pragma mark - Class Methods
+
++ (NSDateFormatter * _Nonnull)ISO8601DateFormatter {
+    static NSDateFormatter *ISO8601DateFormatter;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        ISO8601DateFormatter = [[NSDateFormatter alloc] init];
+        NSLocale *enUSPOSIXLocale = [NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"];
+        ISO8601DateFormatter.locale = enUSPOSIXLocale;
+        ISO8601DateFormatter.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
+        ISO8601DateFormatter.dateFormat = @"yyyy-MM-dd'T'HH:mm:ssZZZZZ";
+    });
+    return ISO8601DateFormatter;
 }
 
 @end
