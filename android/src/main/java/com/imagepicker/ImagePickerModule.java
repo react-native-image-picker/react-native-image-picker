@@ -343,6 +343,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     }
 
     String realPath = getRealPathFromURI(uri);
+    response.putString("origURL", realPath);
     boolean isUrl = false;
 
     if (realPath != null) {
