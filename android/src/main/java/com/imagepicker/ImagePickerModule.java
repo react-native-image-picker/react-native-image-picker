@@ -410,6 +410,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
           currentRotation = 180;
           break;
       }
+      response.putInt("originalRotation", currentRotation);
       response.putBoolean("isVertical", isVertical);
     } catch (IOException e) {
       e.printStackTrace();
