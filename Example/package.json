@@ -7,8 +7,8 @@
     "adb-reverse": "adb reverse tcp:8081 tcp:8081"
   },
   "dependencies": {
-    "react": "15.3.1",
-    "react-native": "0.35.0",
+    "react": "15.4.1",
+    "react-native": "0.38.0",
     "react-native-image-picker": "../"
   }
 }
