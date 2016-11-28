@@ -374,11 +374,25 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 
             NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
             if (storageOptions && [[storageOptions objectForKey:@"cameraRoll"] boolValue] == YES && self.picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
-                if ([[storageOptions objectForKey:@"waitUntilSaved"] boolValue]) {
-                    UIImageWriteToSavedPhotosAlbum(image, self, @selector(savedImage : hasBeenSavedInPhotoAlbumWithError : usingContextInfo :), nil);
-                } else {
-                    UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
+                UIImage *imageToSave;
+                if ([[self.options objectForKey:@"allowsEditing"] boolValue]) {
+                    imageToSave = [info objectForKey:UIImagePickerControllerEditedImage];
                 }
+                else {
+                    imageToSave = [info objectForKey:UIImagePickerControllerOriginalImage];
+                }
+
+                ALAssetsLibrary *assetsLibrary = [[ALAssetsLibrary alloc]init];
+                [assetsLibrary writeImageToSavedPhotosAlbum:[imageToSave CGImage] metadata:[info objectForKey:UIImagePickerControllerMediaMetadata] completionBlock:^(NSURL *assetURL, NSError *error) {
+                    if (error) {self.callback(@[@{@"error": error.localizedFailureReason}]);
+                        return;
+                    }else{
+                        [self.response setObject:[assetURL absoluteString] forKey:@"origURL"];
+                        if ([[storageOptions objectForKey:@"waitUntilSaved"] boolValue]) {
+                            self.callback(@[self.response]);
+                        }
+                    }
+                }];
             }
         }
         else { // VIDEO
