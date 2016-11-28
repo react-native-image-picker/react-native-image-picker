@@ -209,4 +209,4 @@ path | - | OK | The file path
 latitude | - | OK | Latitude metadata, if available
 longitude | - | OK | Longitude metadata, if available
 timestamp | - | OK | Timestamp metadata, if available, in ISO8601 UTC format
-originalRotation | OK | OK | Rotation degrees (photos only) *See [#109](/../../issues/199)*
+originalRotation | - | OK | Rotation degrees (photos only) *See [#109](/../../issues/199)*
