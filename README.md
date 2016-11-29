@@ -190,7 +190,7 @@ storageOptions | OK | OK | If this key is provided, the image will get saved in 
 storageOptions.skipBackup | OK | - | If true, the photo will NOT be backed up to iCloud
 storageOptions.path | OK | - | If set, will save image at /Documents/[path] rather than the root
 storageOptions.cameraRoll | OK | - | If true, the cropped photo will be saved to the iOS Camera Roll.
-storageOptions.waitUntilSaved | OK | - | If true, will delay the response callback until after the photo/video was saved to the Camera Roll.
+storageOptions.waitUntilSaved | OK | - | If true, will delay the response callback until after the photo/video was saved to the Camera Roll. If the photo or video was just taken, then the file name and timestamp fields are only provided in the response object when this is true.
 
 ### The Response Object
 
@@ -206,9 +206,9 @@ width | OK | OK | Image dimensions
 height | OK | OK | Image dimensions
 fileSize | OK | OK | The file size (photos only)
 type | - | OK | The file type (photos only)
-fileName | - | OK | The file name (photos only)
+fileName | OK (photos and videos) | OK (photos) | The file name
 path | - | OK | The file path
-latitude | - | OK | Latitude metadata, if available
-longitude | - | OK | Longitude metadata, if available
-timestamp | - | OK | Timestamp metadata, if available, in ISO8601 UTC format
+latitude | OK | OK | Latitude metadata, if available
+longitude | OK | OK | Longitude metadata, if available
+timestamp | OK | OK | Timestamp metadata, if available, in ISO8601 UTC format
 originalRotation | - | OK | Rotation degrees (photos only) *See [#109](/../../issues/199)*
