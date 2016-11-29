@@ -374,25 +374,34 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 
             NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
             if (storageOptions && [[storageOptions objectForKey:@"cameraRoll"] boolValue] == YES && self.picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
-                UIImage *imageToSave;
-                if ([[self.options objectForKey:@"allowsEditing"] boolValue]) {
-                    imageToSave = [info objectForKey:UIImagePickerControllerEditedImage];
-                }
-                else {
-                    imageToSave = [info objectForKey:UIImagePickerControllerOriginalImage];
-                }
+              if ([[storageOptions objectForKey:@"saveOriginalImage"] boolValue]) {
+                  UIImage *imageToSave;
+                  if ([[self.options objectForKey:@"allowsEditing"] boolValue]) {
+                      imageToSave = [info objectForKey:UIImagePickerControllerEditedImage];
+                  }
+                  else {
+                      imageToSave = [info objectForKey:UIImagePickerControllerOriginalImage];
+                  }
 
-                ALAssetsLibrary *assetsLibrary = [[ALAssetsLibrary alloc]init];
-                [assetsLibrary writeImageToSavedPhotosAlbum:[imageToSave CGImage] metadata:[info objectForKey:UIImagePickerControllerMediaMetadata] completionBlock:^(NSURL *assetURL, NSError *error) {
-                    if (error) {self.callback(@[@{@"error": error.localizedFailureReason}]);
-                        return;
-                    }else{
-                        [self.response setObject:[assetURL absoluteString] forKey:@"origURL"];
-                        if ([[storageOptions objectForKey:@"waitUntilSaved"] boolValue]) {
-                            self.callback(@[self.response]);
-                        }
-                    }
-                }];
+                  ALAssetsLibrary *assetsLibrary = [[ALAssetsLibrary alloc]init];
+                  [assetsLibrary writeImageToSavedPhotosAlbum:[imageToSave CGImage] metadata:[info objectForKey:UIImagePickerControllerMediaMetadata] completionBlock:^(NSURL *assetURL, NSError *error) {
+                      if (error) {self.callback(@[@{@"error": error.localizedFailureReason}]);
+                          return;
+                      }else{
+                          [self.response setObject:[assetURL absoluteString] forKey:@"origURL"];
+                          if ([[storageOptions objectForKey:@"waitUntilSaved"] boolValue]) {
+                              self.callback(@[self.response]);
+                          }
+                      }
+                  }];
+              } else {
+                  if ([[storageOptions objectForKey:@"waitUntilSaved"] boolValue]) {
+                      [self.response setObject:filePath forKey:@"origURL"];;
+                      UIImageWriteToSavedPhotosAlbum(image, self, @selector(savedImage : hasBeenSavedInPhotoAlbumWithError : usingContextInfo :), nil);
+                  } else {
+                      UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
+                  }
+              }
             }
         }
         else { // VIDEO
@@ -415,12 +424,12 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                     return;
                 }
             }
-            
+
             [self.response setObject:videoDestinationURL.absoluteString forKey:@"uri"];
             if (videoRefURL.absoluteString) {
                 [self.response setObject:videoRefURL.absoluteString forKey:@"origURL"];
             }
-            
+
             NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
             if (storageOptions && [[storageOptions objectForKey:@"cameraRoll"] boolValue] == YES && self.picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
                 ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
@@ -457,7 +466,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             self.callback(@[self.response]);
         }
     };
-    
+
     dispatch_async(dispatch_get_main_queue(), ^{
         [picker dismissViewControllerAnimated:YES completion:dismissCompletionBlock];
     });
