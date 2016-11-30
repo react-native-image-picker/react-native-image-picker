@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
 import android.graphics.Matrix;
+import android.graphics.drawable.ColorDrawable;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Environment;
@@ -141,9 +142,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
       actions.add("cancel");
     }
 
-    ArrayAdapter<String> adapter = new ArrayAdapter<String>(currentActivity,
-            android.R.layout.select_dialog_item, titles);
-    AlertDialog.Builder builder = new AlertDialog.Builder(currentActivity);
+    ArrayAdapter<String> adapter = new ArrayAdapter<String>(currentActivity, android.R.layout.select_dialog_item, titles);
+    AlertDialog.Builder builder = new AlertDialog.Builder(currentActivity, android.R.style.Theme_Holo_Light_Dialog);
     if (options.hasKey("title") && options.getString("title") != null && !options.getString("title").isEmpty()) {
       builder.setTitle(options.getString("title"));
     }
@@ -185,20 +185,19 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
         callback.invoke(response);
       }
     });
+    dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
     dialog.show();
   }
 
   // NOTE: Currently not reentrant / doesn't support concurrent requests
   @ReactMethod
   public void launchCamera(final ReadableMap options, final Callback callback) {
-    int requestCode;
-    Intent cameraIntent;
     response = Arguments.createMap();
 
     if (!isCameraAvailable()) {
-        response.putString("error", "Camera not available");
-        callback.invoke(response);
-        return;
+      response.putString("error", "Camera not available");
+      callback.invoke(response);
+      return;
     }
 
     Activity currentActivity = getCurrentActivity();
@@ -214,6 +213,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
     parseOptions(options);
 
+    int requestCode;
+    Intent cameraIntent;
     if (pickVideo) {
       requestCode = REQUEST_LAUNCH_VIDEO_CAPTURE;
       cameraIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
@@ -252,12 +253,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
   // NOTE: Currently not reentrant / doesn't support concurrent requests
   @ReactMethod
   public void launchImageLibrary(final ReadableMap options, final Callback callback) {
-    int requestCode;
-    Intent libraryIntent;
-    Activity currentActivity = getCurrentActivity();
+    response = Arguments.createMap();
 
+    Activity currentActivity = getCurrentActivity();
     if (currentActivity == null) {
-      response = Arguments.createMap();
       response.putString("error", "can't find current Activity");
       callback.invoke(response);
       return;
@@ -269,6 +268,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
     parseOptions(options);
 
+    int requestCode;
+    Intent libraryIntent;
     if (pickVideo) {
       requestCode = REQUEST_LAUNCH_VIDEO_LIBRARY;
       libraryIntent = new Intent(Intent.ACTION_PICK);
@@ -280,7 +281,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     }
 
     if (libraryIntent.resolveActivity(mReactContext.getPackageManager()) == null) {
-      response = Arguments.createMap();
       response.putString("error", "Cannot launch photo library");
       callback.invoke(response);
       return;
@@ -292,7 +292,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
       currentActivity.startActivityForResult(libraryIntent, requestCode);
     } catch (ActivityNotFoundException e) {
       e.printStackTrace();
-      response = Arguments.createMap();
       response.putString("error", "Cannot launch photo library");
       callback.invoke(response);
     }
@@ -505,7 +504,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     }
     return true;
   }
-
 
   private boolean isCameraAvailable() {
     return mReactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)
