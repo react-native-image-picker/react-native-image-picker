@@ -29,7 +29,7 @@ This library started as a basic bridge of the native iOS image picker, and I wan
 **React Native < 0.29**
 `$rnpm link`
 
-Note: On iOS, you'll still need to perform step 4 of the manual instructions below.
+IMPORTANT NOTE: You'll still need to perform step 4 for iOS and step 3 for Android of the manual instructions below.
 
 ### Manual Installation
 
@@ -42,55 +42,41 @@ Note: On iOS, you'll still need to perform step 4 of the manual instructions bel
 5. Compile and have fun
 
 #### Android
-```gradle
-// file: android/settings.gradle
-...
+1. Add the following lines to `android/settings.gradle`:
 
-include ':react-native-image-picker'
-project(':react-native-image-picker').projectDir = new File(settingsDir, '../node_modules/react-native-image-picker/android')
-```
-```gradle
-// file: android/app/build.gradle
-...
+    ```gradle
+    include ':react-native-image-picker'
+    project(':react-native-image-picker').projectDir = new File(settingsDir, '../node_modules/react-native-image-picker/android')
+    ```
+2. Add the compile line to the dependencies in `android/app/build.gradle`:
 
-dependencies {
-    ...
-    compile project(':react-native-image-picker')
-}
-```
-```xml
-<!-- file: android/app/src/main/AndroidManifest.xml -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.myApp">
+    ```gradle
+    dependencies {
+        compile project(':react-native-image-picker')
+    }
+    ```
+3. Add the required permissions in `AndroidManifest.xml`:
 
-    <uses-permission android:name="android.permission.INTERNET" />
-
-    <!-- add following permissions -->
+    ```xml
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-feature android:name="android.hardware.camera" android:required="false"/>
-    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
-    <!-- -->
-    ...
-```
-```java
-// file: android/app/src/main/java/com/<...>/MainApplication.java
-...
+    ```
+4. Add the import and link the package in `MainApplication.java`:
 
-import com.imagepicker.ImagePickerPackage; // <-- add this import
-
-public class MainApplication extends Application implements ReactApplication {
-    @Override
-    protected List<ReactPackage> getPackages() {
-        return Arrays.<ReactPackage>asList(
-            new MainReactPackage(),
-            new ImagePickerPackage() // <-- add this line
-        );
+    ```java
+    import com.imagepicker.ImagePickerPackage; // <-- add this import
+    
+    public class MainApplication extends Application implements ReactApplication {
+        @Override
+        protected List<ReactPackage> getPackages() {
+            return Arrays.<ReactPackage>asList(
+                new MainReactPackage(),
+                new ImagePickerPackage() // <-- add this line
+            );
+        }
     }
-...
-}
-
 ```
+
 ## Usage
 
 ```javascript
