@@ -46,7 +46,7 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and step 3 for Andro
 
     ```gradle
     include ':react-native-image-picker'
-    project(':react-native-image-picker').projectDir = new File(settingsDir, '../node_modules/react-native-image-picker/android')
+    project(':react-native-image-picker').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-image-picker/android')
     ```
 2. Add the compile line to the dependencies in `android/app/build.gradle`:
 
