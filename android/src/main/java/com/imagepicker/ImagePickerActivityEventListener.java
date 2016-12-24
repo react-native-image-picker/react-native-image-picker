@@ -3,11 +3,11 @@ package com.imagepicker;
 import android.app.Activity;
 import android.content.Intent;
 
-import com.facebook.react.bridge.BaseActivityEventListener;
+import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 
 
-public class ImagePickerActivityEventListener extends BaseActivityEventListener {
+public class ImagePickerActivityEventListener implements ActivityEventListener {
 
     private ActivityResultInterface mCallback;
 
