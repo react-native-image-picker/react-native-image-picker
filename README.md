@@ -3,9 +3,9 @@
 
 A React Native module that allows you to use native UI to select a photo/video from the device library or directly from the camera, like so:
 
-iOS | Android
-------- | ----
-<img title="iOS" src="https://github.com/marcshilling/react-native-image-picker/blob/master/images/ios-image.png"> | <img title="Android" src="https://github.com/marcshilling/react-native-image-picker/blob/master/images/android-image.png">
+iOS | Android | Windows
+------- | ---- | ----
+<img title="iOS" src="https://github.com/motius/react-native-image-picker/blob/master/images/ios-image.png"> | <img title="Android" src="https://github.com/motius/react-native-image-picker/blob/master/images/android-image.png"> | <img title="Android" src="https://github.com/motius/react-native-image-picker/blob/master/images/windows-image.png">
 
 #### _Before you open an issue_
 This library started as a basic bridge of the native iOS image picker, and I want to keep it that way. As such, functionality beyond what the native `UIImagePickerController` supports will not be supported here. **Multiple image selection, more control over the crop tool, and landscape support** are things missing from the native iOS functionality - **not issues with my library**. If you need these things, [react-native-image-crop-picker](https://github.com/ivpusic/react-native-image-crop-picker) might be a better choice for you.    
@@ -29,7 +29,7 @@ This library started as a basic bridge of the native iOS image picker, and I wan
 **React Native < 0.29**
 `$rnpm link`
 
-IMPORTANT NOTE: You'll still need to perform step 4 for iOS and step 3 for Android of the manual instructions below.
+IMPORTANT NOTE: You'll still need to perform step 4 for iOS and step 3 for Android of the manual instructions below. `rnpm` is not supported for the UWP version for now, so please resort to the manual installation
 
 ### Manual Installation
 
@@ -75,6 +75,32 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and step 3 for Andro
             );
         }
     }
+    ```
+
+#### UWP
+
+1. Using Visual Studio, right click on your solution and select Add -> Existing Project... Find the project in `../node_modules/react-native-image-picker/windows/ImagePickerLibrary/ImagePickerLibrary.csproj` .
+
+2. In your application project, right click on References -> Add... and mark the checkbox for `ImagePickerLibrary`.
+
+3. In `MainPage.cs`, add the `using ImagePicker;` directive and then add a new instance of the package to the `Packages` property, like this:
+
+```
+using ImagePicker;
+
+///....
+
+public override List<IReactPackage> Packages
+{
+    get
+    {
+        return new List<IReactPackage>
+        {
+            new MainReactPackage(),
+            new ImagePickerPackage(),
+        };
+    }
+}
 ```
 
 ## Usage
@@ -155,46 +181,46 @@ On iOS, don't assume that the absolute uri returned will persist. See [#107](/..
 
 ### Options
 
-option | iOS  | Android | Info
------- | ---- | ------- | ----
-title | OK | OK | Specify `null` or empty string to remove the title
-cancelButtonTitle | OK | OK | Specify `null` or empty string to remove this button (Android only)
-takePhotoButtonTitle | OK | OK | Specify `null` or empty string to remove this button
-chooseFromLibraryButtonTitle | OK | OK | Specify `null` or empty string to remove this button
-customButtons | OK | OK | An array containing objects with the name and title of buttons
-cameraType | OK | - | 'front' or 'back'
-mediaType | OK | OK | 'photo', 'video', or 'mixed' on iOS, 'photo' or 'video' on Android
-maxWidth | OK | OK | Photos only
-maxHeight | OK | OK | Photos only
-quality | OK | OK | 0 to 1, photos only
-videoQuality | OK |  OK | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android
-durationLimit | OK | OK | Max video recording time, in seconds
-rotation | - | OK | Photos only, 0 to 360 degrees of rotation
-allowsEditing | OK | - | bool - enables built in iOS functionality to resize the image after selection
-noData | OK | OK | If true, disables the base64 `data` field from being generated (greatly improves performance on large photos)
-storageOptions | OK | OK | If this key is provided, the image will get saved in the Documents directory on iOS, and the Pictures directory on Android (rather than a temporary directory)
-storageOptions.skipBackup | OK | - | If true, the photo will NOT be backed up to iCloud
-storageOptions.path | OK | - | If set, will save image at /Documents/[path] rather than the root
-storageOptions.cameraRoll | OK | - | If true, the cropped photo will be saved to the iOS Camera Roll.
-storageOptions.waitUntilSaved | OK | - | If true, will delay the response callback until after the photo/video was saved to the Camera Roll. If the photo or video was just taken, then the file name and timestamp fields are only provided in the response object when this is true.
+option | iOS  | Android | Windows | Info
+------ | ---- | ------- | ------- | ----
+title | OK | OK | OK | Specify `null` or empty string to remove the title
+cancelButtonTitle | OK | OK | OK | Specify `null` or empty string to remove this button (Android only)
+takePhotoButtonTitle | OK | OK | OK | Specify `null` or empty string to remove this button
+chooseFromLibraryButtonTitle | OK | OK | OK | Specify `null` or empty string to remove this button
+customButtons | OK | OK | OK| An array containing objects with the name and title of buttons
+cameraType | OK | - | - | 'front' or 'back'
+mediaType | OK | OK | - |'photo', 'video', or 'mixed' on iOS, 'photo' or 'video' on Android
+maxWidth | OK | OK | - | Photos only
+maxHeight | OK | OK | - | Photos only
+quality | OK | OK | - | 0 to 1, photos only
+videoQuality | OK |  OK | - |'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android
+durationLimit | OK | OK | OK | Max video recording time, in seconds
+rotation | - | OK | - | Photos only, 0 to 360 degrees of rotation
+allowsEditing | OK | - | - | bool - enables built in iOS functionality to resize the image after selection
+noData | OK | OK | - | If true, disables the base64 `data` field from being generated (greatly improves performance on large photos)
+storageOptions | OK | OK | - | If this key is provided, the image will get saved in the Documents directory on iOS, and the Pictures directory on Android (rather than a temporary directory)
+storageOptions.skipBackup | OK | - | - |If true, the photo will NOT be backed up to iCloud
+storageOptions.path | OK | - | - | If set, will save image at /Documents/[path] rather than the root
+storageOptions.cameraRoll | OK | - | - | If true, the cropped photo will be saved to the iOS Camera Roll.
+storageOptions.waitUntilSaved | OK | - | - | If true, will delay the response callback until after the photo/video was saved to the Camera Roll. If the photo or video was just taken, then the file name and timestamp fields are only provided in the response object when this is true.
 
 ### The Response Object
 
-key | iOS | Android | Description
------- | ---- | ------- | ----------------------
-didCancel | OK | OK | Informs you if the user cancelled the process
-error | OK | OK | Contains an error message, if there is one
-data | OK | OK | The base64 encoded image data (photos only)
-uri | OK | OK | The uri to the local file asset on the device (photo or video)
-origURL | OK | - | The URL of the original asset in photo library, if it exists
-isVertical | OK | OK | Will be true if the image is vertically oriented
-width | OK | OK | Image dimensions
-height | OK | OK | Image dimensions
-fileSize | OK | OK | The file size (photos only)
-type | - | OK | The file type (photos only)
-fileName | OK (photos and videos) | OK (photos) | The file name
-path | - | OK | The file path
-latitude | OK | OK | Latitude metadata, if available
-longitude | OK | OK | Longitude metadata, if available
-timestamp | OK | OK | Timestamp metadata, if available, in ISO8601 UTC format
-originalRotation | - | OK | Rotation degrees (photos only) *See [#109](/../../issues/199)*
+key | iOS | Android | Windows |Description
+------ | ---- | ------- | ------- | ----------------------
+didCancel | OK | OK | OK |Informs you if the user cancelled the process
+error | OK | OK | OK |Contains an error message, if there is one
+data | OK | OK | OK |The base64 encoded image data (photos only)
+uri | OK | OK | - | The uri to the local file asset on the device (photo or video)
+origURL | OK | - | - | The URL of the original asset in photo library, if it exists
+isVertical | OK | OK | - |Will be true if the image is vertically oriented
+width | OK | OK | - |Image dimensions
+height | OK | OK | - | Image dimensions
+fileSize | OK | OK | - | The file size (photos only)
+type | - | OK | - | The file type (photos only)
+fileName | OK (photos and videos) | OK (photos) | - | The file name
+path | - | OK | - | The file path
+latitude | OK | OK | - |Latitude metadata, if available
+longitude | OK | OK | - | Longitude metadata, if available
+timestamp | OK | OK | - | Timestamp metadata, if available, in ISO8601 UTC format
+originalRotation | - | OK | - | Rotation degrees (photos only) *See [#109](/../../issues/199)*

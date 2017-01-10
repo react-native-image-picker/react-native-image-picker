@@ -31,3 +31,7 @@ node_modules
 
 ## Android iml
 *.iml
+
+## Visual Studio specifics
+.vs
+windows/ImagePickerLibrary/obj/Debug/
