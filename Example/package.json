@@ -9,6 +9,10 @@
   "dependencies": {
     "react": "15.4.1",
     "react-native": "0.38.0",
-    "react-native-image-picker": "../"
+    "react-native-image-picker": "../",
+    "react-native-windows": "^0.38.2"
+  },
+  "devDependencies": {
+    "rnpm-plugin-windows": "^0.2.3"
   }
 }
