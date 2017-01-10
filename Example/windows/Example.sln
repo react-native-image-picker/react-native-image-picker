@@ -3,9 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example", "Example\Example.csproj", "{98F4D050-4D60-40D8-8EA1-2BB37237ABE6}"
-	ProjectSection(ProjectDependencies) = postProject
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C} = {F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactNative", "..\node_modules\react-native-windows\ReactWindows\ReactNative\ReactNative.csproj", "{C7673AD5-E3AA-468C-A5FD-FA38154E205C}"
 EndProject
@@ -13,9 +10,7 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ReactNative.Shared", "..\no
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ChakraBridge", "..\node_modules\react-native-windows\ReactWindows\ChakraBridge\ChakraBridge.vcxproj", "{4B72C796-16D5-4E3A-81C0-3E36F531E578}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "react-native-image-picker", "..\..\windows\react-native-image-picker\react-native-image-picker.csproj", "{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImagePickerLibrary", "ImagePickerLibrary\ImagePickerLibrary.csproj", "{9E2E5051-2771-4B40-BE68-DD696DF93CC0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImagePickerLibrary", "..\..\windows\ImagePickerLibrary\ImagePickerLibrary.csproj", "{9E2E5051-2771-4B40-BE68-DD696DF93CC0}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -141,46 +136,6 @@ Global
 		{4B72C796-16D5-4E3A-81C0-3E36F531E578}.ReleaseBundle|x64.Build.0 = Release|x64
 		{4B72C796-16D5-4E3A-81C0-3E36F531E578}.ReleaseBundle|x86.ActiveCfg = Release|Win32
 		{4B72C796-16D5-4E3A-81C0-3E36F531E578}.ReleaseBundle|x86.Build.0 = Release|Win32
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.Debug|ARM.ActiveCfg = Debug|ARM
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.Debug|ARM.Build.0 = Debug|ARM
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.Debug|ARM.Deploy.0 = Debug|ARM
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.Debug|x64.ActiveCfg = Debug|x64
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.Debug|x64.Build.0 = Debug|x64
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.Debug|x64.Deploy.0 = Debug|x64
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.Debug|x86.ActiveCfg = Debug|x86
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.Debug|x86.Build.0 = Debug|x86
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.Debug|x86.Deploy.0 = Debug|x86
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.DebugBundle|Any CPU.ActiveCfg = DebugBundle|x86
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.DebugBundle|ARM.ActiveCfg = DebugBundle|ARM
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.DebugBundle|ARM.Build.0 = DebugBundle|ARM
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.DebugBundle|ARM.Deploy.0 = DebugBundle|ARM
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.DebugBundle|x64.ActiveCfg = DebugBundle|x64
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.DebugBundle|x64.Build.0 = DebugBundle|x64
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.DebugBundle|x64.Deploy.0 = DebugBundle|x64
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.DebugBundle|x86.ActiveCfg = DebugBundle|x86
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.DebugBundle|x86.Build.0 = DebugBundle|x86
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.DebugBundle|x86.Deploy.0 = DebugBundle|x86
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.Release|Any CPU.ActiveCfg = Release|x86
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.Release|ARM.ActiveCfg = Release|ARM
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.Release|ARM.Build.0 = Release|ARM
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.Release|ARM.Deploy.0 = Release|ARM
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.Release|x64.ActiveCfg = Release|x64
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.Release|x64.Build.0 = Release|x64
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.Release|x64.Deploy.0 = Release|x64
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.Release|x86.ActiveCfg = Release|x86
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.Release|x86.Build.0 = Release|x86
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.Release|x86.Deploy.0 = Release|x86
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.ReleaseBundle|Any CPU.ActiveCfg = ReleaseBundle|x86
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.ReleaseBundle|ARM.ActiveCfg = ReleaseBundle|ARM
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.ReleaseBundle|ARM.Build.0 = ReleaseBundle|ARM
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.ReleaseBundle|ARM.Deploy.0 = ReleaseBundle|ARM
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.ReleaseBundle|x64.ActiveCfg = ReleaseBundle|x64
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.ReleaseBundle|x64.Build.0 = ReleaseBundle|x64
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.ReleaseBundle|x64.Deploy.0 = ReleaseBundle|x64
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.ReleaseBundle|x86.ActiveCfg = ReleaseBundle|x86
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.ReleaseBundle|x86.Build.0 = ReleaseBundle|x86
-		{F375DFEC-9AA7-4E2C-912D-BB3A7BA6F71C}.ReleaseBundle|x86.Deploy.0 = ReleaseBundle|x86
 		{9E2E5051-2771-4B40-BE68-DD696DF93CC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9E2E5051-2771-4B40-BE68-DD696DF93CC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9E2E5051-2771-4B40-BE68-DD696DF93CC0}.Debug|ARM.ActiveCfg = Debug|ARM
