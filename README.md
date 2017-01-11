@@ -65,7 +65,7 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and step 3 for Andro
 
     ```java
     import com.imagepicker.ImagePickerPackage; // <-- add this import
-    
+
     public class MainApplication extends Application implements ReactApplication {
         @Override
         protected List<ReactPackage> getPackages() {
@@ -112,14 +112,16 @@ ImagePicker.showImagePicker(options, (response) => {
     console.log('User tapped custom button: ', response.customButton);
   }
   else {
-    // You can display the image using either data...
-    const source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
+    let source;
 
-    // or a reference to the platform specific asset location
-    if (Platform.OS === 'ios') {
-      const source = {uri: response.uri.replace('file://', ''), isStatic: true};
+    // You can display the image using either data...
+    source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
+
+    // Or a reference to the platform specific asset location
+    if (Platform.OS === 'android') {
+      source = { uri: response.uri };
     } else {
-      const source = {uri: response.uri, isStatic: true};
+      source = { uri: response.uri.replace('file://', '') };
     }
 
     this.setState({
