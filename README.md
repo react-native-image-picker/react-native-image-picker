@@ -113,7 +113,7 @@ ImagePicker.showImagePicker(options, (response) => {
     let source;
 
     // You can display the image using either data...
-    source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
+    source = { uri: 'data:image/jpeg;base64,' + response.data };
 
     // Or a reference to the platform specific asset location
     if (Platform.OS === 'android') {
