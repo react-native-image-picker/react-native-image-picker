@@ -24,6 +24,7 @@ import android.webkit.MimeTypeMap;
 import android.content.pm.PackageManager;
 import android.media.MediaScannerConnection;
 
+import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -53,11 +54,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
 
-interface ActivityResultInterface {
-  void callback(int requestCode, int resultCode, Intent data);
-}
-
-public class ImagePickerModule extends ReactContextBaseJavaModule {
+public class ImagePickerModule extends ReactContextBaseJavaModule implements ActivityEventListener {
 
   static final int REQUEST_LAUNCH_IMAGE_CAPTURE = 13001;
   static final int REQUEST_LAUNCH_IMAGE_LIBRARY = 13002;
@@ -65,7 +62,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
   static final int REQUEST_LAUNCH_VIDEO_CAPTURE = 13004;
 
   private final ReactApplicationContext mReactContext;
-  private ImagePickerActivityEventListener mActivityEventListener;
 
   private Uri mCameraCaptureURI;
   private Callback mCallback;
@@ -85,13 +81,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
 
     mReactContext = reactContext;
 
-    mActivityEventListener = new ImagePickerActivityEventListener(reactContext, new ActivityResultInterface() {
-      @Override
-      public void callback(int requestCode, int resultCode, Intent data) {
-        onActivityResult(requestCode, resultCode, data);
-      }
-    });
-
+    reactContext.addActivityEventListener(this);
   }
 
   @Override
@@ -297,7 +287,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
     }
   }
 
-  public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
+  public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
     //robustness code
     if (mCallback == null || (mCameraCaptureURI == null && requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE)
             || (requestCode != REQUEST_LAUNCH_IMAGE_CAPTURE && requestCode != REQUEST_LAUNCH_IMAGE_LIBRARY
@@ -750,6 +740,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule {
             });
   }
 
-  // Required for RN 0.30+ modules than implement ActivityEventListener
+  // Required for ActivityEventListener
   public void onNewIntent(Intent intent) { }
 }
