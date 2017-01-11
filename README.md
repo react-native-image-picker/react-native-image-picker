@@ -19,7 +19,7 @@ This library started as a basic bridge of the native iOS image picker, and I wan
 
 ## Install
 
-#### NOTE: AS OF v0.25.0, we require you to be using React Native 0.40 or greater!
+#### NOTE: AS OF v0.25.0, THIS PACKAGE REQUIRES YOU TO BE USING REACT NATIVE 0.40 OR GREATER!
 
 `npm install react-native-image-picker@latest --save`
 
