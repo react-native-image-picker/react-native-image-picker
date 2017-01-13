@@ -25,7 +25,7 @@ This library started as a basic bridge of the native iOS image picker, and I wan
 
 ### Automatic Installation
 
-`$rnpm link`
+`react-native link`
 
 IMPORTANT NOTE: You'll still need to perform step 4 for iOS and step 3 for Android of the manual instructions below.
 
