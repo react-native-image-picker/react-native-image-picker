@@ -1,4 +1,4 @@
-#import <React/RCTBridgeModule.h>
+#import <RCTBridgeModule.h>
 #import <UIKit/UIKit.h>
 
 typedef NS_ENUM(NSInteger, RNImagePickerTarget) {
