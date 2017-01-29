@@ -2,6 +2,7 @@
 declare module "react-native-image-picker" {
 
     export interface Response {
+        customButton: string;
         didCancel: boolean;
         error: string;
         data: string;
