@@ -117,10 +117,13 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         }
     }
 
-    if ([action.title isEqualToString:[self.options valueForKey:@"takePhotoButtonTitle"]]) { // Take photo
+    NSString *takePhotoButtonTitle = [self.options valueForKey:@"takePhotoButtonTitle"];
+    NSString *chooseFromLibraryButtonTitle = [self.options valueForKey:@"chooseFromLibraryButtonTitle"];
+
+    if (![takePhotoButtonTitle isEqual:[NSNull null]] && [action.title isEqualToString:takePhotoButtonTitle]) { // Take photo
         [self launchImagePicker:RNImagePickerTargetCamera];
     }
-    else if ([action.title isEqualToString:[self.options valueForKey:@"chooseFromLibraryButtonTitle"]]) { // Choose from library
+    else if (![chooseFromLibraryButtonTitle isEqual:[NSNull null]] && [action.title isEqualToString:chooseFromLibraryButtonTitle]) { // Choose from library
         [self launchImagePicker:RNImagePickerTargetLibrarySingleImage];
     }
 }
