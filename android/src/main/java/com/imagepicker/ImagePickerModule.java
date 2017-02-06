@@ -336,12 +336,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         uri = null;
     }
 
-    Log.w("URI", String.valueOf(uri));
-
     String realPath = getRealPathFromURI(uri);
     boolean isUrl = false;
-
-    Log.w("URI_FILE", String.valueOf(realPath));
 
     if (realPath != null) {
       try {
