@@ -45,6 +45,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     NSString *cancelTitle = [self.options valueForKey:@"cancelButtonTitle"];
     NSString *takePhotoButtonTitle = [self.options valueForKey:@"takePhotoButtonTitle"];
     NSString *chooseFromLibraryButtonTitle = [self.options valueForKey:@"chooseFromLibraryButtonTitle"];
+    NSString *useLastPhotoTitle = [self.options valueForKey:@"useLastPhotoTitle"];
 
 
     self.alertController = [UIAlertController alertControllerWithTitle:title message:nil preferredStyle:UIAlertControllerStyleActionSheet];
@@ -54,6 +55,12 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     }];
     [self.alertController addAction:cancelAction];
 
+    if (![useLastPhotoTitle isEqual:[NSNull null]] && useLastPhotoTitle.length > 0) {
+        UIAlertAction *useLastPhotoAction = [UIAlertAction actionWithTitle:useLastPhotoTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+            [self actionHandler:action];
+        }];
+        [self.alertController addAction:useLastPhotoAction];
+    }
     if (![takePhotoButtonTitle isEqual:[NSNull null]] && takePhotoButtonTitle.length > 0) {
         UIAlertAction *takePhotoAction = [UIAlertAction actionWithTitle:takePhotoButtonTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
             [self actionHandler:action];
@@ -122,6 +129,9 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     }
     else if ([action.title isEqualToString:[self.options valueForKey:@"chooseFromLibraryButtonTitle"]]) { // Choose from library
         [self launchImagePicker:RNImagePickerTargetLibrarySingleImage];
+    }
+    else if ([action.title isEqualToString:[self.options valueForKey:@"useLastPhotoTitle"]]) { // Choose from library
+        [self useLastPhotoPicker];
     }
 }
 
@@ -460,12 +470,12 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                     return;
                 }
             }
-
+            
             [self.response setObject:videoDestinationURL.absoluteString forKey:@"uri"];
             if (videoRefURL.absoluteString) {
                 [self.response setObject:videoRefURL.absoluteString forKey:@"origURL"];
             }
-
+            
             NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
             if (storageOptions && [[storageOptions objectForKey:@"cameraRoll"] boolValue] == YES && self.picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
                 ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
@@ -512,7 +522,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             self.callback(@[self.response]);
         }
     };
-
+    
     dispatch_async(dispatch_get_main_queue(), ^{
         [picker dismissViewControllerAnimated:YES completion:dismissCompletionBlock];
     });
@@ -525,6 +535,72 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             self.callback(@[@{@"didCancel": @YES}]);
         }];
     });
+}
+
+- (void)useLastPhotoPicker {
+    ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
+    // Enumerate just the photos and videos group by using ALAssetsGroupSavedPhotos.
+    [library enumerateGroupsWithTypes:ALAssetsGroupSavedPhotos usingBlock:^(ALAssetsGroup *group, BOOL *stop) {
+        // Within the group enumeration block, filter to enumerate just photos.
+        [group setAssetsFilter:[ALAssetsFilter allPhotos]];
+        // Chooses the photo at the last index
+        [group enumerateAssetsWithOptions:NSEnumerationReverse usingBlock:^(ALAsset *alAsset, NSUInteger index, BOOL *innerStop) {
+            // The end of the enumeration is signaled by asset == nil.
+            if (alAsset) {
+                ALAssetRepresentation *representation = [alAsset defaultRepresentation];
+                UIImage *latestPhoto = [UIImage imageWithCGImage:[representation fullScreenImage]];
+                // Stop the enumerations
+                *stop = YES; *innerStop = YES;
+                [self hasImageToCallback: latestPhoto];
+            }
+        }];
+    } failureBlock: ^(NSError *error) {
+        // Typically you should handle an error more gracefully than this.
+        NSLog(@"No groups");
+    }];
+}
+
+- (void) hasImageToCallback:(UIImage *) image {
+    self.response = [[NSMutableDictionary alloc] init];
+    float maxWidth = image.size.width;
+    float maxHeight = image.size.height;
+    if ([self.options valueForKey:@"maxWidth"]) {
+        maxWidth = [[self.options valueForKey:@"maxWidth"] floatValue];
+    }
+    if ([self.options valueForKey:@"maxHeight"]) {
+        maxHeight = [[self.options valueForKey:@"maxHeight"] floatValue];
+    }
+    
+    image = [self downscaleImageIfNecessary:image maxWidth:maxWidth maxHeight:maxHeight];
+    NSData *data;
+    if ([[[self.options objectForKey:@"imageFileType"] stringValue] isEqualToString:@"png"]) {
+        data = UIImagePNGRepresentation(image);
+    }
+    else {
+        data = UIImageJPEGRepresentation(image, [[self.options valueForKey:@"quality"] floatValue]);
+    }
+    
+    if (![[self.options objectForKey:@"noData"] boolValue]) {
+        NSString *dataString = [data base64EncodedStringWithOptions:0]; // base64 encoded image string
+        [self.response setObject:dataString forKey:@"data"];
+    }
+    
+    BOOL vertical = (image.size.width < image.size.height) ? YES : NO;
+    [self.response setObject:@(vertical) forKey:@"isVertical"];
+    
+    // add ref to the original image
+    NSString *origURL = @"";
+    if (origURL) {
+        [self.response setObject:origURL forKey:@"origURL"];
+    }
+    
+    NSNumber *fileSizeValue = nil;
+    NSError *fileSizeError = nil;
+    
+    [self.response setObject:@(image.size.width) forKey:@"width"];
+    [self.response setObject:@(image.size.height) forKey:@"height"];
+    
+    self.callback(@[self.response]);
 }
 
 #pragma mark - Helpers

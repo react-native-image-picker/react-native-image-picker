@@ -7,6 +7,7 @@ const DEFAULT_OPTIONS = {
   cancelButtonTitle: 'Cancel',
   takePhotoButtonTitle: 'Take Photo…',
   chooseFromLibraryButtonTitle: 'Choose from Library…',
+  useLastPhotoTitle: 'Use Last Photo',
   quality: 1.0,
   allowsEditing: false
 };

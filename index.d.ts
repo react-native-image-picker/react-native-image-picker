@@ -2,7 +2,6 @@
 declare module "react-native-image-picker" {
 
     export interface Response {
-        customButton: string;
         didCancel: boolean;
         error: string;
         data: string;
@@ -30,6 +29,7 @@ declare module "react-native-image-picker" {
         cancelButtonTitle?: string;
         takePhotoButtonTitle?: string;
         chooseFromLibraryButtonTitle?: string;
+        useLastPhotoTitle?: string;
         customButtons?: Array<CustomButtonOptions>;
         cameraType?: 'front' | 'back';
         mediaType?: 'photo' | 'video' | 'mixed';
