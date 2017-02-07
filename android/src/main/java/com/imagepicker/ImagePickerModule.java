@@ -103,6 +103,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     final List<String> titles = new ArrayList<String>();
     final List<String> actions = new ArrayList<String>();
 
+    if (options.hasKey("useLastPhotoTitle")
+            && options.getString("useLastPhotoTitle") != null
+            && !options.getString("useLastPhotoTitle").isEmpty()) {
+      titles.add(options.getString("useLastPhotoTitle"));
+      actions.add("lastPhoto");
+    }
     if (options.hasKey("takePhotoButtonTitle")
             && options.getString("takePhotoButtonTitle") != null
             && !options.getString("takePhotoButtonTitle").isEmpty()
@@ -149,6 +155,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             break;
           case "library":
             launchImageLibrary(options, callback);
+            break;
+          case "lastPhoto":
+            useLastPhotoPicker(callback);
             break;
           case "cancel":
             response.putBoolean("didCancel", true);
@@ -287,7 +296,131 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     }
   }
 
-  public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
+  // NOTE: Currently not reentrant / doesn't support concurrent requests
+  @ReactMethod
+  public void useLastPhotoPicker(final Callback callback) {
+    response = Arguments.createMap();
+    mCallback = callback;
+
+    Activity currentActivity = getCurrentActivity();
+    if (currentActivity == null) {
+      response.putString("error", "can't find current Activity");
+      callback.invoke(response);
+      return;
+    }
+
+    if (!permissionsCheck(currentActivity)) {
+      return;
+    }
+
+    // code ref: http://stackoverflow.com/questions/8337585/get-the-last-picture-taken-by-user
+    // Find the last picture
+    String[] projection = new String[]{
+            MediaStore.Images.ImageColumns._ID,
+            MediaStore.Images.ImageColumns.DATA,
+            MediaStore.Images.ImageColumns.BUCKET_DISPLAY_NAME,
+            MediaStore.Images.ImageColumns.DATE_TAKEN,
+            MediaStore.Images.ImageColumns.MIME_TYPE
+    };
+    final Cursor cursor = currentActivity.getContentResolver()
+            .query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, null,
+                    null, MediaStore.Images.ImageColumns.DATE_TAKEN + " DESC");
+
+    if (cursor.moveToFirst()) {
+      String imageLocation = cursor.getString(1);
+      this.hasImagePathToCallback( imageLocation );
+    } else {
+      response.putString("error", "Cannot find last photo");
+      callback.invoke(response);
+    }
+  }
+
+  private void hasImagePathToCallback(String realPath ) {
+    int currentRotation = 0;
+    try {
+      ExifInterface exif = new ExifInterface(realPath);
+
+      // extract lat, long, and timestamp and add to the response
+      float[] latlng = new float[2];
+      exif.getLatLong(latlng);
+      float latitude = latlng[0];
+      float longitude = latlng[1];
+      if(latitude != 0f || longitude != 0f) {
+        response.putDouble("latitude", latitude);
+        response.putDouble("longitude", longitude);
+      }
+
+      String timestamp = exif.getAttribute(ExifInterface.TAG_DATETIME);
+      SimpleDateFormat exifDatetimeFormat = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss");
+
+      DateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+      isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+      try {
+        String isoFormatString = isoFormat.format(exifDatetimeFormat.parse(timestamp)) + "Z";
+        response.putString("timestamp", isoFormatString);
+      } catch (Exception e) {}
+
+      int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+      boolean isVertical = true;
+      switch (orientation) {
+        case ExifInterface.ORIENTATION_ROTATE_270:
+          isVertical = false;
+          currentRotation = 270;
+          break;
+        case ExifInterface.ORIENTATION_ROTATE_90:
+          isVertical = false;
+          currentRotation = 90;
+          break;
+        case ExifInterface.ORIENTATION_ROTATE_180:
+          currentRotation = 180;
+          break;
+      }
+      response.putInt("originalRotation", currentRotation);
+      response.putBoolean("isVertical", isVertical);
+    } catch (IOException e) {
+      e.printStackTrace();
+      response.putString("error", e.getMessage());
+      mCallback.invoke(response);
+      mCallback = null;
+      return;
+    }
+
+    BitmapFactory.Options options = new BitmapFactory.Options();
+    options.inJustDecodeBounds = true;
+    BitmapFactory.decodeFile(realPath, options);
+    int initialWidth = options.outWidth;
+    int initialHeight = options.outHeight;
+
+    // don't create a new file if contraint are respected
+    if (((initialWidth < maxWidth && maxWidth > 0) || maxWidth == 0) && ((initialHeight < maxHeight && maxHeight > 0) || maxHeight == 0) && quality == 100 && (rotation == 0 || currentRotation == rotation)) {
+      response.putInt("width", initialWidth);
+      response.putInt("height", initialHeight);
+    } else {
+      File resized = getResizedImage(realPath, initialWidth, initialHeight);
+      if (resized == null) {
+        response.putString("error", "Can't resize the image");
+      } else {
+        realPath = resized.getAbsolutePath();
+        BitmapFactory.decodeFile(realPath, options);
+        response.putInt("width", options.outWidth);
+        response.putInt("height", options.outHeight);
+      }
+    }
+
+    response.putString("path", realPath);
+
+    if (!noData) {
+      response.putString("data", getBase64StringFromFile(realPath));
+    }
+
+    putExtraFileInfo(realPath, response);
+
+    mCallback.invoke(response);
+    mCallback = null;
+  }
+
+  public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
     //robustness code
     if (mCallback == null || (mCameraCaptureURI == null && requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE)
             || (requestCode != REQUEST_LAUNCH_IMAGE_CAPTURE && requestCode != REQUEST_LAUNCH_IMAGE_LIBRARY
