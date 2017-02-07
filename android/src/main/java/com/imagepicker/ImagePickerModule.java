@@ -296,7 +296,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     }
   }
 
-  // NOTE: Currently not reentrant / doesn't support concurrent requests
   @ReactMethod
   public void useLastPhotoPicker(final Callback callback) {
     response = Arguments.createMap();
