@@ -184,6 +184,7 @@ key | iOS | Android | Description
 ------ | ---- | ------- | ----------------------
 didCancel | OK | OK | Informs you if the user cancelled the process
 error | OK | OK | Contains an error message, if there is one
+customButton | OK | OK | If the user tapped one of your custom buttons, contains the name of it
 data | OK | OK | The base64 encoded image data (photos only)
 uri | OK | OK | The uri to the local file asset on the device (photo or video)
 origURL | OK | - | The URL of the original asset in photo library, if it exists
