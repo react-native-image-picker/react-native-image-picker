@@ -2,8 +2,8 @@ package com.imagepicker;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -14,9 +14,14 @@ import android.graphics.Matrix;
 import android.graphics.drawable.ColorDrawable;
 import android.media.ExifInterface;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
+import android.provider.ContactsContract;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.FileProvider;
+import android.app.AlertDialog;
 import android.util.Base64;
 import android.util.Log;
 import android.widget.ArrayAdapter;
@@ -33,6 +38,7 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.reactnative.ivpusic.imagepicker.RealPathUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -66,7 +72,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   private Uri mCameraCaptureURI;
   private Callback mCallback;
   private Boolean noData = false;
-  private Boolean tmpImage;
   private Boolean pickVideo = false;
   private int maxWidth = 0;
   private int maxHeight = 0;
@@ -218,7 +223,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
       // we create a tmp file to save the result
       File imageFile = createNewFile();
-      mCameraCaptureURI = Uri.fromFile(imageFile);
+      mCameraCaptureURI = compatUriFromFile(mReactContext, imageFile);
       cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCameraCaptureURI);
     }
 
@@ -500,19 +505,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       || mReactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
   }
 
-  private String getRealPathFromURI(Uri uri) {
-    String result;
-    String[] projection = {MediaStore.Images.Media.DATA};
-    Cursor cursor = mReactContext.getContentResolver().query(uri, projection, null, null, null);
-    if (cursor == null) { // Source is Dropbox or other similar local file path
-      result = uri.getPath();
-    } else {
-      cursor.moveToFirst();
-      int idx = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-      result = cursor.getString(idx);
-      cursor.close();
-    }
-    return result;
+  private @NonNull String getRealPathFromURI(@NonNull final Uri uri) {
+    return RealPathUtil.getRealPathFromURI(mReactContext, uri);
   }
 
   /**
@@ -654,13 +648,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
    * @return an empty file
    */
   private File createNewFile() {
-    String filename = "image-" + UUID.randomUUID().toString() + ".jpg";
-    File path;
-    if (tmpImage) {
-      path = mReactContext.getExternalCacheDir();
-    } else {
-      path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-    }
+    String filename = new StringBuilder("image-")
+            .append(UUID.randomUUID().toString())
+            .append(".jpg")
+            .toString();
+    File path = mReactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 
     File f = new File(path, filename);
     try {
@@ -707,10 +699,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     if (options.hasKey("quality")) {
       quality = (int) (options.getDouble("quality") * 100);
     }
-    tmpImage = true;
-    if (options.hasKey("storageOptions")) {
-      tmpImage = false;
-    }
     rotation = 0;
     if (options.hasKey("rotation")) {
       rotation = options.getInt("rotation");
@@ -742,4 +730,28 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
   // Required for ActivityEventListener
   public void onNewIntent(Intent intent) { }
+
+  public void onActivityResult(int requestCode,
+                               int resultCode,
+                               Intent data)
+  {
+
+  }
+
+  private static Uri compatUriFromFile(@NonNull final Context context,
+                                       @NonNull final File file)
+  {
+    Uri result = null;
+    if (Build.VERSION.SDK_INT < 19)
+    {
+      result = Uri.fromFile(file);
+    }
+    else
+    {
+      final String packageName = context.getApplicationContext().getPackageName();
+      final String authority =  new StringBuilder(packageName).append(".provider").toString();
+      result = FileProvider.getUriForFile(context, authority, file);
+    }
+    return result;
+  }
 }
