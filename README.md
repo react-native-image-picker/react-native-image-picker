@@ -78,7 +78,6 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and step 3 for Andro
 ## Usage
 
 ```javascript
-var Platform = require('react-native').Platform;
 var ImagePicker = require('react-native-image-picker');
 
 // More info on all the options is below in the README...just some common use cases shown here
@@ -110,17 +109,10 @@ ImagePicker.showImagePicker(options, (response) => {
     console.log('User tapped custom button: ', response.customButton);
   }
   else {
-    let source;
+    let source = { uri: response.uri };
 
-    // You can display the image using either data...
-    source = { uri: 'data:image/jpeg;base64,' + response.data };
-
-    // Or a reference to the platform specific asset location
-    if (Platform.OS === 'android') {
-      source = { uri: response.uri };
-    } else {
-      source = { uri: response.uri.replace('file://', '') };
-    }
+    // You can also display the image using data:
+    // let source = { uri: 'data:image/jpeg;base64,' + response.data };
 
     this.setState({
       avatarSource: source

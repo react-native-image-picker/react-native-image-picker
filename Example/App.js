@@ -7,7 +7,6 @@ import {
   PixelRatio,
   TouchableOpacity,
   Image,
-  Platform
 } from 'react-native';
 
 import ImagePicker from 'react-native-image-picker';
@@ -42,17 +41,10 @@ export default class App extends React.Component {
         console.log('User tapped custom button: ', response.customButton);
       }
       else {
-        var source;
+        let source = { uri: response.uri };
 
-        // You can display the image using either:
-        // source = { uri: 'data:image/jpeg;base64,' + response.data };
-
-        // Or:
-        if (Platform.OS === 'android') {
-          source = { uri: response.uri };
-        } else {
-          source = { uri: response.uri.replace('file://', '') };
-        }
+        // You can also display the image using data:
+        // let source = { uri: 'data:image/jpeg;base64,' + response.data };
 
         this.setState({
           avatarSource: source
