@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -16,6 +17,7 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Base64;
 import android.util.Log;
@@ -217,8 +219,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
       // we create a tmp file to save the result
-      File imageFile = createNewFile();
-      mCameraCaptureURI = Uri.fromFile(imageFile);
+      mCameraCaptureURI = newMediaUri();
       cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCameraCaptureURI);
     }
 
@@ -646,6 +647,19 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       photo = null;
     }
     return f;
+  }
+
+  @Nullable
+  private Uri newMediaUri() {
+    ContentValues values = new ContentValues(1);
+    values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpg");
+    Activity activity = mReactContext.getCurrentActivity();
+    if (activity != null) {
+      return activity.getContentResolver()
+              .insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+    }
+
+    return null;
   }
 
   /**
