@@ -168,7 +168,7 @@ storageOptions | OK | OK | If this key is provided, the image will get saved in 
 storageOptions.skipBackup | OK | - | If true, the photo will NOT be backed up to iCloud
 storageOptions.path | OK | - | If set, will save image at /Documents/[path] rather than the root
 storageOptions.cameraRoll | OK | - | If true, the cropped photo will be saved to the iOS Camera Roll.
-storageOptions.waitUntilSaved | OK | - | If true, will delay the response callback until after the photo/video was saved to the Camera Roll. If the photo or video was just taken, then the file name and timestamp fields are only provided in the response object when this is true.
+storageOptions.waitUntilSaved | OK | OK | If true, will delay the response callback until after the photo/video was saved to the Camera Roll. If the photo or video was just taken, then the file name and timestamp fields are only provided in the response object when this is true.
 
 ### The Response Object
 
