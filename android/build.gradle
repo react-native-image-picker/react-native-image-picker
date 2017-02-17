@@ -24,10 +24,9 @@ android {
     buildToolsVersion "23.0.1"
 
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 23
         versionCode 1
-        // get version name from package.json version
         versionName computeVersionName()
     }
     lintOptions {

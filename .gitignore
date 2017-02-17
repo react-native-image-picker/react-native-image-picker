@@ -1,3 +1,8 @@
+### Android Studio ###
+.idea/
+.gradle/
+local.properties
+
 ### Xcode ###
 
 ## Build generated
