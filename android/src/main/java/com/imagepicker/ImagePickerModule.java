@@ -714,7 +714,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     }
   }
 
-  public void fileScan(String path){
+  public void fileScan(String path) {
     MediaScannerConnection.scanFile(mReactContext,
             new String[] { path }, null,
             new MediaScannerConnection.OnScanCompletedListener() {
@@ -728,16 +728,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   // Required for ActivityEventListener
   public void onNewIntent(Intent intent) { }
 
-//  public void onActivityResult(int requestCode,
-//                               int resultCode,
-//                               Intent data)
-//  {
-//
-//  }
+  // Some people need this for compilation
+  public void onActivityResult(int requestCode, int resultCode, Intent data) { }
 
-  private static Uri compatUriFromFile(@NonNull final Context context,
-                                       @NonNull final File file)
-  {
+  private static Uri compatUriFromFile(@NonNull final Context context, @NonNull final File file) {
     Uri result = null;
     if (Build.VERSION.SDK_INT < 19)
     {
