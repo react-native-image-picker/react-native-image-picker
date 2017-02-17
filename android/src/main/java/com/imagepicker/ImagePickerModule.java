@@ -6,7 +6,6 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
@@ -16,7 +15,6 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
-import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -38,7 +36,6 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.WritableMap;
-import com.reactnative.ivpusic.imagepicker.RealPathUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -731,12 +728,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   // Required for ActivityEventListener
   public void onNewIntent(Intent intent) { }
 
-  public void onActivityResult(int requestCode,
-                               int resultCode,
-                               Intent data)
-  {
-
-  }
+//  public void onActivityResult(int requestCode,
+//                               int resultCode,
+//                               Intent data)
+//  {
+//
+//  }
 
   private static Uri compatUriFromFile(@NonNull final Context context,
                                        @NonNull final File file)
