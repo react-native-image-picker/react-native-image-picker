@@ -70,6 +70,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   private Callback mCallback;
   private Boolean noData = false;
   private Boolean pickVideo = false;
+  private Boolean waitUntilSaved = false;
   private int maxWidth = 0;
   private int maxHeight = 0;
   private int quality = 100;
@@ -311,28 +312,30 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     switch (requestCode) {
       case REQUEST_LAUNCH_IMAGE_CAPTURE:
         uri = mCameraCaptureURI;
-        this.fileScan(uri.getPath());
-        break;
+        ImageScanCompletedListener imageScanCompletedListener = new ImageScanCompletedListener(uri, waitUntilSaved);
+        MediaScannerConnection.scanFile(mReactContext, new String[] { uri.getPath() }, null, imageScanCompletedListener);
+        return;
       case REQUEST_LAUNCH_IMAGE_LIBRARY:
         uri = data.getData();
-        break;
+        handleImageSelected(uri);
+        return;
       case REQUEST_LAUNCH_VIDEO_LIBRARY:
-        response.putString("uri", data.getData().toString());
-        response.putString("path", getRealPathFromURI(data.getData()));
-        mCallback.invoke(response);
-        mCallback = null;
+        uri = data.getData();
+        handleVideoSelected(uri);
         return;
       case REQUEST_LAUNCH_VIDEO_CAPTURE:
-        response.putString("uri", data.getData().toString());
-        response.putString("path", getRealPathFromURI(data.getData()));
-        this.fileScan(response.getString("path"));
-        mCallback.invoke(response);
-        mCallback = null;
+        uri = data.getData();
+        String path = getRealPathFromURI(uri);
+        VideoScanCompletedListener videoScanCompletedListener = new VideoScanCompletedListener(uri, waitUntilSaved);
+        MediaScannerConnection.scanFile(mReactContext, new String[] { path }, null, videoScanCompletedListener);
         return;
       default:
-        uri = null;
+        handleImageSelected(null);
+        return;
     }
+  }
 
+  public void handleImageSelected(Uri uri) {
     String realPath = getRealPathFromURI(uri);
     boolean isUrl = false;
 
@@ -442,7 +445,14 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     }
 
     putExtraFileInfo(realPath, response);
+    mCallback.invoke(response);
+    mCallback = null;
+  }
 
+  public void handleVideoSelected(Uri uri) {
+    String path = getRealPathFromURI(uri);
+    response.putString("uri", uri.toString());
+    response.putString("path", path);
     mCallback.invoke(response);
     mCallback = null;
   }
@@ -712,17 +722,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     if (options.hasKey("durationLimit")) {
       videoDurationLimit = options.getInt("durationLimit");
     }
-  }
-
-  public void fileScan(String path){
-    MediaScannerConnection.scanFile(mReactContext,
-            new String[] { path }, null,
-            new MediaScannerConnection.OnScanCompletedListener() {
-
-              public void onScanCompleted(String path, Uri uri) {
-                Log.i("TAG", "Finished scanning " + path);
-              }
-            });
+    waitUntilSaved = false;
+    if (options.hasKey("waitUntilSaved")) {
+      waitUntilSaved = options.getBoolean("waitUntilSaved");
+    }
   }
 
   // Required for ActivityEventListener
@@ -750,5 +753,50 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       result = FileProvider.getUriForFile(context, authority, file);
     }
     return result;
+  }
+
+
+  private class ImageScanCompletedListener implements MediaScannerConnection.OnScanCompletedListener {
+    private boolean waitUntilSaved;
+    private Uri imageUri;
+
+    public ImageScanCompletedListener(Uri uri, boolean waitUntilSaved) {
+      this.imageUri = uri;
+      this.waitUntilSaved = waitUntilSaved;
+      // If we are not to wait until the image is saved, we proceed immediately.
+      if (!this.waitUntilSaved) {
+        handleImageSelected(this.imageUri);
+      }
+    }
+    @Override
+    public void onScanCompleted(String path, Uri uri) {
+      if (this.waitUntilSaved) {
+        handleImageSelected(this.imageUri);
+      } else {
+        // we do nothing, as image handling has already been handled in the constructor
+      }
+    }
+  }
+
+  private class VideoScanCompletedListener implements MediaScannerConnection.OnScanCompletedListener {
+    private boolean waitUntilSaved;
+    private Uri videoUri;
+
+    public VideoScanCompletedListener(Uri uri, boolean waitUntilSaved) {
+      this.videoUri = uri;
+      this.waitUntilSaved = waitUntilSaved;
+      // If we are not to wait until the video is saved, we proceed immediately.
+      if (!this.waitUntilSaved) {
+        handleVideoSelected(this.videoUri);
+      }
+    }
+    @Override
+    public void onScanCompleted(String path, Uri uri) {
+      if (this.waitUntilSaved) {
+        handleVideoSelected(this.videoUri);
+      } else {
+        // we do nothing, as video handling has already been handled in the constructor
+      }
+    }
   }
 }
