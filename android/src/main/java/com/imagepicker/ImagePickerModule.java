@@ -64,10 +64,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   static final int REQUEST_LAUNCH_VIDEO_LIBRARY = 13003;
   static final int REQUEST_LAUNCH_VIDEO_CAPTURE = 13004;
 
-  private final ReactApplicationContext mReactContext;
+  private final ReactApplicationContext reactContext;
 
-  private Uri mCameraCaptureURI;
-  private Callback mCallback;
+  private Uri cameraCaptureURI;
+  private Callback callback;
   private Boolean noData = false;
   private Boolean pickVideo = false;
   private int maxWidth = 0;
@@ -81,7 +81,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   public ImagePickerModule(ReactApplicationContext reactContext) {
     super(reactContext);
 
-    mReactContext = reactContext;
+    this.reactContext = reactContext;
 
     reactContext.addActivityEventListener(this);
   }
@@ -220,17 +220,17 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
       // we create a tmp file to save the result
       File imageFile = createNewFile();
-      mCameraCaptureURI = compatUriFromFile(mReactContext, imageFile);
-      cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCameraCaptureURI);
+      cameraCaptureURI = compatUriFromFile(reactContext, imageFile);
+      cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraCaptureURI);
     }
 
-    if (cameraIntent.resolveActivity(mReactContext.getPackageManager()) == null) {
+    if (cameraIntent.resolveActivity(reactContext.getPackageManager()) == null) {
       response.putString("error", "Cannot launch camera");
       callback.invoke(response);
       return;
     }
 
-    mCallback = callback;
+    this.callback = callback;
 
     try {
       currentActivity.startActivityForResult(cameraIntent, requestCode);
@@ -272,13 +272,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
     }
 
-    if (libraryIntent.resolveActivity(mReactContext.getPackageManager()) == null) {
+    if (libraryIntent.resolveActivity(reactContext.getPackageManager()) == null) {
       response.putString("error", "Cannot launch photo library");
       callback.invoke(response);
       return;
     }
 
-    mCallback = callback;
+    this.callback = callback;
 
     try {
       currentActivity.startActivityForResult(libraryIntent, requestCode);
@@ -291,7 +291,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
   public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
     //robustness code
-    if (mCallback == null || (mCameraCaptureURI == null && requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE)
+    if (callback == null || (cameraCaptureURI == null && requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE)
             || (requestCode != REQUEST_LAUNCH_IMAGE_CAPTURE && requestCode != REQUEST_LAUNCH_IMAGE_LIBRARY
             && requestCode != REQUEST_LAUNCH_VIDEO_LIBRARY && requestCode != REQUEST_LAUNCH_VIDEO_CAPTURE)) {
       return;
@@ -302,15 +302,15 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     // user cancel
     if (resultCode != Activity.RESULT_OK) {
       response.putBoolean("didCancel", true);
-      mCallback.invoke(response);
-      mCallback = null;
+      callback.invoke(response);
+      callback = null;
       return;
     }
 
     Uri uri;
     switch (requestCode) {
       case REQUEST_LAUNCH_IMAGE_CAPTURE:
-        uri = mCameraCaptureURI;
+        uri = cameraCaptureURI;
         this.fileScan(uri.getPath());
         break;
       case REQUEST_LAUNCH_IMAGE_LIBRARY:
@@ -319,15 +319,15 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
       case REQUEST_LAUNCH_VIDEO_LIBRARY:
         response.putString("uri", data.getData().toString());
         response.putString("path", getRealPathFromURI(data.getData()));
-        mCallback.invoke(response);
-        mCallback = null;
+        callback.invoke(response);
+        callback = null;
         return;
       case REQUEST_LAUNCH_VIDEO_CAPTURE:
         response.putString("uri", data.getData().toString());
         response.putString("path", getRealPathFromURI(data.getData()));
         this.fileScan(response.getString("path"));
-        mCallback.invoke(response);
-        mCallback = null;
+        callback.invoke(response);
+        callback = null;
         return;
       default:
         uri = null;
@@ -355,8 +355,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         // image not in cache
         response.putString("error", "Could not read photo");
         response.putString("uri", uri.toString());
-        mCallback.invoke(response);
-        mCallback = null;
+        callback.invoke(response);
+        callback = null;
         return;
       }
     }
@@ -406,8 +406,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     } catch (IOException e) {
       e.printStackTrace();
       response.putString("error", e.getMessage());
-      mCallback.invoke(response);
-      mCallback = null;
+      callback.invoke(response);
+      callback = null;
       return;
     }
 
@@ -443,8 +443,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
     putExtraFileInfo(realPath, response);
 
-    mCallback.invoke(response);
-    mCallback = null;
+    callback.invoke(response);
+    callback = null;
   }
 
   /**
@@ -498,12 +498,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   }
 
   private boolean isCameraAvailable() {
-    return mReactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)
-      || mReactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
+    return reactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)
+      || reactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
   }
 
   private @NonNull String getRealPathFromURI(@NonNull final Uri uri) {
-    return RealPathUtil.getRealPathFromURI(mReactContext, uri);
+    return RealPathUtil.getRealPathFromURI(reactContext, uri);
   }
 
   /**
@@ -518,8 +518,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
    * @throws Exception
    */
   private File createFileFromURI(Uri uri) throws Exception {
-    File file = new File(mReactContext.getExternalCacheDir(), "photo-" + uri.getLastPathSegment());
-    InputStream input = mReactContext.getContentResolver().openInputStream(uri);
+    File file = new File(reactContext.getExternalCacheDir(), "photo-" + uri.getLastPathSegment());
+    InputStream input = reactContext.getContentResolver().openInputStream(uri);
     OutputStream output = new FileOutputStream(file);
 
     try {
@@ -649,7 +649,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             .append(UUID.randomUUID().toString())
             .append(".jpg")
             .toString();
-    File path = mReactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+    File path = reactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 
     File f = new File(path, filename);
     try {
@@ -715,7 +715,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   }
 
   public void fileScan(String path) {
-    MediaScannerConnection.scanFile(mReactContext,
+    MediaScannerConnection.scanFile(reactContext,
             new String[] { path }, null,
             new MediaScannerConnection.OnScanCompletedListener() {
 
