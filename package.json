@@ -19,7 +19,11 @@
       "email": "yfuks@student.42.fr"
     },
     {
+<<<<<<< HEAD
       "name": "Alexandr Ustinov",
+=======
+      "name": "Alexander Ustinov",
+>>>>>>> refactoring
       "email": "rusfearuth@gmail.com"
     }
   ],
