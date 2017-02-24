@@ -4,13 +4,11 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
 import android.graphics.Matrix;
-import android.graphics.drawable.ColorDrawable;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Build;
@@ -19,10 +17,8 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.FileProvider;
-import android.app.AlertDialog;
 import android.util.Base64;
 import android.util.Log;
-import android.widget.ArrayAdapter;
 import android.webkit.MimeTypeMap;
 import android.content.pm.PackageManager;
 import android.media.MediaScannerConnection;
@@ -34,8 +30,9 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.imagepicker.utils.RealPathUtil;
+import com.imagepicker.utils.UI;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -50,9 +47,7 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -95,90 +90,52 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
   public void showImagePicker(final ReadableMap options, final Callback callback) {
     Activity currentActivity = getCurrentActivity();
 
-    if (currentActivity == null) {
-      response = Arguments.createMap();
+    if (currentActivity == null)
+    {
+      cleanResponse();
       response.putString("error", "can't find current Activity");
       callback.invoke(response);
       return;
     }
 
-    final List<String> titles = new ArrayList<String>();
-    final List<String> actions = new ArrayList<String>();
-
-    if (options.hasKey("takePhotoButtonTitle")
-            && options.getString("takePhotoButtonTitle") != null
-            && !options.getString("takePhotoButtonTitle").isEmpty()
-            && isCameraAvailable()) {
-      titles.add(options.getString("takePhotoButtonTitle"));
-      actions.add("photo");
-    }
-    if (options.hasKey("chooseFromLibraryButtonTitle")
-            && options.getString("chooseFromLibraryButtonTitle") != null
-            && !options.getString("chooseFromLibraryButtonTitle").isEmpty()) {
-      titles.add(options.getString("chooseFromLibraryButtonTitle"));
-      actions.add("library");
-    }
-    if (options.hasKey("customButtons")) {
-      ReadableArray customButtons = options.getArray("customButtons");
-      for (int i = 0; i < customButtons.size(); i++) {
-        ReadableMap button = customButtons.getMap(i);
-        int currentIndex = titles.size();
-        titles.add(currentIndex, button.getString("title"));
-        actions.add(currentIndex, button.getString("name"));
-      }
-    }
-    if (options.hasKey("cancelButtonTitle")
-            && options.getString("cancelButtonTitle") != null
-            && !options.getString("cancelButtonTitle").isEmpty()) {
-      titles.add(options.getString("cancelButtonTitle"));
-      actions.add("cancel");
-    }
-
-    ArrayAdapter<String> adapter = new ArrayAdapter<String>(currentActivity, android.R.layout.select_dialog_item, titles);
-    AlertDialog.Builder builder = new AlertDialog.Builder(currentActivity, android.R.style.Theme_Holo_Light_Dialog);
-    if (options.hasKey("title") && options.getString("title") != null && !options.getString("title").isEmpty()) {
-      builder.setTitle(options.getString("title"));
-    }
-
-    builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
-      public void onClick(DialogInterface dialog, int index) {
-        String action = actions.get(index);
-        response = Arguments.createMap();
-
-        switch (action) {
-          case "photo":
-            launchCamera(options, callback);
-            break;
-          case "library":
-            launchImageLibrary(options, callback);
-            break;
-          case "cancel":
-            response.putBoolean("didCancel", true);
-            callback.invoke(response);
-            break;
-          default: // custom button
-            response.putString("customButton", action);
-            callback.invoke(response);
-        }
-      }
-    });
-
-    final AlertDialog dialog = builder.create();
-    /**
-     * override onCancel method to callback cancel in case of a touch outside of
-     * the dialog or the BACK key pressed
-     */
-    dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+    UI.showDialog(currentActivity, options, new UI.OnAction()
+    {
       @Override
-      public void onCancel(DialogInterface dialog) {
-        response = Arguments.createMap();
-        dialog.dismiss();
+      public void onTakePhoto()
+      {
+        launchCamera(options, callback);
+      }
+
+      @Override
+      public void onUseLibrary()
+      {
+        launchImageLibrary(options, callback);
+      }
+
+      @Override
+      public void onCancel()
+      {
+        cleanResponse();
         response.putBoolean("didCancel", true);
         callback.invoke(response);
       }
+
+      @Override
+      public void onCustomButton(@NonNull final String action)
+      {
+        cleanResponse();
+        response.putString("customButton", action);
+        callback.invoke(response);
+      }
+
+      @Override
+      public void onDialogWasCanceled(@NonNull final String action)
+      {
+        cleanResponse();
+        response.putBoolean(action, true);
+        callback.invoke(response);
+      }
     });
-    dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
-    dialog.show();
   }
 
   // NOTE: Currently not reentrant / doesn't support concurrent requests
@@ -730,6 +687,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
   // Some people need this for compilation
   public void onActivityResult(int requestCode, int resultCode, Intent data) { }
+
+  private void cleanResponse()
+  {
+    response = Arguments.createMap();
+  }
 
   private static Uri compatUriFromFile(@NonNull final Context context, @NonNull final File file) {
     Uri result = null;
