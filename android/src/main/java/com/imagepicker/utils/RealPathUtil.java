@@ -1,5 +1,7 @@
-package com.imagepicker;
+package com.imagepicker.utils;
 
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
@@ -14,8 +16,9 @@ import android.support.annotation.Nullable;
 import java.io.File;
 
 public class RealPathUtil {
+	@SuppressLint("NewApi")
 	public static @Nullable String getRealPathFromURI(@NonNull final Context context,
-	                                                  @NonNull final Uri uri) {
+													  @NonNull final Uri uri) {
 
 		final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
 
