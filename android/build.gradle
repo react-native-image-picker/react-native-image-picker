@@ -36,6 +36,9 @@ android {
 
 repositories {
     mavenCentral()
+    maven {
+      url './../android-maven'
+    }
 }
 
 dependencies {
