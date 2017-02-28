@@ -36,7 +36,7 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and step 3 for Andro
 1. In the XCode's "Project navigator", right click on your project's Libraries folder ➜ `Add Files to <...>`
 2. Go to `node_modules` ➜ `react-native-image-picker` ➜ `ios` ➜ select `RNImagePicker.xcodeproj`
 3. Add `RNImagePicker.a` to `Build Phases -> Link Binary With Libraries`
-4. For iOS 10+, Add the `NSPhotoLibraryUsageDescription`, `NSCameraUsageDescription`, and `NSMicrophoneUsageDescription` (if allowing video) keys to your `Info.plist` with strings describing why your app needs these permissions
+4. For iOS 10+, Add the `NSPhotoLibraryUsageDescription`, `NSCameraUsageDescription`, and `NSMicrophoneUsageDescription` (if allowing video) keys to your `Info.plist` with strings describing why your app needs these permissions. **Note: You will get a SIGABRT crash if you don't complete this step**
 5. Compile and have fun
 
 #### Android
