@@ -438,6 +438,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       }
       else
       {
+        // Newly captured images should only leave one copy on disk.
+        if (requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE) { 
+          imageConfig.original.delete();
+        }
         uri = Uri.fromFile(imageConfig.resized);
         BitmapFactory.decodeFile(imageConfig.resized.getAbsolutePath(), options);
         responseHelper.putInt("width", options.outWidth);
