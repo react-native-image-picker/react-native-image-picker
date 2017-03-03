@@ -83,7 +83,7 @@ android {
     defaultConfig {
         applicationId "com.example"
         minSdkVersion 16
-        targetSdkVersion 23
+        targetSdkVersion 22
         versionCode 1
         versionName "1.0"
         ndk {

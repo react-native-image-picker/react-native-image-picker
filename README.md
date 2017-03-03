@@ -46,20 +46,37 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and step 3 for Andro
     include ':react-native-image-picker'
     project(':react-native-image-picker').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-image-picker/android')
     ```
-2. Add the compile line to the dependencies in `android/app/build.gradle`:
+2. Update the android build tools version to `2.2.+` in `android/build.gradle`:
+    ```gradle
+    buildscript {
+        ...
+        dependencies {
+            classpath 'com.android.tools.build:gradle:2.2.+' // <- USE 2.2.+ version
+        }
+        ...
+    }
+    ...
+    ```
+3. Update the gradle version to `2.14.1` in `android/gradle/wrapper/gradle-wrapper.properties`:
+    ```
+    ...
+    distributionUrl=https\://services.gradle.org/distributions/gradle-2.14.1-all.zip
+    ```
+
+4. Add the compile line to the dependencies in `android/app/build.gradle`:
 
     ```gradle
     dependencies {
         compile project(':react-native-image-picker')
     }
     ```
-3. Add the required permissions in `AndroidManifest.xml`:
+5. Add the required permissions in `AndroidManifest.xml`:
 
     ```xml
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     ```
-4. Add the import and link the package in `MainApplication.java`:
+6. Add the import and link the package in `MainApplication.java`:
 
     ```java
     import com.imagepicker.ImagePickerPackage; // <-- add this import
@@ -70,10 +87,67 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and step 3 for Andro
             return Arrays.<ReactPackage>asList(
                 new MainReactPackage(),
                 new ImagePickerPackage() // <-- add this line
+                // OR if you want to customize dialog style
+                new ImagePickerPackage(R.style.my_dialog_style)
             );
         }
     }
-```
+    ```
+
+    Customization settings of dialog `android/app/res/values/themes.xml`:
+
+    ```xml
+    <?xml version="1.0" encoding="utf-8"?>
+    <resources>
+        <style name="DefaultExplainingPermissionsTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
+            <!-- Used for the buttons -->
+            <item name="colorAccent">@color/your_color</item>
+
+            <!-- Used for the title and text -->
+            <item name="android:textColorPrimary">@color/your_color</item>
+
+            <!-- Used for the background -->
+            <item name="android:background">@color/your_color</item>
+        </style>
+    <resources>
+    ```
+##### Android (Optional)
+
+If `MainActivity` is not instance of `ReactActivity`, you will need to implement `OnImagePickerPermissionsCallback` to `MainActivity`:
+
+    ```java
+    import com.imagepicker.permissions.OnImagePickerPermissionsCallback; // <- add this import
+    import com.facebook.react.modules.core.PermissionListener; // <- add this import
+
+    public class MainActivity extends YourActivity implements OnImagePickerPermissionsCallback {
+      private PermissionListener listener; // <- add this attribute
+
+      // Your methods here
+
+      // Copy from here
+
+      @Override
+      public void setPermissionListener(PermissionListener listener)
+      {
+        this.listener = listener;
+      }
+
+      @Override
+      public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
+      {
+        if (listener != null)
+        {
+          listener.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+      }
+
+      // To here
+    }
+    ```
+This code allows to pass result of request permissions to native part.
+
+
 
 ## Usage
 
@@ -169,6 +243,10 @@ storageOptions.skipBackup | OK | - | If true, the photo will NOT be backed up to
 storageOptions.path | OK | - | If set, will save image at /Documents/[path] rather than the root
 storageOptions.cameraRoll | OK | - | If true, the cropped photo will be saved to the iOS Camera Roll.
 storageOptions.waitUntilSaved | OK | - | If true, will delay the response callback until after the photo/video was saved to the Camera Roll. If the photo or video was just taken, then the file name and timestamp fields are only provided in the response object when this is true.
+permissionDenied.title | - | OK | Title of explaining permissions dialog. By default `Permission denied`.
+permissionDenied.text | - | OK | Message of explaining permissions dialog. By default `To be able to take pictures with your camera and choose images from your library.`.
+permissionDenied.reTryTitle | - | OK | Title of re-try button. By default `re-try`
+permissionDenied.okTitle | - | OK | Title of ok button. By default `I'm sure`
 
 ### The Response Object
 

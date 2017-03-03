@@ -33,6 +33,7 @@ xcuserdata/
 ### Node
 node_modules
 *.log
+yarn.lock
 
 ## Android iml
 *.iml
