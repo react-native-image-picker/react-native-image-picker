@@ -1,14 +1,17 @@
 package com.imagepicker.utils;
 
-import android.app.AlertDialog;
+//import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.drawable.ColorDrawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AlertDialog;
 import android.widget.ArrayAdapter;
 
 import com.facebook.react.bridge.ReadableMap;
+import com.imagepicker.ImagePickerModule;
+import com.imagepicker.R;
 
 import java.util.List;
 
@@ -17,19 +20,25 @@ import java.util.List;
  */
 public class UI
 {
-    public static void showDialog(@Nullable final Context context,
-                                  @NonNull final ReadableMap options,
-                                  @Nullable final OnAction callback)
+    public static @NonNull AlertDialog chooseDialog(@Nullable final ImagePickerModule module,
+                                                    @NonNull final ReadableMap options,
+                                                    @Nullable final OnAction callback)
     {
+        final Context context = module.getActivity();
+        if (context == null)
+        {
+            return null;
+        }
+
         final ButtonsHelper buttons = ButtonsHelper.newInstance(options);
         final List<String> titles = buttons.getTitles();
         final List<String> actions = buttons.getActions();
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 context,
-                android.R.layout.select_dialog_item,
+                R.layout.list_item,
                 titles
         );
-        AlertDialog.Builder builder = new AlertDialog.Builder(context, android.R.style.Theme_Holo_Light_Dialog);
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, module.getDialogThemeId() /*android.R.style.Theme_Holo_Light_Dialog*/);
         if (ReadableMapUtils.hasAndNotEmpty(options, "title"))
         {
             builder.setTitle(options.getString("title"));
@@ -58,6 +67,17 @@ public class UI
             }
         });
 
+        builder.setNegativeButton(buttons.btnCancel.title, new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialogInterface,
+                                int i)
+            {
+                callback.onCancel();
+                dialogInterface.dismiss();
+            }
+        });
+
         final AlertDialog dialog = builder.create();
 
         dialog.setOnCancelListener(new DialogInterface.OnCancelListener()
@@ -65,13 +85,13 @@ public class UI
             @Override
             public void onCancel(@NonNull final DialogInterface dialog)
             {
-                callback.onDialogWasCanceled("didCancel");
+                callback.onCancel();
                 dialog.dismiss();
             }
         });
 
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
-        dialog.show();
+        //dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+        return dialog;
     }
 
     public interface OnAction
@@ -80,6 +100,5 @@ public class UI
         void onUseLibrary();
         void onCancel();
         void onCustomButton(String action);
-        void onDialogWasCanceled(String action);
     }
 }
