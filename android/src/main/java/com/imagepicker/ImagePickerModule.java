@@ -113,11 +113,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       switch (requestCode)
       {
         case REQUEST_PERMISSIONS_FOR_CAMERA:
-          launchCamera(callback);
+          launchCamera(options, callback);
           break;
 
         case REQUEST_PERMISSIONS_FOR_LIBRARY:
-          launchImageLibrary(callback);
+          launchImageLibrary(options, callback);
           break;
 
       }
@@ -158,13 +158,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       @Override
       public void onTakePhoto()
       {
-        launchCamera(callback);
+        launchCamera(options, callback);
       }
 
       @Override
       public void onUseLibrary()
       {
-        launchImageLibrary(callback);
+        launchImageLibrary(options, callback);
       }
 
       @Override
@@ -189,7 +189,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
   // NOTE: Currently not reentrant / doesn't support concurrent requests
   @ReactMethod
-  public void launchCamera(final Callback callback) {
+  public void launchCamera(final ReadableMap options, final Callback callback) {
     if (!isCameraAvailable()) {
       responseHelper.invokeError(callback, "Camera not available");
       return;
@@ -200,6 +200,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       responseHelper.invokeError(callback, "can't find current Activity");
       return;
     }
+
+    this.options = options;
 
     if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_CAMERA))
     {
@@ -248,13 +250,15 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
   // NOTE: Currently not reentrant / doesn't support concurrent requests
   @ReactMethod
-  public void launchImageLibrary(final Callback callback)
+  public void launchImageLibrary(final ReadableMap options, final Callback callback)
   {
     final Activity currentActivity = getCurrentActivity();
     if (currentActivity == null) {
       responseHelper.invokeError(callback, "can't find current Activity");
       return;
     }
+
+    this.options = options;
 
     if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_LIBRARY))
     {
