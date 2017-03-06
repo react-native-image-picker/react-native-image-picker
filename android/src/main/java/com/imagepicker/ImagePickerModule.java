@@ -825,7 +825,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
                                                  @NonNull final File file)
   {
     Uri result = null;
-    if (Build.VERSION.SDK_INT < 19)
+    if (Build.VERSION.SDK_INT < 21)
     {
       result = Uri.fromFile(file);
     }
