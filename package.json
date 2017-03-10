@@ -34,8 +34,5 @@
   "scripts": {
     "prepublish": "rm -rf android/build Example/android/build Example/android/app/build node_modules"
   },
-  "types": "./index.d.ts",
-  "peerDependencies": {
-    "react-native": "^0.42.0"
-  }
+  "types": "./index.d.ts"
 }
