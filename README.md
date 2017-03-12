@@ -41,11 +41,11 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and steps 2, 3, and 
 
 #### Android
 1. Add the following lines to `android/settings.gradle`:
-
     ```gradle
     include ':react-native-image-picker'
     project(':react-native-image-picker').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-image-picker/android')
     ```
+    
 2. Update the android build tools version to `2.2.+` in `android/build.gradle`:
     ```gradle
     buildscript {
@@ -56,28 +56,28 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and steps 2, 3, and 
         ...
     }
     ...
-    ```
+    ``` 
+    
 3. Update the gradle version to `2.14.1` in `android/gradle/wrapper/gradle-wrapper.properties`:
     ```
     ...
     distributionUrl=https\://services.gradle.org/distributions/gradle-2.14.1-all.zip
     ```
-
+    
 4. Add the compile line to the dependencies in `android/app/build.gradle`:
-
     ```gradle
     dependencies {
         compile project(':react-native-image-picker')
     }
     ```
+    
 5. Add the required permissions in `AndroidManifest.xml`:
-
     ```xml
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     ```
+    
 6. Add the import and link the package in `MainApplication.java`:
-
     ```java
     import com.imagepicker.ImagePickerPackage; // <-- add this import
 
@@ -94,60 +94,57 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and steps 2, 3, and 
     }
     ```
 
-    Customization settings of dialog `android/app/res/values/themes.xml`:
-
-    ```xml
-    <?xml version="1.0" encoding="utf-8"?>
-    <resources>
-        <style name="DefaultExplainingPermissionsTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
-            <!-- Used for the buttons -->
-            <item name="colorAccent">@color/your_color</item>
-
-            <!-- Used for the title and text -->
-            <item name="android:textColorPrimary">@color/your_color</item>
-
-            <!-- Used for the background -->
-            <item name="android:background">@color/your_color</item>
-        </style>
-    <resources>
-    ```
 ##### Android (Optional)
 
+Customization settings of dialog `android/app/res/values/themes.xml`:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="DefaultExplainingPermissionsTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <!-- Used for the buttons -->
+        <item name="colorAccent">@color/your_color</item>
+
+        <!-- Used for the title and text -->
+        <item name="android:textColorPrimary">@color/your_color</item>
+
+        <!-- Used for the background -->
+        <item name="android:background">@color/your_color</item>
+    </style>
+<resources>
+```
+
 If `MainActivity` is not instance of `ReactActivity`, you will need to implement `OnImagePickerPermissionsCallback` to `MainActivity`:
+```java
+import com.imagepicker.permissions.OnImagePickerPermissionsCallback; // <- add this import
+import com.facebook.react.modules.core.PermissionListener; // <- add this import
 
-    ```java
-    import com.imagepicker.permissions.OnImagePickerPermissionsCallback; // <- add this import
-    import com.facebook.react.modules.core.PermissionListener; // <- add this import
+public class MainActivity extends YourActivity implements OnImagePickerPermissionsCallback {
+  private PermissionListener listener; // <- add this attribute
 
-    public class MainActivity extends YourActivity implements OnImagePickerPermissionsCallback {
-      private PermissionListener listener; // <- add this attribute
+  // Your methods here
 
-      // Your methods here
+  // Copy from here
 
-      // Copy from here
+  @Override
+  public void setPermissionListener(PermissionListener listener)
+  {
+    this.listener = listener;
+  }
 
-      @Override
-      public void setPermissionListener(PermissionListener listener)
-      {
-        this.listener = listener;
-      }
-
-      @Override
-      public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
-      {
-        if (listener != null)
-        {
-          listener.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-      }
-
-      // To here
+  @Override
+  public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
+  {
+    if (listener != null)
+    {
+      listener.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
-    ```
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+  }
+
+  // To here
+}
+```
 This code allows to pass result of request permissions to native part.
-
-
 
 ## Usage
 
