@@ -21,7 +21,6 @@ import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.FileProvider;
-import android.support.v4.os.EnvironmentCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.Base64;
 import android.util.Log;
@@ -213,14 +212,17 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
   // NOTE: Currently not reentrant / doesn't support concurrent requests
   @ReactMethod
-  public void launchCamera(final ReadableMap options, final Callback callback) {
-    if (!isCameraAvailable()) {
+  public void launchCamera(final ReadableMap options, final Callback callback)
+  {
+    if (!isCameraAvailable())
+    {
       responseHelper.invokeError(callback, "Camera not available");
       return;
     }
 
     final Activity currentActivity = getCurrentActivity();
-    if (currentActivity == null) {
+    if (currentActivity == null)
+    {
       responseHelper.invokeError(callback, "can't find current Activity");
       return;
     }
@@ -236,38 +238,46 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
     int requestCode;
     Intent cameraIntent;
-    if (pickVideo) {
+    if (pickVideo)
+    {
       requestCode = REQUEST_LAUNCH_VIDEO_CAPTURE;
       cameraIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
       cameraIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, videoQuality);
-      if (videoDurationLimit > 0) {
+      if (videoDurationLimit > 0)
+      {
         cameraIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, videoDurationLimit);
       }
-    } else {
+    }
+    else
+    {
       requestCode = REQUEST_LAUNCH_IMAGE_CAPTURE;
       cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
       // we create a tmp file to save the result
       File imageFile = createNewFile(this.options, false);
-      Log.w("FILE_PATH", String.valueOf(imageFile));
       cameraCaptureURI = compatUriFromFile(reactContext, imageFile);
-      if (cameraCaptureURI == null) {
+      if (cameraCaptureURI == null)
+      {
         responseHelper.invokeError(callback, "Couldn't get file path for photo");
         return;
       }
       cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraCaptureURI);
     }
 
-    if (cameraIntent.resolveActivity(reactContext.getPackageManager()) == null) {
+    if (cameraIntent.resolveActivity(reactContext.getPackageManager()) == null)
+    {
       responseHelper.invokeError(callback, "Cannot launch camera");
       return;
     }
 
     this.callback = callback;
 
-    try {
+    try
+    {
       currentActivity.startActivityForResult(cameraIntent, requestCode);
-    } catch (ActivityNotFoundException e) {
+    }
+    catch (ActivityNotFoundException e)
+    {
       e.printStackTrace();
       responseHelper.invokeError(callback, "Cannot launch camera");
     }
@@ -298,26 +308,33 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
     int requestCode;
     Intent libraryIntent;
-    if (pickVideo) {
+    if (pickVideo)
+    {
       requestCode = REQUEST_LAUNCH_VIDEO_LIBRARY;
       libraryIntent = new Intent(Intent.ACTION_PICK);
       libraryIntent.setType("video/*");
-    } else {
+    }
+    else
+    {
       requestCode = REQUEST_LAUNCH_IMAGE_LIBRARY;
       libraryIntent = new Intent(Intent.ACTION_PICK,
       MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
     }
 
-    if (libraryIntent.resolveActivity(reactContext.getPackageManager()) == null) {
+    if (libraryIntent.resolveActivity(reactContext.getPackageManager()) == null)
+    {
       responseHelper.invokeError(callback, "Cannot launch photo library");
       return;
     }
 
     this.callback = callback;
 
-    try {
+    try
+    {
       currentActivity.startActivityForResult(libraryIntent, requestCode);
-    } catch (ActivityNotFoundException e) {
+    }
+    catch (ActivityNotFoundException e)
+    {
       e.printStackTrace();
       responseHelper.invokeError(callback, "Cannot launch photo library");
     }
@@ -732,7 +749,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
     final boolean forceLocal = requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE;
     File f = createNewFile(this.options, !forceLocal);
-    Log.d("FILE_PATH_RESIZED", String.valueOf(f));
     FileOutputStream fo;
     try {
       fo = new FileOutputStream(f);
@@ -772,13 +788,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
             .append(UUID.randomUUID().toString())
             .append(".jpg")
             .toString();
-    Log.d("FILE_PATH", String.valueOf(options == null));
-    Log.d("FILE_PATH_HAS", String.valueOf(ReadableMapUtils.hasAndNotNullReadableMap(options, "storageOptions") && !forceLocal));
     final File path = ReadableMapUtils.hasAndNotNullReadableMap(options, "storageOptions") && !forceLocal
             ? Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
             : reactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-
-    Log.d("FILE_PATH", String.valueOf(path));
     File result = new File(path, filename);
     try
     {
