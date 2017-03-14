@@ -3,6 +3,7 @@ package com.imagepicker.utils;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
+import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.ReadableMap;
 
 /**
@@ -11,7 +12,8 @@ import com.facebook.react.bridge.ReadableMap;
 
 public class ReadableMapUtils
 {
-    public static @NonNull boolean hasAndNotEmpty(@NonNull final ReadableMap target,
+    public static @NonNull boolean hasAndNotEmpty(@NonNull Class clazz,
+                                                  @NonNull final ReadableMap target,
                                                   @NonNull final String key)
     {
         if (!target.hasKey(key))
@@ -19,8 +21,32 @@ public class ReadableMapUtils
             return false;
         }
 
-        final String value = target.getString(key);
+        if (target.isNull(key))
+        {
+            return false;
+        }
 
-        return !TextUtils.isEmpty(value);
+        if (String.class.equals(clazz))
+        {
+            final String value = target.getString(key);
+            return !TextUtils.isEmpty(value);
+        }
+
+        return true;
+    }
+
+
+    public static @NonNull boolean hasAndNotNullReadableMap(@NonNull final ReadableMap target,
+                                                            @NonNull final String key)
+    {
+        return hasAndNotEmpty(ReadableMap.class, target, key);
+    }
+
+
+
+    public static @NonNull boolean hasAndNotEmptyString(@NonNull final ReadableMap target,
+                                                        @NonNull final String key)
+    {
+        return hasAndNotEmpty(String.class, target, key);
     }
 }

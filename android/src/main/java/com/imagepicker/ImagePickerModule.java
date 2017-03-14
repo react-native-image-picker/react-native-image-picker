@@ -21,6 +21,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.FileProvider;
+import android.support.v4.os.EnvironmentCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.Base64;
 import android.util.Log;
@@ -37,6 +38,7 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.imagepicker.permissions.PermissionUtils;
 import com.imagepicker.permissions.OnImagePickerPermissionsCallback;
+import com.imagepicker.utils.ReadableMapUtils;
 import com.imagepicker.utils.RealPathUtil;
 import com.imagepicker.utils.UI;
 
@@ -156,27 +158,44 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     final AlertDialog dialog = UI.chooseDialog(this, options, new UI.OnAction()
     {
       @Override
-      public void onTakePhoto()
+      public void onTakePhoto(@NonNull final ImagePickerModule module)
       {
-        launchCamera(options, callback);
+        if (module == null)
+        {
+          return;
+        }
+        module.launchCamera();
       }
 
       @Override
-      public void onUseLibrary()
+      public void onUseLibrary(@NonNull final ImagePickerModule module)
       {
-        launchImageLibrary(options, callback);
+        if (module == null)
+        {
+          return;
+        }
+        module.launchImageLibrary();
       }
 
       @Override
-      public void onCancel()
+      public void onCancel(@NonNull final ImagePickerModule module)
       {
-        doOnCancel();
+        if (module == null)
+        {
+          return;
+        }
+        module.doOnCancel();
       }
 
       @Override
-      public void onCustomButton(@NonNull final String action)
+      public void onCustomButton(@NonNull final ImagePickerModule module,
+                                 @NonNull final String action)
       {
-        responseHelper.invokeCustomButton(callback, action);
+        if (module == null)
+        {
+          return;
+        }
+        module.invokeCustomButton(action);
       }
     });
     dialog.show();
@@ -185,6 +204,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   public void doOnCancel()
   {
     responseHelper.invokeCancel(callback);
+  }
+
+  public void launchCamera()
+  {
+    this.launchCamera(this.options, this.callback);
   }
 
   // NOTE: Currently not reentrant / doesn't support concurrent requests
@@ -224,7 +248,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
       // we create a tmp file to save the result
-      File imageFile = createNewFile();
+      File imageFile = createNewFile(this.options, false);
+      Log.w("FILE_PATH", String.valueOf(imageFile));
       cameraCaptureURI = compatUriFromFile(reactContext, imageFile);
       if (cameraCaptureURI == null) {
         responseHelper.invokeError(callback, "Couldn't get file path for photo");
@@ -248,6 +273,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     }
   }
 
+  public void launchImageLibrary()
+  {
+    this.launchImageLibrary(this.options, this.callback);
+  }
   // NOTE: Currently not reentrant / doesn't support concurrent requests
   @ReactMethod
   public void launchImageLibrary(final ReadableMap options, final Callback callback)
@@ -316,7 +345,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     switch (requestCode) {
       case REQUEST_LAUNCH_IMAGE_CAPTURE:
         uri = cameraCaptureURI;
-        this.fileScan(uri.getPath());
+        fileScan(uri.getPath());
         break;
       case REQUEST_LAUNCH_IMAGE_LIBRARY:
         uri = data.getData();
@@ -428,7 +457,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       responseHelper.putInt("width", initialWidth);
       responseHelper.putInt("height", initialHeight);
     } else {
-      File resized = getResizedImage(realPath, initialWidth, initialHeight);
+      File resized = getResizedImage(realPath, initialWidth, initialHeight, requestCode);
       if (resized == null) {
         responseHelper.putString("error", "Can't resize the image");
       } else {
@@ -452,6 +481,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     responseHelper.invokeResponse(callback);
     callback = null;
     this.options = null;
+  }
+
+  public void invokeCustomButton(@NonNull final String action)
+  {
+    responseHelper.invokeCustomButton(this.callback, action);
   }
 
   /**
@@ -644,7 +678,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
    * @param initialHeight
    * @return resized file
    */
-  private File getResizedImage(final String realPath, final int initialWidth, final int initialHeight) {
+  private @Nullable File getResizedImage(@NonNull final String realPath,
+                                         final int initialWidth,
+                                         final int initialHeight,
+                                         final int requestCode)
+  {
     Options options = new BitmapFactory.Options();
     options.inScaled = false;
     Bitmap photo = BitmapFactory.decodeFile(realPath, options);
@@ -692,7 +730,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     scaledphoto.compress(Bitmap.CompressFormat.JPEG, quality, bytes);
 
-    File f = createNewFile();
+    final boolean forceLocal = requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE;
+    File f = createNewFile(this.options, !forceLocal);
+    Log.d("FILE_PATH_RESIZED", String.valueOf(f));
     FileOutputStream fo;
     try {
       fo = new FileOutputStream(f);
@@ -715,27 +755,43 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     return f;
   }
 
+  private @Nullable File createNewFile(@NonNull final ReadableMap options)
+  {
+    return createNewFile(options, true);
+  }
+
   /**
    * Create a new file
    *
    * @return an empty file
    */
-  private File createNewFile() {
-    String filename = new StringBuilder("image-")
+  private @Nullable File createNewFile(@NonNull final ReadableMap options,
+                                       @NonNull final boolean forceLocal)
+  {
+    final String filename = new StringBuilder("image-")
             .append(UUID.randomUUID().toString())
             .append(".jpg")
             .toString();
-    File path = reactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+    Log.d("FILE_PATH", String.valueOf(options == null));
+    Log.d("FILE_PATH_HAS", String.valueOf(ReadableMapUtils.hasAndNotNullReadableMap(options, "storageOptions") && !forceLocal));
+    final File path = ReadableMapUtils.hasAndNotNullReadableMap(options, "storageOptions") && !forceLocal
+            ? Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+            : reactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 
-    File f = new File(path, filename);
-    try {
+    Log.d("FILE_PATH", String.valueOf(path));
+    File result = new File(path, filename);
+    try
+    {
       path.mkdirs();
-      f.createNewFile();
-    } catch (IOException e) {
+      result.createNewFile();
+    }
+    catch (IOException e)
+    {
       e.printStackTrace();
+      result = null;
     }
 
-    return f;
+    return result;
   }
 
   private void putExtraFileInfo(@NonNull final String path,
