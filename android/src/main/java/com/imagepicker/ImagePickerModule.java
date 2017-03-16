@@ -51,6 +51,7 @@ import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.channels.FileChannel;
 import java.text.DateFormat;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
@@ -225,7 +226,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
       // we create a tmp file to save the result
-      File imageFile = createNewFile(true);
+      File imageFile = createNewFile();
       cameraCaptureURI = compatUriFromFile(reactContext, imageFile);
       if (cameraCaptureURI == null) {
         responseHelper.invokeError(callback, "Couldn't get file path for photo");
@@ -441,6 +442,20 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       }
     }
 
+    if (saveToCameraRoll && requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE) {
+      final File oldFile = new File(uri.getPath());
+      final File newDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+      final File newFile = new File(newDir.getPath(), uri.getLastPathSegment());
+
+      try {
+        moveFile(oldFile, newFile);
+        uri = Uri.fromFile(newFile);
+      } catch (IOException e) {
+        e.printStackTrace();
+        responseHelper.putString("error", "Error moving image to camera roll: " + e.getMessage());
+      }
+    }
+
     responseHelper.putString("uri", uri.toString());
     responseHelper.putString("path", realPath);
 
@@ -453,6 +468,32 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     responseHelper.invokeResponse(callback);
     callback = null;
     this.options = null;
+  }
+
+  /**
+   * Move a file from one location to another.
+   *
+   * This is done via copy + deletion, because Android will throw an error
+   * if you try to move a file across mount points, e.g. to the SD card.
+   */
+  private void moveFile(final File oldFile, final File newFile) throws IOException {
+    FileChannel oldChannel = null;
+    FileChannel newChannel = null;
+
+    try {
+      oldChannel = new FileInputStream(oldFile).getChannel();
+      newChannel = new FileOutputStream(newFile).getChannel();
+      oldChannel.transferTo(0, oldChannel.size(), newChannel);
+
+      oldFile.delete();
+    } finally {
+      try {
+        if (oldChannel != null) oldChannel.close();
+        if (newChannel != null) newChannel.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
   }
 
   /**
@@ -693,7 +734,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     scaledphoto.compress(Bitmap.CompressFormat.JPEG, quality, bytes);
 
-    File f = createNewFile(false);
+    File f = createNewFile();
     FileOutputStream fo;
     try {
       fo = new FileOutputStream(f);
@@ -713,6 +754,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       scaledphoto = null;
       photo = null;
     }
+
     return f;
   }
 
@@ -721,18 +763,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
    *
    * @return an empty file
    */
-  private File createNewFile(final Boolean isTemporary) {
+  private File createNewFile() {
     String filename = new StringBuilder("image-")
             .append(UUID.randomUUID().toString())
             .append(".jpg")
             .toString();
-
-    File path;
-    if (saveToCameraRoll && !isTemporary) {
-      path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-    } else {
-      path = reactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-    }
+    File path = reactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 
     File f = new File(path, filename);
     try {
