@@ -85,6 +85,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   private int rotation = 0;
   private int videoQuality = 1;
   private int videoDurationLimit = 0;
+  private Boolean saveToCameraRoll = false;
   private ResponseHelper responseHelper = new ResponseHelper();
   private PermissionListener listener = new PermissionListener()
   {
@@ -224,7 +225,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
       // we create a tmp file to save the result
-      File imageFile = createNewFile();
+      File imageFile = createNewFile(true);
       cameraCaptureURI = compatUriFromFile(reactContext, imageFile);
       if (cameraCaptureURI == null) {
         responseHelper.invokeError(callback, "Couldn't get file path for photo");
@@ -692,7 +693,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     scaledphoto.compress(Bitmap.CompressFormat.JPEG, quality, bytes);
 
-    File f = createNewFile();
+    File f = createNewFile(false);
     FileOutputStream fo;
     try {
       fo = new FileOutputStream(f);
@@ -720,12 +721,18 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
    *
    * @return an empty file
    */
-  private File createNewFile() {
+  private File createNewFile(final Boolean isTemporary) {
     String filename = new StringBuilder("image-")
             .append(UUID.randomUUID().toString())
             .append(".jpg")
             .toString();
-    File path = reactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+
+    File path;
+    if (saveToCameraRoll && !isTemporary) {
+      path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+    } else {
+      path = reactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+    }
 
     File f = new File(path, filename);
     try {
@@ -789,6 +796,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     videoDurationLimit = 0;
     if (options.hasKey("durationLimit")) {
       videoDurationLimit = options.getInt("durationLimit");
+    }
+    saveToCameraRoll = false;
+    if (options.hasKey("storageOptions")) {
+      final ReadableMap storageOptions = options.getMap("storageOptions");
+      if (storageOptions.hasKey("cameraRoll")) {
+        saveToCameraRoll = storageOptions.getBoolean("cameraRoll");
+      }
     }
   }
 
