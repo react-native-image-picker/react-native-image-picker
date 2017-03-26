@@ -71,6 +71,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   static final int REQUEST_LAUNCH_VIDEO_CAPTURE    = 13004;
   static final int REQUEST_PERMISSIONS_FOR_CAMERA  = 14001;
   static final int REQUEST_PERMISSIONS_FOR_LIBRARY = 14002;
+  static final int REQUEST_PERMISSIONS_FOR_USE_LAST_PHOTO= 14003;
 
   private final ReactApplicationContext reactContext;
   private final int dialogThemeId;
@@ -120,6 +121,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         case REQUEST_PERMISSIONS_FOR_LIBRARY:
           launchImageLibrary(options, callback);
           break;
+
+        case REQUEST_PERMISSIONS_FOR_USE_LAST_PHOTO:
+          useLastPhotoPicker(options, callback);
+          break;
+
 
       }
       return true;
@@ -301,6 +307,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     }
   }
 
+  // NOTE: Currently not reentrant / doesn't support concurrent requests
   @ReactMethod
   public void useLastPhotoPicker(final ReadableMap options, final Callback callback)
   {
@@ -311,7 +318,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       return;
     }
 
-    if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_LIBRARY))
+    if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_USE_LAST_PHOTO))
     {
       return;
     }
