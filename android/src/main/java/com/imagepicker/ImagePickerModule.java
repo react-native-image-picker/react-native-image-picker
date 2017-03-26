@@ -301,7 +301,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     }
   }
 
-  // NOTE: Currently not reentrant / doesn't support concurrent requests
   @ReactMethod
   public void useLastPhotoPicker(final ReadableMap options, final Callback callback)
   {
