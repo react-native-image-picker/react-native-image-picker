@@ -6,7 +6,6 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
@@ -72,6 +71,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   static final int REQUEST_PERMISSIONS_FOR_CAMERA  = 14001;
   static final int REQUEST_PERMISSIONS_FOR_LIBRARY = 14002;
   static final int REQUEST_PERMISSIONS_FOR_USE_LAST_PHOTO= 14003;
+
 
   private final ReactApplicationContext reactContext;
   private final int dialogThemeId;

@@ -1,7 +1,6 @@
-
 declare module "react-native-image-picker" {
 
-    export interface Response {
+    interface Response {
         customButton: string;
         didCancel: boolean;
         error: string;
@@ -20,12 +19,12 @@ declare module "react-native-image-picker" {
         timestamp?: string;
     }
 
-    export interface CustomButtonOptions {
+    interface CustomButtonOptions {
         name?: string;
         title?: string;
     }
 
-    export interface Options {
+    interface Options {
         title?: string;
         cancelButtonTitle?: string;
         takePhotoButtonTitle?: string;
@@ -45,7 +44,7 @@ declare module "react-native-image-picker" {
         storageOptions?: StorageOptions;
     }
 
-    export interface StorageOptions {
+    interface StorageOptions {
         skipBackup?: boolean;
         path?: string;
         cameraRoll?: boolean;
@@ -53,11 +52,12 @@ declare module "react-native-image-picker" {
     }
 
 
-    export default class ImagePicker {
+    class ImagePicker {
         static showImagePicker(options: Options, callback: (response: Response) => void): void;
         static launchCamera(options: Options, callback: (response: Response) => void): void;
         static launchImageLibrary(options: Options, callback: (response: Response) => void): void;
     }
 
-}
+    export = ImagePicker;
 
+}
