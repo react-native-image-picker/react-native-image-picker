@@ -450,6 +450,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       try {
         moveFile(oldFile, newFile);
         uri = Uri.fromFile(newFile);
+        realPath = newFile.getAbsolutePath();
       } catch (IOException e) {
         e.printStackTrace();
         responseHelper.putString("error", "Error moving image to camera roll: " + e.getMessage());
