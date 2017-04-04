@@ -443,7 +443,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     }
 
     if (saveToCameraRoll && requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE) {
-      final File oldFile = new File(uri.getPath());
+      final File oldFile = new File(realPath);
       final File newDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
       final File newFile = new File(newDir.getPath(), uri.getLastPathSegment());
 
