@@ -448,8 +448,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       final File newFile = new File(newDir.getPath(), uri.getLastPathSegment());
 
       try {
-        moveFile(oldFile, newFile);
-        uri = Uri.fromFile(newFile);
+        copy(oldFile, newFile);
+        uri = Uri.fromFile(oldFile);
         realPath = newFile.getAbsolutePath();
       } catch (IOException e) {
         e.printStackTrace();
@@ -495,6 +495,20 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         e.printStackTrace();
       }
     }
+  }
+
+  public void copy(File src, File dst) throws IOException {
+    InputStream in = new FileInputStream(src);
+    OutputStream out = new FileOutputStream(dst);
+
+    // Transfer bytes from in to out
+    byte[] buf = new byte[1024];
+    int len;
+    while ((len = in.read(buf)) > 0) {
+      out.write(buf, 0, len);
+    }
+    in.close();
+    out.close();
   }
 
   /**
