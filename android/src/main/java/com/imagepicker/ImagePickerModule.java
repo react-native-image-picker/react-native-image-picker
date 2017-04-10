@@ -387,21 +387,25 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         imageConfig = imageConfig.withOriginalFile(new File(realPath));
         break;
 
-      case REQUEST_LAUNCH_VIDEO_LIBRARY:
+      case REQUEST_LAUNCH_VIDEO_LIBRARY: {
+        final String path = getRealPathFromURI(data.getData());
         responseHelper.putString("uri", data.getData().toString());
-        responseHelper.putString("path", getRealPathFromURI(data.getData()));
+        responseHelper.putString("path", path);
+        putExtraFileInfo(path, responseHelper);
         responseHelper.invokeResponse(callback);
         callback = null;
         return;
-
+      }
       case REQUEST_LAUNCH_VIDEO_CAPTURE:
         final String path = getRealPathFromURI(data.getData());
         responseHelper.putString("uri", data.getData().toString());
         responseHelper.putString("path", path);
         fileScan(reactContext, path);
+        putExtraFileInfo(path, responseHelper);
         responseHelper.invokeResponse(callback);
         callback = null;
         return;
+      }
     }
 
     final ReadExifResult result = readExifInterface(responseHelper, imageConfig);
