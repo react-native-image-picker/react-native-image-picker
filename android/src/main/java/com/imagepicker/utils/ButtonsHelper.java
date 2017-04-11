@@ -103,7 +103,7 @@ public class ButtonsHelper
                                                     @NonNull final String key,
                                                     @NonNull final String action)
     {
-        if (!ReadableMapUtils.hasAndNotEmpty(options, key))
+        if (!ReadableMapUtils.hasAndNotEmptyString(options, key))
         {
             return null;
         }
