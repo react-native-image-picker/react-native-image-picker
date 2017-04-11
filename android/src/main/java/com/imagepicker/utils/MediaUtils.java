@@ -19,9 +19,11 @@ import com.imagepicker.media.ImageConfig;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
@@ -286,6 +288,84 @@ public class MediaUtils
 
         return result;
     }
+
+    public static @Nullable RolloutPhotoResult rolloutPhotoFromCamera(@NonNull final ImageConfig imageConfig)
+    {
+        RolloutPhotoResult result = null;
+        final File oldFile = imageConfig.resized == null ? imageConfig.original: imageConfig.resized;
+        final File newDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+        final File newFile = new File(newDir.getPath(), oldFile.getName());
+
+        try
+        {
+            moveFile(oldFile, newFile);
+            ImageConfig newImageConfig;
+            if (imageConfig.resized != null)
+            {
+                newImageConfig = imageConfig.withResizedFile(newFile);
+            }
+            else
+            {
+                newImageConfig = imageConfig.withOriginalFile(newFile);
+            }
+            result = new RolloutPhotoResult(newImageConfig, null);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+            result = new RolloutPhotoResult(imageConfig, e);
+        }
+        return result;
+    }
+
+    /**
+     * Move a file from one location to another.
+     *
+     * This is done via copy + deletion, because Android will throw an error
+     * if you try to move a file across mount points, e.g. to the SD card.
+     */
+    private static void moveFile(@NonNull final File oldFile,
+                                 @NonNull final File newFile) throws IOException
+    {
+        FileChannel oldChannel = null;
+        FileChannel newChannel = null;
+
+        try
+        {
+            oldChannel = new FileInputStream(oldFile).getChannel();
+            newChannel = new FileOutputStream(newFile).getChannel();
+            oldChannel.transferTo(0, oldChannel.size(), newChannel);
+
+            oldFile.delete();
+        }
+        finally
+        {
+            try
+            {
+                if (oldChannel != null) oldChannel.close();
+                if (newChannel != null) newChannel.close();
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    public static class RolloutPhotoResult
+    {
+        public final ImageConfig imageConfig;
+        public final Throwable error;
+
+        public RolloutPhotoResult(@NonNull final ImageConfig imageConfig,
+                                  @Nullable final Throwable error)
+        {
+            this.imageConfig = imageConfig;
+            this.error = error;
+        }
+    }
+
 
     public static class ReadExifResult
     {

@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
-import android.media.ExifInterface;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.provider.Settings;
@@ -15,11 +14,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.text.TextUtilsCompat;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.util.Base64;
-import android.util.Log;
 import android.util.Patterns;
 import android.webkit.MimeTypeMap;
 import android.content.pm.PackageManager;
@@ -34,7 +31,6 @@ import com.facebook.react.bridge.ReadableMap;
 import com.imagepicker.media.ImageConfig;
 import com.imagepicker.permissions.PermissionUtils;
 import com.imagepicker.permissions.OnImagePickerPermissionsCallback;
-import com.imagepicker.utils.MediaUtils;
 import com.imagepicker.utils.MediaUtils.ReadExifResult;
 import com.imagepicker.utils.RealPathUtil;
 import com.imagepicker.utils.UI;
@@ -48,14 +44,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
-import java.text.DateFormat;
-import java.text.ParsePosition;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
 
 import com.facebook.react.modules.core.PermissionListener;
+
+import static com.imagepicker.utils.MediaUtils.*;
 import static com.imagepicker.utils.MediaUtils.createNewFile;
 import static com.imagepicker.utils.MediaUtils.getResizedImage;
 
@@ -78,7 +70,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   protected Uri cameraCaptureURI;
   private Boolean noData = false;
   private Boolean pickVideo = false;
-  private ImageConfig imageConfig = new ImageConfig(null, null, 0, 0, 100, 0);
+  private ImageConfig imageConfig = new ImageConfig(null, null, 0, 0, 100, 0, false);
 
   @Deprecated
   private int videoQuality = 1;
@@ -153,7 +145,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
     this.callback = callback;
     this.options = options;
-    imageConfig = new ImageConfig(null, null, 0, 0, 100, 0);
+    imageConfig = new ImageConfig(null, null, 0, 0, 100, 0, false);
 
     final AlertDialog dialog = UI.chooseDialog(this, options, new UI.OnAction()
     {
@@ -356,7 +348,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     // user cancel
     if (resultCode != Activity.RESULT_OK)
     {
-      MediaUtils.removeUselessFiles(requestCode, imageConfig);
+      removeUselessFiles(requestCode, imageConfig);
       responseHelper.invokeCancel(callback);
       callback = null;
       return;
@@ -406,17 +398,17 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         final String path = getRealPathFromURI(data.getData());
         responseHelper.putString("uri", data.getData().toString());
         responseHelper.putString("path", path);
-        MediaUtils.fileScan(reactContext, path);
+        fileScan(reactContext, path);
         responseHelper.invokeResponse(callback);
         callback = null;
         return;
     }
 
-    final ReadExifResult result = MediaUtils.readExifInterface(responseHelper, imageConfig);
+    final ReadExifResult result = readExifInterface(responseHelper, imageConfig);
 
     if (result.error != null)
     {
-      MediaUtils.removeUselessFiles(requestCode, imageConfig);
+      removeUselessFiles(requestCode, imageConfig);
       responseHelper.invokeError(callback, result.error.getMessage());
       callback = null;
       return;
@@ -434,14 +426,14 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     {
       responseHelper.putInt("width", initialWidth);
       responseHelper.putInt("height", initialHeight);
-      MediaUtils.fileScan(reactContext, imageConfig.original.getAbsolutePath());
+      fileScan(reactContext, imageConfig.original.getAbsolutePath());
     }
     else
     {
       imageConfig = getResizedImage(reactContext, this.options, imageConfig, initialWidth, initialHeight, requestCode);
       if (imageConfig.resized == null)
       {
-        MediaUtils.removeUselessFiles(requestCode, imageConfig);
+        removeUselessFiles(requestCode, imageConfig);
         responseHelper.putString("error", "Can't resize the image");
       }
       else
@@ -452,7 +444,27 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         responseHelper.putInt("height", options.outHeight);
 
         updatedResultResponse(uri, imageConfig.resized.getAbsolutePath());
-        MediaUtils.fileScan(reactContext, imageConfig.resized.getAbsolutePath());
+        fileScan(reactContext, imageConfig.resized.getAbsolutePath());
+      }
+    }
+
+    if (imageConfig.saveToCameraRoll && requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE)
+    {
+      final RolloutPhotoResult rolloutResult = rolloutPhotoFromCamera(imageConfig);
+
+      if (rolloutResult.error == null)
+      {
+        imageConfig = rolloutResult.imageConfig;
+        uri = Uri.fromFile(imageConfig.getActualFile());
+        updatedResultResponse(uri, imageConfig.getActualFile().getAbsolutePath());
+      }
+      else
+      {
+        removeUselessFiles(requestCode, imageConfig);
+        final String errorMessage = new StringBuilder("Error moving image to camera roll: ")
+                .append(rolloutResult.error.getMessage()).toString();
+        responseHelper.putString("error", errorMessage);
+        return;
       }
     }
 
@@ -465,6 +477,25 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   {
     responseHelper.invokeCustomButton(this.callback, action);
   }
+
+  @Override
+  public void onNewIntent(Intent intent) { }
+
+  public Context getContext()
+  {
+    return getReactApplicationContext();
+  }
+
+  public @StyleRes int getDialogThemeId()
+  {
+    return this.dialogThemeId;
+  }
+
+  public @NonNull Activity getActivity()
+  {
+    return getCurrentActivity();
+  }
+
 
   private boolean passResult(int requestCode)
   {
@@ -668,23 +699,5 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     if (options.hasKey("durationLimit")) {
       videoDurationLimit = options.getInt("durationLimit");
     }
-  }
-
-  @Override
-  public void onNewIntent(Intent intent) { }
-
-  public Context getContext()
-  {
-    return getReactApplicationContext();
-  }
-
-  public @StyleRes int getDialogThemeId()
-  {
-    return this.dialogThemeId;
-  }
-
-  public @NonNull Activity getActivity()
-  {
-    return getCurrentActivity();
   }
 }
