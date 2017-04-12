@@ -22,6 +22,7 @@ declare module "react-native-image-picker" {
     interface CustomButtonOptions {
         name?: string;
         title?: string;
+        style?: 'default' | 'cancel' | 'destructive';
     }
 
     interface Options {
