@@ -396,7 +396,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         callback = null;
         return;
       }
-      case REQUEST_LAUNCH_VIDEO_CAPTURE:
+      case REQUEST_LAUNCH_VIDEO_CAPTURE: {
         final String path = getRealPathFromURI(data.getData());
         responseHelper.putString("uri", data.getData().toString());
         responseHelper.putString("path", path);
