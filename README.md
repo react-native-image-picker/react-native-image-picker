@@ -79,16 +79,16 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and steps 2, 3, and 
     
 6. Add the import and link the package in `MainApplication.java`:
     ```java
-    import com.imagepicker.ImagePickerPackage; // <-- add this import
+    import com.reactnative.ivpusic.imagepicker.PickerPackage; // <-- add this import
 
     public class MainApplication extends Application implements ReactApplication {
         @Override
         protected List<ReactPackage> getPackages() {
             return Arrays.<ReactPackage>asList(
                 new MainReactPackage(),
-                new ImagePickerPackage() // <-- add this line
+                new PickerPackage() // <-- add this line
                 // OR if you want to customize dialog style
-                new ImagePickerPackage(R.style.my_dialog_style)
+                new PickerPackage(R.style.my_dialog_style)
             );
         }
     }
