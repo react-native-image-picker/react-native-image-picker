@@ -142,6 +142,15 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       responseHelper.invokeError(callback, "can't find current Activity");
       return;
     }
+    if (options.hasKey("imageSource")) {
+        String source = options.getString("imageSource");
+        if (source.equals("photo")) {
+            launchCamera(options, callback);
+        } else {
+            launchImageLibrary(options, callback);
+        }
+        return;
+    }
 
     this.callback = callback;
     this.options = options;

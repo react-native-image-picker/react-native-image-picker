@@ -37,6 +37,15 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 {
     self.callback = callback; // Save the callback so we can use it from the delegate methods
     self.options = options;
+    NSString *source = [self.options valueForKey:@"imageSource"];
+    if (source.length != 0) {
+        if ([source isEqualToString:@"photo"]) {
+            [self launchImagePicker:RNImagePickerTargetCamera];
+        } else {
+            [self launchImagePicker:RNImagePickerTargetLibrarySingleImage];
+        }
+        return;
+    }
 
     NSString *title = [self.options valueForKey:@"title"];
     if ([title isEqual:[NSNull null]] || title.length == 0) {
