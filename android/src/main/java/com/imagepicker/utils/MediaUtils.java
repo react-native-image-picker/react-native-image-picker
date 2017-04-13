@@ -37,32 +37,15 @@ import static com.imagepicker.ImagePickerModule.REQUEST_LAUNCH_IMAGE_CAPTURE;
 
 public class MediaUtils
 {
-    public static @Nullable File createNewFile(@NonNull final Context reactContext,
-                                               @NonNull final ReadableMap options,
-                                               @NonNull final boolean forceLocal)
+    public static @NonNull File createNewFile(@NonNull final Context reactContext)
     {
         final String filename = new StringBuilder("image-")
                 .append(UUID.randomUUID().toString())
                 .append(".jpg")
                 .toString();
-
-        final File path = ReadableMapUtils.hasAndNotNullReadableMap(options, "storageOptions") && !forceLocal
-                ? Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                : reactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-
+        final File path = reactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File result = new File(path, filename);
-
-        try
-        {
-            path.mkdirs();
-            result.createNewFile();
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-            result = null;
-        }
-
+        path.mkdirs();
         return result;
     }
 
@@ -70,18 +53,15 @@ public class MediaUtils
      * Create a resized image to fulfill the maxWidth/maxHeight, quality and rotation values
      *
      * @param context
-     * @param options
      * @param imageConfig
      * @param initialWidth
      * @param initialHeight
      * @return updated ImageConfig
      */
     public static @NonNull ImageConfig getResizedImage(@NonNull final Context context,
-                                                       @NonNull final ReadableMap options,
                                                        @NonNull final ImageConfig imageConfig,
                                                        final int initialWidth,
-                                                       final int initialHeight,
-                                                       final int requestCode)
+                                                       final int initialHeight)
     {
         BitmapFactory.Options imageOptions = new BitmapFactory.Options();
         imageOptions.inScaled = false;
@@ -145,8 +125,7 @@ public class MediaUtils
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         scaledPhoto.compress(Bitmap.CompressFormat.JPEG, result.quality, bytes);
 
-        final boolean forceLocal = requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE;
-        final File resized = createNewFile(context, options, !forceLocal);
+        final File resized = createNewFile(context);
 
         if (resized == null)
         {
@@ -237,14 +216,11 @@ public class MediaUtils
             ExifInterface exif = new ExifInterface(imageConfig.original.getAbsolutePath());
 
             // extract lat, long, and timestamp and add to the response
-            float[] latlng = new float[2];
-            exif.getLatLong(latlng);
-            float latitude = latlng[0];
-            float longitude = latlng[1];
-            if(latitude != 0f || longitude != 0f)
+            float[] latLng = new float[2];
+            if(exif.getLatLong(latLng))
             {
-                responseHelper.putDouble("latitude", latitude);
-                responseHelper.putDouble("longitude", longitude);
+                responseHelper.putDouble("latitude", latLng[0]);
+                responseHelper.putDouble("longitude", latLng[1]);
             }
 
             final String timestamp = exif.getAttribute(ExifInterface.TAG_DATETIME);
@@ -324,32 +300,51 @@ public class MediaUtils
      * This is done via copy + deletion, because Android will throw an error
      * if you try to move a file across mount points, e.g. to the SD card.
      */
-    private static void moveFile(@NonNull final File oldFile,
+    public static void moveFile(@NonNull final File oldFile,
                                  @NonNull final File newFile) throws IOException
     {
-        FileChannel oldChannel = null;
-        FileChannel newChannel = null;
+        FileInputStream in = new FileInputStream(oldFile);
+        FileOutputStream out = new FileOutputStream(newFile);
 
         try
         {
-            oldChannel = new FileInputStream(oldFile).getChannel();
-            newChannel = new FileOutputStream(newFile).getChannel();
-            oldChannel.transferTo(0, oldChannel.size(), newChannel);
-
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = in.read(buf)) > 0) {
+                out.write(buf, 0, len);
+            }
+            in.close();
+            out.close();
             oldFile.delete();
         }
         finally
         {
             try
             {
-                if (oldChannel != null) oldChannel.close();
-                if (newChannel != null) newChannel.close();
+                if (in != null)
+                {
+                    in.close();
+                }
+                if (out != null)
+                {
+                    out.close();
+                }
             }
             catch (IOException e)
             {
                 e.printStackTrace();
             }
         }
+    }
+
+    public static void removeOriginIfNeeded(@NonNull final ImageConfig imageConfig,
+                                            final int requestCode)
+    {
+        if (requestCode != ImagePickerModule.REQUEST_LAUNCH_IMAGE_CAPTURE)
+        {
+            return;
+        }
+        imageConfig.original.delete();
     }
 
 

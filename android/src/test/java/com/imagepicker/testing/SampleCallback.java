@@ -15,9 +15,6 @@ public class SampleCallback implements Callback
     @Override
     public void invoke(Object... args)
     {
-        System.out.println(args.length);
-        System.out.println(String.valueOf(args[0]));
-        System.out.println(args[0].getClass());
         for (int i = 0; i < args.length; i++) {
             if (lookingForError(args[i])) {
                 break;

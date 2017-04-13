@@ -31,6 +31,7 @@ import com.facebook.react.bridge.ReadableMap;
 import com.imagepicker.media.ImageConfig;
 import com.imagepicker.permissions.PermissionUtils;
 import com.imagepicker.permissions.OnImagePickerPermissionsCallback;
+import com.imagepicker.utils.MediaUtils;
 import com.imagepicker.utils.MediaUtils.ReadExifResult;
 import com.imagepicker.utils.RealPathUtil;
 import com.imagepicker.utils.UI;
@@ -247,7 +248,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       requestCode = REQUEST_LAUNCH_IMAGE_CAPTURE;
       cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-      final File original = createNewFile(reactContext, this.options, false);
+      final File original = createNewFile(reactContext);
       imageConfig = imageConfig.withOriginalFile(original);
 
       cameraCaptureURI = RealPathUtil.compatUriFromFile(reactContext, imageConfig.original);
@@ -430,7 +431,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     }
     else
     {
-      imageConfig = getResizedImage(reactContext, this.options, imageConfig, initialWidth, initialHeight, requestCode);
+      imageConfig = getResizedImage(reactContext, imageConfig, initialWidth, initialHeight);
       if (imageConfig.resized == null)
       {
         removeUselessFiles(requestCode, imageConfig);
@@ -445,6 +446,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
         updatedResultResponse(uri, imageConfig.resized.getAbsolutePath());
         fileScan(reactContext, imageConfig.resized.getAbsolutePath());
+        MediaUtils.removeOriginIfNeeded(imageConfig, requestCode);
       }
     }
 
