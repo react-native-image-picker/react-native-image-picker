@@ -39,16 +39,21 @@ public class MediaUtils
 {
     public static @Nullable File createNewFile(@NonNull final Context reactContext,
                                                @NonNull final ReadableMap options,
-                                               @NonNull final boolean forceLocal)
+                                               @NonNull final boolean forceLocal,
+                                               @NonNull final boolean isVideo)
     {
-        final String filename = new StringBuilder("image-")
+        final String prefix = isVideo ? "video-" : "image-";
+        final String extension = isVideo ? ".mp4" : ".jpg";
+        final String filename = new StringBuilder(prefix)
                 .append(UUID.randomUUID().toString())
-                .append(".jpg")
+                .append(extension)
                 .toString();
 
+        final String directoryEnum = isVideo ? Environment.DIRECTORY_MOVIES : Environment.DIRECTORY_PICTURES;
+
         final File path = ReadableMapUtils.hasAndNotNullReadableMap(options, "storageOptions") && !forceLocal
-                ? Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                : reactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+                ? Environment.getExternalStoragePublicDirectory(directoryEnum)
+                : reactContext.getExternalFilesDir(directoryEnum);
 
         File result = new File(path, filename);
 
@@ -146,7 +151,7 @@ public class MediaUtils
         scaledPhoto.compress(Bitmap.CompressFormat.JPEG, result.quality, bytes);
 
         final boolean forceLocal = requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE;
-        final File resized = createNewFile(context, options, !forceLocal);
+        final File resized = createNewFile(context, options, !forceLocal, false);
 
         if (resized == null)
         {
