@@ -3,6 +3,7 @@
 #import <AssetsLibrary/AssetsLibrary.h>
 #import <AVFoundation/AVFoundation.h>
 #import <Photos/Photos.h>
+#import <React/RCTUtils.h>
 
 @import MobileCoreServices;
 
@@ -80,10 +81,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     }
 
     dispatch_async(dispatch_get_main_queue(), ^{
-        UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
-        while (root.presentedViewController != nil) {
-            root = root.presentedViewController;
-        }
+        UIViewController *root = RCTPresentedViewController();
 
         /* On iPad, UIAlertController presents a popover view rather than an action sheet like on iPhone. We must provide the location
         of the location to show the popover in this case. For simplicity, we'll just display it on the bottom center of the screen
@@ -189,10 +187,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     // Check permissions
     void (^showPickerViewController)() = ^void() {
         dispatch_async(dispatch_get_main_queue(), ^{
-            UIViewController *root = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
-            while (root.presentedViewController != nil) {
-                root = root.presentedViewController;
-            }
+            UIViewController *root = RCTPresentedViewController();
             [root presentViewController:self.picker animated:YES completion:nil];
         });
     };
