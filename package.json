@@ -5,7 +5,7 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jp928/react-native-image-picker.git"
+    "url": "https://github.com/marcshilling/react-native-image-picker.git"
   },
   "nativePackage": true,
   "author": "Marc Shilling (marcshilling)",
