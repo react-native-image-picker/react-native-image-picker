@@ -6,8 +6,10 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ResolveInfo;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -44,6 +46,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
+import java.util.List;
 
 import com.facebook.react.modules.core.PermissionListener;
 
@@ -266,6 +269,17 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     }
 
     this.callback = callback;
+
+    // Workaround for Android bug.
+    // grantUriPermission also needed for KITKAT,
+    // see https://code.google.com/p/android/issues/detail?id=76683
+    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
+      List<ResolveInfo> resInfoList = reactContext.getPackageManager().queryIntentActivities(cameraIntent, PackageManager.MATCH_DEFAULT_ONLY);
+      for (ResolveInfo resolveInfo : resInfoList) {
+        String packageName = resolveInfo.activityInfo.packageName;
+        reactContext.grantUriPermission(packageName, cameraCaptureURI, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+      }
+    }
 
     try
     {
