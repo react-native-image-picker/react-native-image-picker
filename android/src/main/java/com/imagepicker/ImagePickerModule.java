@@ -457,6 +457,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         imageConfig = rolloutResult.imageConfig;
         uri = Uri.fromFile(imageConfig.getActualFile());
         updatedResultResponse(uri, imageConfig.getActualFile().getAbsolutePath());
+        fileScan(reactContext, imageConfig.getActualFile().getAbsolutePath());
       }
       else
       {
