@@ -594,6 +594,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
           final String errorDescription = new StringBuilder(activity.getClass().getSimpleName())
                   .append(" must implement ")
                   .append(OnImagePickerPermissionsCallback.class.getSimpleName())
+                  .append(PermissionAwareActivity.class.getSimpleName())
                   .toString();
           throw new UnsupportedOperationException(errorDescription);
         }
