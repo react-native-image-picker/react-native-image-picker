@@ -145,7 +145,10 @@ namespace ImagePicker
                     byte[] byteArray = new byte[photoStream.Size];
                     reader.ReadBytes(byteArray);
                     base64Data = Convert.ToBase64String(byteArray);
-                    response["data"] = base64Data;
+                    if (!(bool)parsedOptions["noData"])
+                    {
+                        response["data"] = base64Data;
+                    }
                     response["uri"] = data.Path;
                     callback.Invoke(response);
                 }
@@ -238,6 +241,7 @@ namespace ImagePicker
         private Dictionary<string, object> parseOptions(JObject options)
         {
             var parsedOptions = new Dictionary<string, object>();
+            parsedOptions["noData"] = false;
             if (options["noData"] != null)
             {
                 parsedOptions["noData"] = options["noData"].Value<bool>();

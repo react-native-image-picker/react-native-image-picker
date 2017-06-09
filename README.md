@@ -188,7 +188,7 @@ cancelButtonTitle | OK | OK | OK | Specify `null` or empty string to remove this
 takePhotoButtonTitle | OK | OK | OK | Specify `null` or empty string to remove this button
 chooseFromLibraryButtonTitle | OK | OK | OK | Specify `null` or empty string to remove this button
 customButtons | OK | OK | OK| An array containing objects with the name and title of buttons
-cameraType | OK | - | - | 'front' or 'back'
+cameraType | OK | - | N/A* | 'front' or 'back'
 mediaType | OK | OK | - |'photo', 'video', or 'mixed' on iOS, 'photo' or 'video' on Android
 maxWidth | OK | OK | - | Photos only
 maxHeight | OK | OK | - | Photos only
@@ -196,13 +196,16 @@ quality | OK | OK | - | 0 to 1, photos only
 videoQuality | OK |  OK | - |'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android
 durationLimit | OK | OK | OK | Max video recording time, in seconds
 rotation | - | OK | - | Photos only, 0 to 360 degrees of rotation
-allowsEditing | OK | - | - | bool - enables built in iOS functionality to resize the image after selection
-noData | OK | OK | - | If true, disables the base64 `data` field from being generated (greatly improves performance on large photos)
+allowsEditing | OK | - | N/A | bool - enables built in iOS functionality to resize the image after selection
+noData | OK | OK | OK | If true, disables the base64 `data` field from being generated (greatly improves performance on large photos)
 storageOptions | OK | OK | - | If this key is provided, the image will get saved in the Documents directory on iOS, and the Pictures directory on Android (rather than a temporary directory)
 storageOptions.skipBackup | OK | - | - |If true, the photo will NOT be backed up to iCloud
 storageOptions.path | OK | - | - | If set, will save image at /Documents/[path] rather than the root
 storageOptions.cameraRoll | OK | - | - | If true, the cropped photo will be saved to the iOS Camera Roll.
 storageOptions.waitUntilSaved | OK | - | - | If true, will delay the response callback until after the photo/video was saved to the Camera Roll. If the photo or video was just taken, then the file name and timestamp fields are only provided in the response object when this is true.
+
+
+\* The camera interface allows to switch cameras
 
 ### The Response Object
 

@@ -26,7 +26,8 @@ export default class App extends React.Component {
       maxHeight: 500,
       storageOptions: {
         skipBackup: true
-      }
+      },
+      noData: true,
     };
 
     ImagePicker.showImagePicker(options, (response) => {
@@ -61,7 +62,7 @@ export default class App extends React.Component {
       title: 'Video Picker',
       takePhotoButtonTitle: 'Take Video...',
       mediaType: 'video',
-      videoQuality: 'medium'
+      videoQuality: 'medium',
     };
 
     ImagePicker.showImagePicker(options, (response) => {
