@@ -150,6 +150,18 @@ namespace ImagePicker
                         response["data"] = base64Data;
                     }
                     response["uri"] = data.Path;
+                    if (!(bool)parsedOptions["tmpImage"])
+                    {
+                        try
+                        {
+                            StorageFolder picturesLibrary = KnownFolders.PicturesLibrary;
+                            StorageFile imageFile = await picturesLibrary.CreateFileAsync(data.Name, CreationCollisionOption.GenerateUniqueName);
+                        }
+                        catch (Exception e)
+                        {
+                            response["error"] = "Error when saving file " + e.ToString();
+                        }
+                    }
                     callback.Invoke(response);
                 }
                 else
