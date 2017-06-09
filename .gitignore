@@ -34,4 +34,5 @@ node_modules
 
 ## Visual Studio specifics
 .vs
-windows/ImagePickerLibrary/obj/Debug/
+windows/ImagePickerLibrary/obj/
+windows/ImagePickerLibrary/bin/
