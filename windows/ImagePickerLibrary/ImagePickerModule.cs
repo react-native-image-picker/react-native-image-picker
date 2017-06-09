@@ -51,7 +51,6 @@ namespace ImagePicker
                 actions.Add("library");
             }
 
-
             if (options["customButtons"] != null)
             {
                 List<JToken> customButtons = options["customButtons"].ToList<JToken>();
@@ -137,7 +136,7 @@ namespace ImagePicker
                     data = await _captureUI.CaptureFileAsync(CameraCaptureUIMode.Photo);
                 }
 
-                string base64Video = "";
+                string base64Data = "";
                 if (data != null)
                 {
                     IRandomAccessStream photoStream = await data.OpenAsync(FileAccessMode.Read);
@@ -145,8 +144,9 @@ namespace ImagePicker
                     await reader.LoadAsync((uint)photoStream.Size);
                     byte[] byteArray = new byte[photoStream.Size];
                     reader.ReadBytes(byteArray);
-                    base64Video = Convert.ToBase64String(byteArray);
-                    response["data"] = base64Video; // TODO: Return URI
+                    base64Data = Convert.ToBase64String(byteArray);
+                    response["data"] = base64Data;
+                    response["uri"] = data.Path;
                     callback.Invoke(response);
                 }
                 else
@@ -205,6 +205,7 @@ namespace ImagePicker
 
             string base64Image = await convertToBase64(file);
             response["data"] = base64Image; // TODO: Return URI
+            response["uri"] = file.Path;
             callback.Invoke(response);
         }
 
