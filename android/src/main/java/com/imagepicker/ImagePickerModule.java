@@ -221,8 +221,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     }
 
     this.options = options;
+    this.callback = callback;
 
-    if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_CAMERA))
+    if (!permissionsCheck(currentActivity, REQUEST_PERMISSIONS_FOR_CAMERA))
     {
       return;
     }
@@ -293,8 +294,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     }
 
     this.options = options;
+    this.callback = callback;
 
-    if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_LIBRARY))
+    if (!permissionsCheck(currentActivity, REQUEST_PERMISSIONS_FOR_LIBRARY))
     {
       return;
     }
@@ -518,7 +520,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   }
 
   private boolean permissionsCheck(@NonNull final Activity activity,
-                                   @NonNull final Callback callback,
                                    @NonNull final int requestCode)
   {
     final int writePermission = ActivityCompat
