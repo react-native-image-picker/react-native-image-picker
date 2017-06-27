@@ -53,6 +53,8 @@ import static com.imagepicker.utils.MediaUtils.*;
 import static com.imagepicker.utils.MediaUtils.createNewFile;
 import static com.imagepicker.utils.MediaUtils.getResizedImage;
 
+// import android.util.Log;
+
 public class ImagePickerModule extends ReactContextBaseJavaModule
         implements ActivityEventListener
 {
@@ -366,7 +368,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     // user cancel
     if (resultCode != Activity.RESULT_OK)
     {
-      removeUselessFiles(requestCode, imageConfig);
+      // Force cleanup of the files
+      removeUselessFiles(REQUEST_LAUNCH_IMAGE_CAPTURE, imageConfig);
       responseHelper.invokeCancel(callback);
       callback = null;
       return;
@@ -418,6 +421,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         uri = cameraCaptureURI;
         updatedResultResponse(uri, imageConfig.original.getAbsolutePath());
         responseHelper.invokeResponse(callback);
+        callback = null;
+        this.options = null;
         return;
     }
 
@@ -455,6 +460,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       }
       else
       {
+        removeOriginalFile(imageConfig);
         uri = Uri.fromFile(imageConfig.resized);
         BitmapFactory.decodeFile(imageConfig.resized.getAbsolutePath(), options);
         responseHelper.putInt("width", options.outWidth);

@@ -213,6 +213,14 @@ public class MediaUtils
         }
     }
 
+    public static void removeOriginalFile(@NonNull final ImageConfig imageConfig)
+    {
+        if (imageConfig.original != null && imageConfig.original.exists())
+        {
+            imageConfig.original.delete();
+        }
+    }
+
     public static void fileScan(@Nullable final Context reactContext,
                                 @NonNull final String path)
     {
