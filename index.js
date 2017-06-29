@@ -18,13 +18,24 @@ const DEFAULT_OPTIONS = {
   }
 };
 
-module.exports = {
-  ...ImagePickerManager,
-  showImagePicker: function showImagePicker(options, callback) {
-    if (typeof options === 'function') {
-      callback = options;
-      options = {};
-    }
-    return ImagePickerManager.showImagePicker({...DEFAULT_OPTIONS, ...options}, callback)
+function _call(func, options, callback) {
+  if (typeof options === 'function') {
+    callback = options;
+    options = {};
   }
+  return ImagePickerManager[func]({ ...DEFAULT_OPTIONS, ...options }, callback);
 }
+
+module.exports = {
+  showImagePicker: function showImagePicker(options, callback) {
+    _call('showImagePicker', options, callback);
+  },
+
+  launchImageLibrary: function launchImageLibrary(options, callback) {
+    _call('launchImageLibrary', options, callback);
+  },
+
+  launchCamera: function launchCamera(options, callback) {
+    _call('launchCamera', options, callback);
+  }
+};
