@@ -1,5 +1,5 @@
 #import "ImagePickerManager.h"
-#import "RCTConvert.h"
+#import <React/RCTConvert.h>
 #import <AssetsLibrary/AssetsLibrary.h>
 #import <AVFoundation/AVFoundation.h>
 #import <Photos/Photos.h>
@@ -453,19 +453,21 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                     [fileManager removeItemAtURL:videoDestinationURL error:nil];
                 }
 
-                NSError *error = nil;
-                [fileManager moveItemAtURL:videoURL toURL:videoDestinationURL error:&error];
-                if (error) {
-                    self.callback(@[@{@"error": error.localizedFailureReason}]);
-                    return;
+                if (videoURL) { // Protect against reported crash
+                  NSError *error = nil;
+                  [fileManager moveItemAtURL:videoURL toURL:videoDestinationURL error:&error];
+                  if (error) {
+                      self.callback(@[@{@"error": error.localizedFailureReason}]);
+                      return;
+                  }
                 }
             }
-            
+
             [self.response setObject:videoDestinationURL.absoluteString forKey:@"uri"];
             if (videoRefURL.absoluteString) {
                 [self.response setObject:videoRefURL.absoluteString forKey:@"origURL"];
             }
-            
+
             NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
             if (storageOptions && [[storageOptions objectForKey:@"cameraRoll"] boolValue] == YES && self.picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
                 ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
@@ -512,7 +514,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             self.callback(@[self.response]);
         }
     };
-    
+
     dispatch_async(dispatch_get_main_queue(), ^{
         [picker dismissViewControllerAnimated:YES completion:dismissCompletionBlock];
     });

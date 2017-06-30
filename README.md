@@ -8,7 +8,7 @@ iOS | Android | Windows
 <img title="iOS" src="https://github.com/motius/react-native-image-picker/blob/master/images/ios-image.png"> | <img title="Android" src="https://github.com/motius/react-native-image-picker/blob/master/images/android-image.png"> | <img title="Android" src="https://github.com/motius/react-native-image-picker/blob/master/images/windows-image.png">
 
 #### _Before you open an issue_
-This library started as a basic bridge of the native iOS image picker, and I want to keep it that way. As such, functionality beyond what the native `UIImagePickerController` supports will not be supported here. **Multiple image selection, more control over the crop tool, and landscape support** are things missing from the native iOS functionality - **not issues with my library**. If you need these things, [react-native-image-crop-picker](https://github.com/ivpusic/react-native-image-crop-picker) might be a better choice for you.    
+This library started as a basic bridge of the native iOS image picker, and I want to keep it that way. As such, functionality beyond what the native `UIImagePickerController` supports will not be supported here. **Multiple image selection, more control over the crop tool, and landscape support** are things missing from the native iOS functionality - **not issues with my library**. If you need these things, [react-native-image-crop-picker](https://github.com/ivpusic/react-native-image-crop-picker) might be a better choice for you.   
 
 ## Table of contents
 - [Install](#install)
@@ -19,17 +19,15 @@ This library started as a basic bridge of the native iOS image picker, and I wan
 
 ## Install
 
+### NOTE: THIS PACKAGE IS NOW BUILT FOR REACT NATIVE 0.40 OR GREATER! IF YOU NEED TO SUPPORT REACT NATIVE < 0.40, YOU SHOULD INSTALL THIS PACKAGE `@0.24`
+
 `npm install react-native-image-picker@latest --save`
 
 ### Automatic Installation
 
-**React Native >= 0.29**
-`$react-native link`
+`react-native link`
 
-**React Native < 0.29**
-`$rnpm link`
-
-IMPORTANT NOTE: You'll still need to perform step 4 for iOS and step 3 for Android of the manual instructions below. `rnpm` is not supported for the UWP version for now, so please resort to the manual installation
+IMPORTANT NOTE: You'll still need to perform step 4 for iOS and steps 2, 3, and 5 for Android of the manual instructions below. `rnpm` is not supported for the UWP version for now, so please resort to the manual installation.
 
 ### Manual Installation
 
@@ -38,44 +36,116 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and step 3 for Andro
 1. In the XCode's "Project navigator", right click on your project's Libraries folder ➜ `Add Files to <...>`
 2. Go to `node_modules` ➜ `react-native-image-picker` ➜ `ios` ➜ select `RNImagePicker.xcodeproj`
 3. Add `RNImagePicker.a` to `Build Phases -> Link Binary With Libraries`
-4. For iOS 10+, Add the `NSPhotoLibraryUsageDescription`, `NSCameraUsageDescription`, and `NSMicrophoneUsageDescription` (if allowing video) keys to your `Info.plist` with strings describing why your app needs these permissions
+4. For iOS 10+, Add the `NSPhotoLibraryUsageDescription`, `NSCameraUsageDescription`, and `NSMicrophoneUsageDescription` (if allowing video) keys to your `Info.plist` with strings describing why your app needs these permissions. **Note: You will get a SIGABRT crash if you don't complete this step**
 5. Compile and have fun
 
 #### Android
 1. Add the following lines to `android/settings.gradle`:
-
     ```gradle
     include ':react-native-image-picker'
     project(':react-native-image-picker').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-image-picker/android')
     ```
-2. Add the compile line to the dependencies in `android/app/build.gradle`:
-
+    
+2. Update the android build tools version to `2.2.+` in `android/build.gradle`:
+    ```gradle
+    buildscript {
+        ...
+        dependencies {
+            classpath 'com.android.tools.build:gradle:2.2.+' // <- USE 2.2.+ version
+        }
+        ...
+    }
+    ...
+    ``` 
+    
+3. Update the gradle version to `2.14.1` in `android/gradle/wrapper/gradle-wrapper.properties`:
+    ```
+    ...
+    distributionUrl=https\://services.gradle.org/distributions/gradle-2.14.1-all.zip
+    ```
+    
+4. Add the compile line to the dependencies in `android/app/build.gradle`:
     ```gradle
     dependencies {
         compile project(':react-native-image-picker')
     }
     ```
-3. Add the required permissions in `AndroidManifest.xml`:
-
+    
+5. Add the required permissions in `AndroidManifest.xml`:
     ```xml
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     ```
-4. Add the import and link the package in `MainApplication.java`:
-
+    
+6. Add the import and link the package in `MainApplication.java`:
     ```java
     import com.imagepicker.ImagePickerPackage; // <-- add this import
-    
+
     public class MainApplication extends Application implements ReactApplication {
         @Override
         protected List<ReactPackage> getPackages() {
             return Arrays.<ReactPackage>asList(
                 new MainReactPackage(),
                 new ImagePickerPackage() // <-- add this line
+                // OR if you want to customize dialog style
+                new ImagePickerPackage(R.style.my_dialog_style)
             );
         }
     }
     ```
+
+##### Android (Optional)
+
+Customization settings of dialog `android/app/res/values/themes.xml`:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="DefaultExplainingPermissionsTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <!-- Used for the buttons -->
+        <item name="colorAccent">@color/your_color</item>
+
+        <!-- Used for the title and text -->
+        <item name="android:textColorPrimary">@color/your_color</item>
+
+        <!-- Used for the background -->
+        <item name="android:background">@color/your_color</item>
+    </style>
+<resources>
+```
+
+If `MainActivity` is not instance of `ReactActivity`, you will need to implement `OnImagePickerPermissionsCallback` to `MainActivity`:
+```java
+import com.imagepicker.permissions.OnImagePickerPermissionsCallback; // <- add this import
+import com.facebook.react.modules.core.PermissionListener; // <- add this import
+
+public class MainActivity extends YourActivity implements OnImagePickerPermissionsCallback {
+  private PermissionListener listener; // <- add this attribute
+
+  // Your methods here
+
+  // Copy from here
+
+  @Override
+  public void setPermissionListener(PermissionListener listener)
+  {
+    this.listener = listener;
+  }
+
+  @Override
+  public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
+  {
+    if (listener != null)
+    {
+      listener.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+  }
+
+  // To here
+}
+```
+
+This code allows to pass result of request permissions to native part.
 
 #### UWP
 
@@ -100,13 +170,11 @@ public override List<IReactPackage> Packages
             new ImagePickerPackage(),
         };
     }
-}
 ```
 
 ## Usage
 
 ```javascript
-var Platform = require('react-native').Platform;
 var ImagePicker = require('react-native-image-picker');
 
 // More info on all the options is below in the README...just some common use cases shown here
@@ -138,15 +206,10 @@ ImagePicker.showImagePicker(options, (response) => {
     console.log('User tapped custom button: ', response.customButton);
   }
   else {
-    // You can display the image using either data...
-    const source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
+    let source = { uri: response.uri };
 
-    // or a reference to the platform specific asset location
-    if (Platform.OS === 'ios') {
-      const source = {uri: response.uri.replace('file://', ''), isStatic: true};
-    } else {
-      const source = {uri: response.uri, isStatic: true};
-    }
+    // You can also display the image using data:
+    // let source = { uri: 'data:image/jpeg;base64,' + response.data };
 
     this.setState({
       avatarSource: source
@@ -198,11 +261,15 @@ durationLimit | OK | OK | OK | Max video recording time, in seconds
 rotation | - | OK | - | Photos only, 0 to 360 degrees of rotation
 allowsEditing | OK | - | N/A | bool - enables built in iOS functionality to resize the image after selection
 noData | OK | OK | OK | If true, disables the base64 `data` field from being generated (greatly improves performance on large photos)
-storageOptions | OK | OK | - | If this key is provided, the image will get saved in the Documents directory on iOS, and the Pictures directory on Android (rather than a temporary directory)
-storageOptions.skipBackup | OK | - | - |If true, the photo will NOT be backed up to iCloud
-storageOptions.path | OK | - | - | If set, will save image at /Documents/[path] rather than the root
-storageOptions.cameraRoll | OK | - | - | If true, the cropped photo will be saved to the iOS Camera Roll.
+storageOptions | OK | OK | - | If this key is provided, the image will be saved in your app's `Documents` directory on iOS, or your app's `Pictures` directory on Android (rather than a temporary directory)
+storageOptions.skipBackup | OK | - | - | If true, the photo will NOT be backed up to iCloud
+storageOptions.path | OK | - | - | If set, will save the image at `Documents/[path]/` rather than the root `Documents`
+storageOptions.cameraRoll | OK | OK | - | If true, the cropped photo will be saved to the iOS Camera Roll or Android DCIM folder.
 storageOptions.waitUntilSaved | OK | - | - | If true, will delay the response callback until after the photo/video was saved to the Camera Roll. If the photo or video was just taken, then the file name and timestamp fields are only provided in the response object when this is true.
+permissionDenied.title | - | OK | - | Title of explaining permissions dialog. By default `Permission denied`.
+permissionDenied.text | - | OK | - | Message of explaining permissions dialog. By default `To be able to take pictures with your camera and choose images from your library.`.
+permissionDenied.reTryTitle | - | OK | - | Title of re-try button. By default `re-try`
+permissionDenied.okTitle | - | OK | - | Title of ok button. By default `I'm sure`
 
 
 \* The camera interface allows to switch cameras

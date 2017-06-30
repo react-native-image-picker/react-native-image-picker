@@ -7,7 +7,6 @@ import {
   PixelRatio,
   TouchableOpacity,
   Image,
-  Platform
 } from 'react-native';
 
 import ImagePicker from 'react-native-image-picker';
@@ -27,7 +26,6 @@ export default class App extends React.Component {
       storageOptions: {
         skipBackup: true
       },
-      noData: true,
     };
 
     ImagePicker.showImagePicker(options, (response) => {
@@ -43,7 +41,7 @@ export default class App extends React.Component {
         console.log('User tapped custom button: ', response.customButton);
       }
       else {
-        var source;
+        let source = { uri: response.uri };
 
         // You can display the image using either:
         source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
