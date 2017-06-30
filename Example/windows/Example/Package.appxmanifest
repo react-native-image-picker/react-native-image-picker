@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" IgnorableNamespaces="uap mp">
-  <Identity Name="05b17e32-385b-430a-bb90-94a995500f48" Publisher="CN=publisher" Version="1.0.0.0" />
-  <mp:PhoneIdentity PhoneProductId="05b17e32-385b-430a-bb90-94a995500f48" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
+  <Identity Name="0046a6f7-136f-400b-9ae1-5cac839e7517" Publisher="CN=publisher" Version="1.0.0.0" />
+  <mp:PhoneIdentity PhoneProductId="0046a6f7-136f-400b-9ae1-5cac839e7517" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>Example</DisplayName>
     <PublisherDisplayName>React Native for UWP</PublisherDisplayName>

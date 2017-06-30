@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "Facebook.CSSLayout": "2.0.1-pre",
     "Microsoft.NETCore.UniversalWindowsPlatform": "5.2.2"
   },
   "frameworks": {

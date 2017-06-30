@@ -151,9 +151,11 @@ This code allows to pass result of request permissions to native part.
 
 1. Using Visual Studio, right click on your solution and select Add -> Existing Project... Find the project in `../node_modules/react-native-image-picker/windows/ImagePickerLibrary/ImagePickerLibrary.csproj` .
 
-2. In your application project, right click on References -> Add... and mark the checkbox for `ImagePickerLibrary`.
+2. Right click in your application project -> Add -> Reference and mark the checkbox for `ImagePickerLibrary`.
 
-3. In `MainPage.cs`, add the `using ImagePicker;` directive and then add a new instance of the package to the `Packages` property, like this:
+3. Right click in your application project -> Properties -> Package Manifest -> Capabilities, and mark 'Pictures Library'.
+
+4. In `MainPage.cs`, add the `using ImagePicker;` directive and then add a new instance of the package to the `Packages` property, like this:
 
 ```
 using ImagePicker;
