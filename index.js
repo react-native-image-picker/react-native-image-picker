@@ -14,6 +14,7 @@ const DEFAULT_OPTIONS = {
     title: 'Permission denied',
     text: 'To be able to take pictures with your camera and choose images from your library.',
     reTryTitle: 're-try',
+    settingTitle: 'Open Settins',
     okTitle: 'I\'m sure',
   }
 };

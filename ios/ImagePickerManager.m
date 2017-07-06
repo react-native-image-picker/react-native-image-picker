@@ -200,21 +200,23 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     if (target == RNImagePickerTargetCamera) {
         [self checkCameraPermissions:^(BOOL granted) {
             if (!granted) {
-                self.callback(@[@{@"error": @"Camera permissions not granted"}]);
-                return;
+                if(![self showPermissionAlert]){
+                    self.callback(@[@{@"error": @"Camera permissions not granted"}]);
+                }
+            }else{
+                showPickerViewController();
             }
-
-            showPickerViewController();
         }];
     }
     else { // RNImagePickerTargetLibrarySingleImage
         [self checkPhotosPermissions:^(BOOL granted) {
             if (!granted) {
-                self.callback(@[@{@"error": @"Photo library permissions not granted"}]);
-                return;
+                if(![self showPermissionAlert]){
+                    self.callback(@[@{@"error": @"Photo library permissions not granted"}]);
+                }
+            }else{
+                showPickerViewController();
             }
-
-            showPickerViewController();
         }];
     }
 }
@@ -689,6 +691,33 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         NSLog(@"Error setting skip backup attribute: file not found");
         return @NO;
     }
+}
+
+-(BOOL)showPermissionAlert{
+    NSDictionary *permissionDenied = [self.options objectForKey:@"permissionDenied"];
+    if(!permissionDenied){
+        return NO;
+    }
+    NSString *title = [permissionDenied objectForKey:@"title"];
+    NSString *text = [permissionDenied objectForKey:@"text"];
+    NSString *settingTitle = [permissionDenied objectForKey:@"settingTitle"];
+    NSString *okTitle = [permissionDenied objectForKey:@"okTitle"];
+
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:title message:text preferredStyle:UIAlertControllerStyleAlert];
+
+    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:okTitle style:UIAlertActionStyleCancel handler:nil];
+    UIAlertAction *openSettingAction = [UIAlertAction actionWithTitle:settingTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        if([[UIApplication sharedApplication] canOpenURL: [NSURL URLWithString:UIApplicationOpenSettingsURLString]]){
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
+        }else{
+            NSLog(@"The application cannot open Settings for unknow reasons");
+        }
+    }];
+    [alert addAction:cancelAction];
+    [alert addAction:openSettingAction];
+
+    [[[UIApplication sharedApplication].delegate.window rootViewController] presentViewController:alert animated:YES completion:nil];
+    return YES;
 }
 
 #pragma mark - Class Methods

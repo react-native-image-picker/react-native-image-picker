@@ -45,7 +45,7 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and steps 2, 3, and 
     include ':react-native-image-picker'
     project(':react-native-image-picker').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-image-picker/android')
     ```
-    
+
 2. Update the android build tools version to `2.2.+` in `android/build.gradle`:
     ```gradle
     buildscript {
@@ -56,27 +56,27 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and steps 2, 3, and 
         ...
     }
     ...
-    ``` 
-    
+    ```
+
 3. Update the gradle version to `2.14.1` in `android/gradle/wrapper/gradle-wrapper.properties`:
     ```
     ...
     distributionUrl=https\://services.gradle.org/distributions/gradle-2.14.1-all.zip
     ```
-    
+
 4. Add the compile line to the dependencies in `android/app/build.gradle`:
     ```gradle
     dependencies {
         compile project(':react-native-image-picker')
     }
     ```
-    
+
 5. Add the required permissions in `AndroidManifest.xml`:
     ```xml
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     ```
-    
+
 6. Add the import and link the package in `MainApplication.java`:
     ```java
     import com.imagepicker.ImagePickerPackage; // <-- add this import
@@ -240,10 +240,11 @@ storageOptions.skipBackup | OK | - | If true, the photo will NOT be backed up to
 storageOptions.path | OK | - | If set, will save the image at `Documents/[path]/` rather than the root `Documents`
 storageOptions.cameraRoll | OK | OK | If true, the cropped photo will be saved to the iOS Camera Roll or Android DCIM folder.
 storageOptions.waitUntilSaved | OK | - | If true, will delay the response callback until after the photo/video was saved to the Camera Roll. If the photo or video was just taken, then the file name and timestamp fields are only provided in the response object when this is true.
-permissionDenied.title | - | OK | Title of explaining permissions dialog. By default `Permission denied`.
-permissionDenied.text | - | OK | Message of explaining permissions dialog. By default `To be able to take pictures with your camera and choose images from your library.`.
+permissionDenied.title | OK | OK | Title of explaining permissions dialog. By default `Permission denied`.
+permissionDenied.text | OK | OK | Message of explaining permissions dialog. By default `To be able to take pictures with your camera and choose images from your library.`.
 permissionDenied.reTryTitle | - | OK | Title of re-try button. By default `re-try`
-permissionDenied.okTitle | - | OK | Title of ok button. By default `I'm sure`
+permissionDenied.settingTitle | OK | - | Title of open-settings button. By default `Open Settings`
+permissionDenied.okTitle | OK | OK | Title of ok button. By default `I'm sure`
 
 ### The Response Object
 
