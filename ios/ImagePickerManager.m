@@ -414,6 +414,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                                 PHAsset *capturedAsset = [PHAsset fetchAssetsWithALAssetURLs:@[assetURL] options:nil].lastObject;
                                 NSString *originalFilename = [self originalFilenameForAsset:capturedAsset assetType:PHAssetResourceTypePhoto];
                                 self.response[@"fileName"] = originalFilename ?: [NSNull null];
+                                self.response[@"origURL"] = [assetURL absoluteString];
                                 // This implementation will never have a location for the captured image, it needs to be added manually with CoreLocation code here.
                                 if (capturedAsset.creationDate) {
                                     self.response[@"timestamp"] = [[ImagePickerManager ISO8601DateFormatter] stringFromDate:capturedAsset.creationDate];
