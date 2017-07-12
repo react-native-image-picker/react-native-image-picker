@@ -22,10 +22,17 @@ const DEFAULT_OPTIONS = {
 module.exports = {
   ...ImagePickerManager,
   showImagePicker: function showImagePicker(options, callback) {
+    if(this.hasShow){
+        return;
+    }
+    this.hasShow = true;
     if (typeof options === 'function') {
       callback = options;
       options = {};
     }
-    return ImagePickerManager.showImagePicker({...DEFAULT_OPTIONS, ...options}, callback)
+    return ImagePickerManager.showImagePicker({...DEFAULT_OPTIONS, ...options}, (response)=>{
+        this.hasShowed = false;
+        callback&&callback(response);
+    })
   }
 }
