@@ -87,7 +87,9 @@ public class UI
             public void onCancel(@NonNull final DialogInterface dialog)
             {
                 callback.onCancel(reference.get());
-                dialog.dismiss();
+                if(dialog != null){
+                    dialog.dismiss();
+                }
             }
         });
 

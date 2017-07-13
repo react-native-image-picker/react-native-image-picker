@@ -73,6 +73,10 @@ public class ResponseHelper
 
     public void invokeResponse(@NonNull final Callback callback)
     {
-        callback.invoke(response);
+        try{
+            callback.invoke(response);
+        }catch (RuntimeException e){
+            //java.lang.RuntimeException: Illegal callback invocation from native module. This callback type only permits a single invocation from native code.
+        }
     }
 }
