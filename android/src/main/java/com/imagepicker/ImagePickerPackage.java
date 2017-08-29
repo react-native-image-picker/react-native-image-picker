@@ -31,7 +31,7 @@ public class ImagePickerPackage implements ReactPackage {
     return Arrays.<NativeModule>asList(new ImagePickerModule(reactContext, dialogThemeId));
   }
 
-  @Override
+  // Deprecated RN 0.47
   public List<Class<? extends JavaScriptModule>> createJSModules() {
     return Collections.emptyList();
   }
