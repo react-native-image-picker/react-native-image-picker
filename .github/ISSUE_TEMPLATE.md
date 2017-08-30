@@ -1,4 +1,4 @@
-* Fixedse read the following carefully before opening a new issue.
+* Please read the following carefully before opening a new issue.
 Your issue may be closed if it does not provide the information required by this template.
 
 --- Delete everything above this line ---
