@@ -250,7 +250,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       final File original = createNewFile(reactContext, this.options, false);
       imageConfig = imageConfig.withOriginalFile(original);
 
-      cameraCaptureURI = RealPathUtil.compatUriFromFile(reactContext, imageConfig.original);
+      if (imageConfig.original != null) {
+        cameraCaptureURI = RealPathUtil.compatUriFromFile(reactContext, imageConfig.original);
+      }else {
+        responseHelper.invokeError(callback, "Couldn't get file path for photo");
+        return;
+      }
       if (cameraCaptureURI == null)
       {
         responseHelper.invokeError(callback, "Couldn't get file path for photo");
