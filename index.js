@@ -1,6 +1,6 @@
 'use strict'
 
-const { NativeModules } = require('react-native');
+const { NativeModules, Platform } = require('react-native');
 const { ImagePickerManager } = NativeModules;
 
 const DEFAULT_OPTIONS = {
@@ -26,5 +26,16 @@ module.exports = {
       options = {};
     }
     return ImagePickerManager.showImagePicker({...DEFAULT_OPTIONS, ...options}, callback)
-  }
+  },
+  showImageChooser: function showImageChooser(options, callback) {
+	if (Platform.OS !== 'android') {
+	  console.warn('showImageChooser is available only on Android');
+	  return;
+	}
+    if (typeof options === 'function') {
+      callback = options;
+      options = {};
+    }
+    return ImagePickerManager.showImageChooser({...DEFAULT_OPTIONS, ...options}, callback)
+  } 
 }

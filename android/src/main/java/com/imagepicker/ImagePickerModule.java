@@ -3,11 +3,14 @@ package com.imagepicker;
 import android.Manifest;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ResolveInfo;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -32,6 +35,7 @@ import com.imagepicker.media.ImageConfig;
 import com.imagepicker.permissions.PermissionUtils;
 import com.imagepicker.permissions.OnImagePickerPermissionsCallback;
 import com.imagepicker.utils.MediaUtils.ReadExifResult;
+import com.imagepicker.utils.ReadableMapUtils;
 import com.imagepicker.utils.RealPathUtil;
 import com.imagepicker.utils.UI;
 
@@ -44,6 +48,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.facebook.react.modules.core.PermissionListener;
 
@@ -59,6 +65,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   public static final int REQUEST_LAUNCH_IMAGE_LIBRARY    = 13002;
   public static final int REQUEST_LAUNCH_VIDEO_LIBRARY    = 13003;
   public static final int REQUEST_LAUNCH_VIDEO_CAPTURE    = 13004;
+  public static final int REQUEST_LAUNCH_IMAGE_CHOOSER    = 13005;
   public static final int REQUEST_PERMISSIONS_FOR_CAMERA  = 14001;
   public static final int REQUEST_PERMISSIONS_FOR_LIBRARY = 14002;
 
@@ -191,6 +198,90 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       }
     });
     dialog.show();
+  }
+
+  @ReactMethod
+  public void showImageChooser(final ReadableMap options, final Callback callback) {
+    Activity currentActivity = getCurrentActivity();
+
+    if (currentActivity == null)
+    {
+      responseHelper.invokeError(callback, "can't find current Activity");
+      return;
+    }
+
+    this.callback = callback;
+    this.options = options;
+    imageConfig = new ImageConfig(null, null, 0, 0, 100, 0, false);
+
+    parseOptions(this.options);
+
+    // Prepare camera capture URI
+    final File original = createNewFile(reactContext, this.options, false);
+    imageConfig = imageConfig.withOriginalFile(original);
+    cameraCaptureURI = RealPathUtil.compatUriFromFile(reactContext, imageConfig.original);
+    if (cameraCaptureURI == null)
+    {
+      responseHelper.invokeError(callback, "Couldn't get file path for photo");
+      return;
+    }
+
+    List<Intent> allIntents = new ArrayList<>();
+    PackageManager packageManager = currentActivity.getPackageManager();
+
+    // collect all camera intents
+    if (permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_CAMERA)) {
+      Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+      List<ResolveInfo> listCam = packageManager.queryIntentActivities(captureIntent, 0);
+      for (ResolveInfo res : listCam) {
+        Intent intent = new Intent(captureIntent);
+        intent.setComponent(new ComponentName(res.activityInfo.packageName, res.activityInfo.name));
+        intent.setPackage(res.activityInfo.packageName);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, cameraCaptureURI);
+        allIntents.add(intent);
+      }
+    }
+
+    // collect all gallery intents
+    Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT);
+    galleryIntent.setType("image/*");
+    List<ResolveInfo> listGallery = packageManager.queryIntentActivities(galleryIntent, 0);
+    for (ResolveInfo res : listGallery) {
+      Intent intent = new Intent(galleryIntent);
+      intent.setComponent(new ComponentName(res.activityInfo.packageName, res.activityInfo.name));
+      intent.setPackage(res.activityInfo.packageName);
+      allIntents.add(intent);
+    }
+
+    // the main intent is the last in the  list (fucking android) so pickup the useless one
+    Intent mainIntent = allIntents.get(allIntents.size() - 1);
+    for (Intent intent : allIntents) {
+      if (intent.getComponent().getClassName().equals("com.android.documentsui.DocumentsActivity")) {
+        mainIntent = intent;
+        break;
+      }
+    }
+
+    allIntents.remove(mainIntent);
+
+    // Create a chooser from the main  intent
+    final String chooserTitle = (ReadableMapUtils.hasAndNotEmptyString(options, "title")) ? options.getString("title") : "";
+    Intent chooserIntent = Intent.createChooser(mainIntent, chooserTitle);
+
+    // Add all other intents
+    chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, allIntents.toArray(new Parcelable[allIntents.size()]));
+
+    this.callback = callback;
+
+    try
+    {
+      currentActivity.startActivityForResult(chooserIntent, REQUEST_LAUNCH_IMAGE_CHOOSER);
+    }
+    catch (ActivityNotFoundException e)
+    {
+      e.printStackTrace();
+      responseHelper.invokeError(callback, "Cannot launch image chooser");
+    }
   }
 
   public void doOnCancel()
@@ -354,6 +445,15 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       return;
     }
 
+    // map image chooser request code to the correct one
+    if (requestCode == REQUEST_LAUNCH_IMAGE_CHOOSER) {
+      if (data == null || MediaStore.ACTION_IMAGE_CAPTURE.equals(data.getAction())) {
+        requestCode = REQUEST_LAUNCH_IMAGE_CAPTURE;
+      } else {
+        requestCode = REQUEST_LAUNCH_IMAGE_LIBRARY;
+      }
+    }
+
     Uri uri = null;
     switch (requestCode)
     {
@@ -501,7 +601,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   {
     return callback == null || (cameraCaptureURI == null && requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE)
             || (requestCode != REQUEST_LAUNCH_IMAGE_CAPTURE && requestCode != REQUEST_LAUNCH_IMAGE_LIBRARY
-            && requestCode != REQUEST_LAUNCH_VIDEO_LIBRARY && requestCode != REQUEST_LAUNCH_VIDEO_CAPTURE);
+            && requestCode != REQUEST_LAUNCH_VIDEO_LIBRARY && requestCode != REQUEST_LAUNCH_VIDEO_CAPTURE
+            && requestCode != REQUEST_LAUNCH_IMAGE_CHOOSER);
   }
 
   private void updatedResultResponse(@Nullable final Uri uri,
