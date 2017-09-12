@@ -70,6 +70,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   protected Uri cameraCaptureURI;
   private Boolean noData = false;
   private Boolean pickVideo = false;
+  private Boolean pickMixed = false;
   private ImageConfig imageConfig = new ImageConfig(null, null, 0, 0, 100, 0, false);
 
   @Deprecated
@@ -232,6 +233,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     int requestCode;
     Intent cameraIntent;
 
+
     if (pickVideo)
     {
       requestCode = REQUEST_LAUNCH_VIDEO_CAPTURE;
@@ -303,7 +305,16 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
     int requestCode;
     Intent libraryIntent;
-    if (pickVideo)
+    if (pickMixed)
+    {
+      requestCode = REQUEST_LAUNCH_VIDEO_LIBRARY;
+      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+        libraryIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+      } else {
+        libraryIntent = new Intent(Intent.ACTION_PICK);
+      }
+      libraryIntent.setType("*/*");
+    } else if (pickVideo)
     {
       requestCode = REQUEST_LAUNCH_VIDEO_LIBRARY;
       if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
@@ -695,6 +706,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       noData = options.getBoolean("noData");
     }
     imageConfig = imageConfig.updateFromOptions(options);
+    pickMixed = false;
+    if (options.hasKey("mediaType") && options.getString("mediaType").equals("mixed")) {
+      pickMixed = true;
+    }
     pickVideo = false;
     if (options.hasKey("mediaType") && options.getString("mediaType").equals("video")) {
       pickVideo = true;
