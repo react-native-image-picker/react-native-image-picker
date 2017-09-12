@@ -79,23 +79,13 @@ public class MediaUtils
     public static @NonNull ImageConfig getResizedImage(@NonNull final Context context,
                                                        @NonNull final ReadableMap options,
                                                        @NonNull final ImageConfig imageConfig,
-                                                       int initialWidth,
-                                                       int initialHeight,
+                                                       final int initialWidth,
+                                                       final int initialHeight,
                                                        final int requestCode)
     {
         BitmapFactory.Options imageOptions = new BitmapFactory.Options();
         imageOptions.inScaled = false;
-        imageOptions.inSampleSize = 1;
-
-        if (imageConfig.maxWidth != 0 || imageConfig.maxHeight != 0) {
-            while ((imageConfig.maxWidth == 0 || initialWidth > 2 * imageConfig.maxWidth) &&
-                   (imageConfig.maxHeight == 0 || initialHeight > 2 * imageConfig.maxHeight)) {
-                imageOptions.inSampleSize *= 2;
-                initialHeight /= 2;
-                initialWidth /= 2;
-            }
-        }
-
+        // FIXME: OOM here
         Bitmap photo = BitmapFactory.decodeFile(imageConfig.original.getAbsolutePath(), imageOptions);
 
         if (photo == null)
