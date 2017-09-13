@@ -5,10 +5,10 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/marcshilling/react-native-image-picker.git"
+    "url": "https://github.com/erealmsoft/react-native-image-picker.git"
   },
   "nativePackage": true,
-  "author": "Marc Shilling (marcshilling)",
+  "author": "Marc Shilling (erealmsoft)",
   "contributors": [
     {
       "name": "Matheus Santos",
@@ -32,7 +32,7 @@
     "picker"
   ],
   "scripts": {
-    "prepare": "rm -rf android/build Example/android/build Example/android/app/build node_modules"
+    
   },
   "types": "./index.d.ts"
 }
