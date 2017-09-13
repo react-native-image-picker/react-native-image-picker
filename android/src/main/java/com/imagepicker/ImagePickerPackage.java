@@ -26,7 +26,6 @@ public class ImagePickerPackage implements ReactPackage {
     this.dialogThemeId = dialogThemeId;
   }
 
-  @Override
   public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
     return Arrays.<NativeModule>asList(new ImagePickerModule(reactContext, dialogThemeId));
   }
