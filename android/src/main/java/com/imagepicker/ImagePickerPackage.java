@@ -26,13 +26,9 @@ public class ImagePickerPackage implements ReactPackage {
     this.dialogThemeId = dialogThemeId;
   }
 
+  @Override
   public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
     return Arrays.<NativeModule>asList(new ImagePickerModule(reactContext, dialogThemeId));
-  }
-
-  // Deprecated RN 0.47
-  public List<Class<? extends JavaScriptModule>> createJSModules() {
-    return Collections.emptyList();
   }
 
   @Override
