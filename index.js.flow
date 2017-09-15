@@ -50,7 +50,11 @@ export type StorageOptions = {
     waitUntilSaved?: boolean;
 }
 
-declare export function showImagePicker(options: Options, callback: (response: Response) => void): void;
-declare export function launchCamera(options: Options, callback: (response: Response) => void): void;
-declare export function launchImageLibrary(options: Options, callback: (response: Response) => void): void;
+declare export function showImagePicker(options: ?Options, callback: (response: Response) => any): void;
+declare export function showImagePicker(callback: (response: Response) => any): void;
 
+declare export function launchCamera(options: ?Options, callback: (response: Response) => any): void;
+declare export function launchCamera(callback: (response: Response) => any): void;
+
+declare export function launchImageLibrary(options: ?Options, callback: (response: Response) => any): void;
+declare export function launchImageLibrary(callback: (response: Response) => any): void;
