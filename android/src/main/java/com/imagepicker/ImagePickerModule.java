@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ResolveInfo;
+import android.database.Cursor;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
@@ -20,6 +21,7 @@ import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Patterns;
+import android.util.Log;
 import android.webkit.MimeTypeMap;
 import android.content.pm.PackageManager;
 
@@ -31,10 +33,12 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.imagepicker.media.ImageConfig;
+import com.imagepicker.media.VideoConfig;
 import com.imagepicker.permissions.PermissionUtils;
 import com.imagepicker.permissions.OnImagePickerPermissionsCallback;
 import com.imagepicker.utils.MediaUtils.ReadExifResult;
 import com.imagepicker.utils.RealPathUtil;
+import com.imagepicker.media.LastFile;
 import com.imagepicker.utils.UI;
 
 import java.io.ByteArrayOutputStream;
@@ -71,11 +75,15 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   protected Callback callback;
   private ReadableMap options;
   protected Uri cameraCaptureURI;
+  protected Uri videoCaptureURI;
   private Boolean noData = false;
   private Boolean pickVideo = false;
+  private Boolean noGallery = false;
   private ImageConfig imageConfig = new ImageConfig(null, null, 0, 0, 100, 0, false);
+  private VideoConfig videoConfig = new VideoConfig(null);
+  private LastFile lastGalleryFile = null;
 
-  @Deprecated
+    @Deprecated
   private int videoQuality = 1;
 
   @Deprecated
@@ -149,6 +157,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     this.callback = callback;
     this.options = options;
     imageConfig = new ImageConfig(null, null, 0, 0, 100, 0, false);
+    videoConfig = new VideoConfig(null);
 
     final AlertDialog dialog = UI.chooseDialog(this, options, new UI.OnAction()
     {
@@ -234,19 +243,40 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
     int requestCode;
     Intent cameraIntent;
+    lastGalleryFile = null;
 
     if (pickVideo)
     {
+      if(noGallery)
+        lastGalleryFile = findLastSavedFile("video");
       requestCode = REQUEST_LAUNCH_VIDEO_CAPTURE;
       cameraIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+
+      final File original = createNewVideoFile(reactContext);
+      videoConfig = videoConfig.withOriginalFile(original);
+
+      if(videoConfig.original != null)
+          videoCaptureURI = RealPathUtil.compatUriFromFile(reactContext, videoConfig.original);
+      else{
+          responseHelper.invokeError(callback, "Couldn't get file path for video");
+          return;
+      }
+
+      if(videoCaptureURI == null){
+          responseHelper.invokeError(callback, "Couldn't get file path for video");
+      }
+
       cameraIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, videoQuality);
       if (videoDurationLimit > 0)
       {
         cameraIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, videoDurationLimit);
       }
+      cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, videoCaptureURI);
     }
     else
     {
+      if(noGallery)
+        lastGalleryFile = findLastSavedFile("image");
       requestCode = REQUEST_LAUNCH_IMAGE_CAPTURE;
       cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
@@ -274,18 +304,19 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     }
 
     this.callback = callback;
-
+    currentActivity.setResult(Activity.RESULT_OK, cameraIntent);
     // Workaround for Android bug.
     // grantUriPermission also needed for KITKAT,
     // see https://code.google.com/p/android/issues/detail?id=76683
     if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
-      List<ResolveInfo> resInfoList = reactContext.getPackageManager().queryIntentActivities(cameraIntent, PackageManager.MATCH_DEFAULT_ONLY);
-      for (ResolveInfo resolveInfo : resInfoList) {
-        String packageName = resolveInfo.activityInfo.packageName;
-        reactContext.grantUriPermission(packageName, cameraCaptureURI, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
-      }
-    }
+        List<ResolveInfo> resInfoList = reactContext.getPackageManager().queryIntentActivities(cameraIntent, PackageManager.MATCH_DEFAULT_ONLY);
+        for (ResolveInfo resolveInfo : resInfoList) {
+            String packageName = resolveInfo.activityInfo.packageName;
+            reactContext.grantUriPermission(packageName, cameraCaptureURI, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            reactContext.grantUriPermission(packageName, videoCaptureURI, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
+        }
+    }
     try
     {
       currentActivity.startActivityForResult(cameraIntent, requestCode);
@@ -377,6 +408,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     switch (requestCode)
     {
       case REQUEST_LAUNCH_IMAGE_CAPTURE:
+        if(noGallery)
+          removeLastSavedPicture();
         uri = cameraCaptureURI;
         break;
 
@@ -414,10 +447,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         return;
 
       case REQUEST_LAUNCH_VIDEO_CAPTURE:
-        final String path = getRealPathFromURI(data.getData());
-        responseHelper.putString("uri", data.getData().toString());
-        responseHelper.putString("path", path);
-        fileScan(reactContext, path);
+        if(noGallery)
+          removeLastSavedVideo();
+        uri = Uri.fromFile(videoConfig.getActualFile());
+        updatedResultResponse(uri, videoConfig.getActualFile().getAbsolutePath());
+        fileScan(reactContext, videoConfig.original.getAbsolutePath());
         responseHelper.invokeResponse(callback);
         callback = null;
         return;
@@ -720,5 +754,109 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     if (options.hasKey("durationLimit")) {
       videoDurationLimit = options.getInt("durationLimit");
     }
+    if(options.hasKey("noGallery"))
+      noGallery = options.getBoolean("noGallery");
   }
+
+  private void removeLastSavedPicture(){
+    LastFile currentFile = findLastSavedFile("image");
+    File createdFile = new File(imageConfig.getActualFile().getAbsolutePath());
+    if(currentFile != null) {
+      if (createdFile.exists() && lastGalleryFile != null) {
+        if (currentFile.notLastFile(lastGalleryFile))
+          removeGalleryFile(currentFile.getFile());
+      } else {
+        cameraCaptureURI = moveFile(currentFile.getPath(), reactContext.getExternalCacheDir().getPath());
+      }
+    }
+  }
+
+  private void removeLastSavedVideo(){
+    LastFile currentFile = findLastSavedFile("video");
+    File createdFile = new File(videoConfig.getActualFile().getAbsolutePath());
+    if(currentFile != null) {
+      if (createdFile.exists() && lastGalleryFile != null) {
+        if (currentFile.notLastFile(lastGalleryFile))
+          removeGalleryFile(currentFile.getFile());
+      } else {
+        videoCaptureURI = moveFile(currentFile.getPath(), reactContext.getExternalCacheDir().getPath());
+      }
+    }
+  }
+
+  private LastFile findLastSavedFile(String option){
+    String[] projection = null;
+    Uri uri = null;
+
+    if(option.equals("image")) {
+      projection = new String[]{MediaStore.Images.ImageColumns.DATE_TAKEN, MediaStore.Images.ImageColumns.DATA,
+                                MediaStore.Images.ImageColumns._ID, MediaStore.Images.ImageColumns.SIZE};
+      uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+    } else if(option.equals("video")) {
+      projection = new String[]{MediaStore.Video.VideoColumns.DATE_TAKEN, MediaStore.Video.VideoColumns.DATA,
+                                MediaStore.Video.VideoColumns._ID, MediaStore.Video.VideoColumns.SIZE};
+      uri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+    } else {
+      return null;
+    }
+
+    Cursor cursor = null;
+
+    if(uri == null && projection == null){
+      return null;
+    }
+
+    cursor = reactContext.getContentResolver().query(uri, projection, null, null, null);
+
+
+    if(cursor != null && cursor.moveToLast()){
+      return new LastFile(cursor.getInt(2), cursor.getLong(3), cursor.getString(1));
+    }
+
+    return null;
+  }
+
+  private Uri moveFile(String inputPath, String outputPath){
+    InputStream input = null;
+    OutputStream output = null;
+
+    File inputFile = new File(inputPath);
+    try{
+      File outputDirectory = new File(outputPath);
+      if(!outputDirectory.exists())
+        outputDirectory.mkdirs();
+
+      input = new FileInputStream(inputPath);
+      output = new FileOutputStream(outputPath + inputFile.getName());
+
+      byte[] buffer = new byte[1024];
+      int read;
+      while((read = input.read(buffer)) != -1){
+        output.write(buffer, 0, read);
+      }
+      input.close();
+      input = null;
+
+      output.flush();
+      output.close();
+      output = null;
+
+      removeGalleryFile(new File(inputPath));
+    } catch (FileNotFoundException ex){
+      Log.e("imagepicker", ex.getMessage());
+      return null;
+    } catch(Exception ex){
+      Log.e("imagepicker", ex.getMessage());
+      return null;
+    }
+    return Uri.fromFile(new File(outputPath + inputFile.getName()));
+  }
+
+  private void removeGalleryFile(File deletionFile){
+      if (deletionFile.exists()) {
+          deletionFile.delete();
+          reactContext.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(deletionFile)));
+      }
+  }
+
 }

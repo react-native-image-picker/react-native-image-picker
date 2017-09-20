@@ -252,8 +252,8 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             }
         }
         else {
-            NSURL *videoURL = info[UIImagePickerControllerMediaURL];
-            fileName = videoURL.lastPathComponent;
+            NSString *dateTime = [[ImagePickerManager VideoFilenameFormat] stringFromDate:[NSDate date]];
+            fileName = [dateTime stringByAppendingString:@".mov"];
         }
 
         // We default to path to the temporary directory
@@ -699,6 +699,19 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         ISO8601DateFormatter.dateFormat = @"yyyy-MM-dd'T'HH:mm:ssZZZZZ";
     });
     return ISO8601DateFormatter;
+}
+
++ (NSDateFormatter * _Nonnull)VideoFilenameFormat {
+    static NSDateFormatter *VideoFilenameFormat;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        VideoFilenameFormat = [[NSDateFormatter alloc] init];
+        NSLocale *enUSPOSIXLocale = [NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"];
+        VideoFilenameFormat.locale = enUSPOSIXLocale;
+        VideoFilenameFormat.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
+        VideoFilenameFormat.dateFormat = @"'VIDEO_'yyyyMMddHHmmssSS";
+    });
+    return VideoFilenameFormat;
 }
 
 @end

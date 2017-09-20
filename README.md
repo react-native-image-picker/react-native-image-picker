@@ -235,6 +235,7 @@ durationLimit | OK | OK | Max video recording time, in seconds
 rotation | - | OK | Photos only, 0 to 360 degrees of rotation
 allowsEditing | OK | - | bool - enables built in iOS functionality to resize the image after selection
 noData | OK | OK | If true, disables the base64 `data` field from being generated (greatly improves performance on large photos)
+noGallery | - | OK | If true, image or video will be stored only in the temporary directory on Android and will NOT be in your gallery
 storageOptions | OK | OK | If this key is provided, the image will be saved in your app's `Documents` directory on iOS, or your app's `Pictures` directory on Android (rather than a temporary directory)
 storageOptions.skipBackup | OK | - | If true, the photo will NOT be backed up to iCloud
 storageOptions.path | OK | - | If set, will save the image at `Documents/[path]/` rather than the root `Documents`
@@ -260,7 +261,7 @@ width | OK | OK | Image dimensions
 height | OK | OK | Image dimensions
 fileSize | OK | OK | The file size (photos only)
 type | - | OK | The file type (photos only)
-fileName | OK (photos and videos) | OK (photos) | The file name
+fileName | OK | OK | The file name
 path | - | OK | The file path
 latitude | OK | OK | Latitude metadata, if available
 longitude | OK | OK | Longitude metadata, if available
