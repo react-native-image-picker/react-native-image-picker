@@ -3,13 +3,17 @@ package com.imagepicker;
 import android.Manifest;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -21,7 +25,6 @@ import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Patterns;
 import android.webkit.MimeTypeMap;
-import android.content.pm.PackageManager;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.bridge.ActivityEventListener;
@@ -30,9 +33,11 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.modules.core.PermissionListener;
 import com.imagepicker.media.ImageConfig;
-import com.imagepicker.permissions.PermissionUtils;
 import com.imagepicker.permissions.OnImagePickerPermissionsCallback;
+import com.imagepicker.permissions.PermissionUtils;
+import com.imagepicker.utils.MediaUtils;
 import com.imagepicker.utils.MediaUtils.ReadExifResult;
 import com.imagepicker.utils.RealPathUtil;
 import com.imagepicker.utils.UI;
@@ -48,11 +53,15 @@ import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
-import com.facebook.react.modules.core.PermissionListener;
-
-import static com.imagepicker.utils.MediaUtils.*;
+import static android.R.attr.name;
+import static com.imagepicker.utils.MediaUtils.RolloutPhotoResult;
 import static com.imagepicker.utils.MediaUtils.createNewFile;
+import static com.imagepicker.utils.MediaUtils.fileScan;
+import static com.imagepicker.utils.MediaUtils.getFileName;
 import static com.imagepicker.utils.MediaUtils.getResizedImage;
+import static com.imagepicker.utils.MediaUtils.readExifInterface;
+import static com.imagepicker.utils.MediaUtils.removeUselessFiles;
+import static com.imagepicker.utils.MediaUtils.rolloutPhotoFromCamera;
 
 public class ImagePickerModule extends ReactContextBaseJavaModule
         implements ActivityEventListener
@@ -74,6 +83,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   private Boolean noData = false;
   private Boolean pickVideo = false;
   private ImageConfig imageConfig = new ImageConfig(null, null, 0, 0, 100, 0, false);
+  private boolean useSystemImageUri = false;
 
   @Deprecated
   private int videoQuality = 1;
@@ -87,7 +97,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     public boolean onRequestPermissionsResult(final int requestCode,
                                               @NonNull final String[] permissions,
                                               @NonNull final int[] grantResults)
-    {
+{
       boolean permissionsGranted = true;
       for (int i = 0; i < permissions.length; i++)
       {
@@ -123,7 +133,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
   public ImagePickerModule(ReactApplicationContext reactContext,
                            @StyleRes final int dialogThemeId)
-  {
+{
     super(reactContext);
 
     this.dialogThemeId = dialogThemeId;
@@ -185,7 +195,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       @Override
       public void onCustomButton(@NonNull final ImagePickerModule module,
                                  @NonNull final String action)
-      {
+                                {
         if (module == null)
         {
           return;
@@ -255,14 +265,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
       if (imageConfig.original != null) {
         cameraCaptureURI = RealPathUtil.compatUriFromFile(reactContext, imageConfig.original);
-      }else {
-        responseHelper.invokeError(callback, "Couldn't get file path for photo");
-        return;
       }
       if (cameraCaptureURI == null)
       {
-        responseHelper.invokeError(callback, "Couldn't get file path for photo");
-        return;
+        useSystemImageUri = true;
+        cameraCaptureURI = createImageUri(reactContext);
       }
       cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraCaptureURI);
     }
@@ -278,7 +285,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     // Workaround for Android bug.
     // grantUriPermission also needed for KITKAT,
     // see https://code.google.com/p/android/issues/detail?id=76683
-    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
+    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT && cameraCaptureURI != null) {
       List<ResolveInfo> resInfoList = reactContext.getPackageManager().queryIntentActivities(cameraIntent, PackageManager.MATCH_DEFAULT_ONLY);
       for (ResolveInfo resolveInfo : resInfoList) {
         String packageName = resolveInfo.activityInfo.packageName;
@@ -332,7 +339,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     {
       requestCode = REQUEST_LAUNCH_IMAGE_LIBRARY;
       libraryIntent = new Intent(Intent.ACTION_PICK,
-      MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+              MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
     }
 
     if (libraryIntent.resolveActivity(reactContext.getPackageManager()) == null)
@@ -377,6 +384,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     switch (requestCode)
     {
       case REQUEST_LAUNCH_IMAGE_CAPTURE:
+        if (useSystemImageUri)
+        {
+          saveBitmapToNative();
+        }
         uri = cameraCaptureURI;
         break;
 
@@ -449,7 +460,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     }
     else
     {
-      imageConfig = getResizedImage(reactContext, this.options, imageConfig, initialWidth, initialHeight, requestCode);
+      imageConfig = getResizedImage(reactContext, this.options, imageConfig, initialWidth, initialHeight, requestCode, useSystemImageUri);
       if (imageConfig.resized == null)
       {
         removeUselessFiles(requestCode, imageConfig);
@@ -490,6 +501,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     responseHelper.invokeResponse(callback);
     callback = null;
     this.options = null;
+    cameraCaptureURI = null;
   }
 
   public void invokeCustomButton(@NonNull final String action)
@@ -622,7 +634,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
   private boolean isCameraAvailable() {
     return reactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)
-      || reactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
+            || reactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
   }
 
   private @NonNull String getRealPathFromURI(@NonNull final Uri uri) {
@@ -721,4 +733,31 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       videoDurationLimit = options.getInt("durationLimit");
     }
   }
+
+  private static Uri createImageUri(Context context) {
+    final String name = "taskPhoto" + System.currentTimeMillis();
+    ContentValues contentValues = new ContentValues();
+    contentValues.put(MediaStore.Images.Media.TITLE, name);
+    contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, MediaUtils.getFileName());
+    contentValues.put(MediaStore.Images.Media.MIME_TYPE, "image/jpg");
+    Uri uri = context.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
+    return uri;
+  }
+
+  private void saveBitmapToNative() {
+    try {
+      Bitmap bitmap = MediaStore.Images.Media.getBitmap(reactContext.getContentResolver(), cameraCaptureURI);
+      final String filename = MediaUtils.getFileName();
+      File path = new File(reactContext.getCacheDir(), Environment.DIRECTORY_DCIM);
+      File result = new File(path, filename);
+      imageConfig = imageConfig.withOriginalFile(result);
+      FileOutputStream fileOutputStream = new FileOutputStream(result);
+      bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream);
+      fileOutputStream.flush();
+      fileOutputStream.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
 }

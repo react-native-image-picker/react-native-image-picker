@@ -20,7 +20,6 @@ import com.imagepicker.media.ImageConfig;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -37,14 +36,18 @@ import static com.imagepicker.ImagePickerModule.REQUEST_LAUNCH_IMAGE_CAPTURE;
 
 public class MediaUtils
 {
+    public static String getFileName() {
+        return new StringBuilder("image-")
+                .append(UUID.randomUUID().toString())
+                .append(".jpg")
+                .toString();
+    }
+
     public static @Nullable File createNewFile(@NonNull final Context reactContext,
                                                @NonNull final ReadableMap options,
                                                @NonNull final boolean forceLocal)
     {
-        final String filename = new StringBuilder("image-")
-                .append(UUID.randomUUID().toString())
-                .append(".jpg")
-                .toString();
+        final String filename = getFileName();
 
         final File path = ReadableMapUtils.hasAndNotNullReadableMap(options, "storageOptions") && !forceLocal
                 ? Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
@@ -81,7 +84,8 @@ public class MediaUtils
                                                        @NonNull final ImageConfig imageConfig,
                                                        int initialWidth,
                                                        int initialHeight,
-                                                       final int requestCode)
+                                                       final int requestCode,
+                                                       final boolean useSystemImageUri)
     {
         BitmapFactory.Options imageOptions = new BitmapFactory.Options();
         imageOptions.inScaled = false;
@@ -89,7 +93,7 @@ public class MediaUtils
 
         if (imageConfig.maxWidth != 0 || imageConfig.maxHeight != 0) {
             while ((imageConfig.maxWidth == 0 || initialWidth > 2 * imageConfig.maxWidth) &&
-                   (imageConfig.maxHeight == 0 || initialHeight > 2 * imageConfig.maxHeight)) {
+                    (imageConfig.maxHeight == 0 || initialHeight > 2 * imageConfig.maxHeight)) {
                 imageOptions.inSampleSize *= 2;
                 initialHeight /= 2;
                 initialWidth /= 2;
@@ -156,7 +160,16 @@ public class MediaUtils
         scaledPhoto.compress(Bitmap.CompressFormat.JPEG, result.quality, bytes);
 
         final boolean forceLocal = requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE;
-        final File resized = createNewFile(context, options, !forceLocal);
+
+        File resized = null;
+
+        if (useSystemImageUri) {
+            final String filename = MediaUtils.getFileName();
+            File path = new File(context.getCacheDir(), Environment.DIRECTORY_DCIM);
+            resized = new File(path, filename);
+        }else {
+            resized = createNewFile(context, options, !forceLocal);
+        }
 
         if (resized == null)
         {
