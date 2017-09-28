@@ -438,11 +438,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     BitmapFactory.decodeFile(imageConfig.original.getAbsolutePath(), options);
     int initialWidth = options.outWidth;
     int initialHeight = options.outHeight;
-    updatedResultResponse(uri, imageConfig.original.getAbsolutePath());
 
     // don't create a new file if contraint are respected
     if (imageConfig.useOriginal(initialWidth, initialHeight, result.currentRotation))
     {
+      updatedResultResponse(uri, imageConfig.original.getAbsolutePath());
       responseHelper.putInt("width", initialWidth);
       responseHelper.putInt("height", initialHeight);
       fileScan(reactContext, imageConfig.original.getAbsolutePath());
