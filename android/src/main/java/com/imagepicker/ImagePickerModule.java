@@ -17,6 +17,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.util.Base64;
+import android.util.Log;
 import android.util.Patterns;
 import android.webkit.MimeTypeMap;
 import android.content.pm.PackageManager;
@@ -28,6 +29,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.modules.core.PermissionAwareActivity;
 import com.imagepicker.media.ImageConfig;
 import com.imagepicker.permissions.PermissionUtils;
 import com.imagepicker.permissions.OnImagePickerPermissionsCallback;
@@ -44,9 +46,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.facebook.react.modules.core.PermissionListener;
 
+import static android.R.attr.writePermission;
 import static com.imagepicker.utils.MediaUtils.*;
 import static com.imagepicker.utils.MediaUtils.createNewFile;
 import static com.imagepicker.utils.MediaUtils.getResizedImage;
@@ -223,7 +228,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
     this.options = options;
 
-    if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_CAMERA))
+    if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_CAMERA, new String[] {Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}))
     {
       return;
     }
@@ -296,7 +301,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
     this.options = options;
 
-    if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_LIBRARY))
+    if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_LIBRARY, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE}))
     {
       return;
     }
@@ -305,6 +310,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
     int requestCode;
     Intent libraryIntent;
+    Log.d("PICK MIXED", String.valueOf(pickMixed));
+    Log.d("PICK VIDEO", String.valueOf(pickVideo));
     if (pickMixed)
     {
       requestCode = REQUEST_LAUNCH_VIDEO_LIBRARY;
@@ -538,19 +545,22 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
   private boolean permissionsCheck(@NonNull final Activity activity,
                                    @NonNull final Callback callback,
-                                   @NonNull final int requestCode)
+                                   @NonNull final int requestCode,
+                                   @NonNull final String[] permissions)
   {
-    final int writePermission = ActivityCompat
-            .checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-    final int cameraPermission = ActivityCompat
-            .checkSelfPermission(activity, Manifest.permission.CAMERA);
 
-    final boolean permissionsGrated = writePermission == PackageManager.PERMISSION_GRANTED &&
-            cameraPermission == PackageManager.PERMISSION_GRANTED;
+    final List<Integer> permissionsStatuses = new ArrayList<>();
+    boolean permissionsGranted = true;
+    boolean dontAskAgain = false;
+    for (String permission:permissions) {
+      int grantedStatus = ActivityCompat.checkSelfPermission(activity, permission);
+      permissionsStatuses.add(grantedStatus);
+      permissionsGranted = permissionsGranted && grantedStatus == PackageManager.PERMISSION_GRANTED;
+      dontAskAgain = dontAskAgain || (grantedStatus != PackageManager.PERMISSION_GRANTED && !ActivityCompat.shouldShowRequestPermissionRationale(activity, permission));
+    }
 
-    if (!permissionsGrated)
+    if (!permissionsGranted)
     {
-      final Boolean dontAskAgain = ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) && ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA);
 
       if (dontAskAgain)
       {
@@ -603,6 +613,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         {
           ((OnImagePickerPermissionsCallback) activity).setPermissionListener(listener);
           ActivityCompat.requestPermissions(activity, PERMISSIONS, requestCode);
+        }
+        else if (activity instanceof PermissionAwareActivity) {
+          ((PermissionAwareActivity) activity).requestPermissions(PERMISSIONS, requestCode, listener);
         }
         else
         {
