@@ -222,7 +222,6 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     if (!asset) { return nil; }
     
     if (SYSTEM_VERSION_LESS_THAN(@"9.0") && SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"8.0")) {
-        // code here
         NSString*FileName=[asset valueForKey:@"filename"];
         return FileName;
     }
