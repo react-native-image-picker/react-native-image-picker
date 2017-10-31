@@ -5,6 +5,10 @@
 #import <Photos/Photos.h>
 #import <React/RCTUtils.h>
 
+#define SYSTEM_VERSION_LESS_THAN(v) ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedAscending)
+
+#define SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(v)  ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] != NSOrderedAscending)
+
 @import MobileCoreServices;
 
 @interface ImagePickerManager ()
@@ -216,7 +220,13 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 
 - (NSString * _Nullable)originalFilenameForAsset:(PHAsset * _Nullable)asset assetType:(PHAssetResourceType)type {
     if (!asset) { return nil; }
-
+    
+    if (SYSTEM_VERSION_LESS_THAN(@"9.0") && SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"8.0")) {
+        // code here
+        NSString*FileName=[asset valueForKey:@"filename"];
+        return FileName;
+    }
+    
     PHAssetResource *originalResource;
     // Get the underlying resources for the PHAsset (PhotoKit)
     NSArray<PHAssetResource *> *pickedAssetResources = [PHAssetResource assetResourcesForAsset:asset];
