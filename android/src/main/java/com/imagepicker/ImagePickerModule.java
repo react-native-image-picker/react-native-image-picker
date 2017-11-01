@@ -280,6 +280,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       requestCode = REQUEST_LAUNCH_VIDEO_LIBRARY;
       if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
         libraryIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        libraryIntent.addCategory(Intent.CATEGORY_OPENABLE);
       } else {
         libraryIntent = new Intent(Intent.ACTION_PICK);
       }
@@ -289,6 +290,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       requestCode = REQUEST_LAUNCH_VIDEO_LIBRARY;
       if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
         libraryIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        libraryIntent.addCategory(Intent.CATEGORY_OPENABLE);
       } else {
         libraryIntent = new Intent(Intent.ACTION_PICK);
       }
@@ -299,6 +301,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       requestCode = REQUEST_LAUNCH_IMAGE_LIBRARY;
       if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
         libraryIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        libraryIntent.addCategory(Intent.CATEGORY_OPENABLE);
       } else {
         libraryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
       }
