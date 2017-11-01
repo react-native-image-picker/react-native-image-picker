@@ -363,9 +363,13 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             NSData *data;
             if ([[[self.options objectForKey:@"imageFileType"] stringValue] isEqualToString:@"png"]) {
                 data = UIImagePNGRepresentation(image);
+                NSString *mimeType = (__bridge_transfer NSString *)(UTTypeCopyPreferredTagWithClass(kUTTypePNG, kUTTagClassMIMEType));
+                [self.response setObject:mimeType forKey:@"type"];
             }
             else {
                 data = UIImageJPEGRepresentation(image, [[self.options valueForKey:@"quality"] floatValue]);
+                NSString *mimeType = (__bridge_transfer NSString *)(UTTypeCopyPreferredTagWithClass(kUTTypeJPEG, kUTTagClassMIMEType));
+                [self.response setObject:mimeType forKey:@"type"];
             }
             [data writeToFile:path atomically:YES];
 
@@ -489,9 +493,6 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                 }];
             }
         }
-
-        NSString *mimeType = [self mimeTypeForResourceAtURL:imageURL];
-        [self.response setObject:mimeType forKey:@"type"];
 
         // If storage options are provided, check the skipBackup flag
         if ([self.options objectForKey:@"storageOptions"] && [[self.options objectForKey:@"storageOptions"] isKindOfClass:[NSDictionary class]]) {
@@ -687,15 +688,6 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         NSLog(@"Error setting skip backup attribute: file not found");
         return @NO;
     }
-}
-
-- (NSString *)mimeTypeForResourceAtURL:(NSURL *)url
-{
-    NSString *filenameExtension = url.pathExtension;
-    CFStringRef uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, (__bridge CFStringRef)filenameExtension, nil);
-    NSString *mimeType = (__bridge_transfer NSString *)(UTTypeCopyPreferredTagWithClass(uti, kUTTagClassMIMEType));
-    CFRelease(uti);
-    return mimeType;
 }
 
 #pragma mark - Class Methods

@@ -259,7 +259,7 @@ isVertical | OK | OK | Will be true if the image is vertically oriented
 width | OK | OK | Image dimensions
 height | OK | OK | Image dimensions
 fileSize | OK | OK | The file size (photos only)
-type | OK (photos and videos) | OK (photos) | The file type
+type | OK | OK | The file type (photos only)
 fileName | OK (photos and videos) | OK (photos) | The file name
 path | - | OK | The file path
 latitude | OK | OK | Latitude metadata, if available
