@@ -175,11 +175,9 @@ public class MediaUtils
 
         result = result.withResizedFile(resized);
 
-        FileOutputStream fos;
-        try
+        try (FileOutputStream fos = new FileOutputStream(result.resized))
         {
-            fos = new FileOutputStream(result.resized);
-            fos.write(bytes.toByteArray());
+            bytes.writeTo(fos);
         }
         catch (IOException e)
         {
