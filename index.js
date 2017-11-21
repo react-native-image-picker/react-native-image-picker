@@ -20,6 +20,10 @@ const DEFAULT_OPTIONS = {
 
 module.exports = {
   ...ImagePickerManager,
+  onPickerDidStart: function onPickerDidStart(callback) {
+    ImagePickerManager.onPickerDidStart(callback);
+    return this;
+  },
   showImagePicker: function showImagePicker(options, callback) {
     if (typeof options === 'function') {
       callback = options;

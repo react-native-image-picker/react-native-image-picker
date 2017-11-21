@@ -50,6 +50,8 @@ export type StorageOptions = {
     waitUntilSaved?: boolean;
 }
 
+declare export function onPickerDidStart(callback: () => any): void;
+
 declare export function showImagePicker(options: ?Options, callback: (response: Response) => any): void;
 declare export function showImagePicker(callback: (response: Response) => any): void;
 

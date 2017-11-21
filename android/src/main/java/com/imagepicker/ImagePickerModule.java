@@ -69,6 +69,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   private final int dialogThemeId;
 
   protected Callback callback;
+  protected Callback pickStartCallback = null;
   private ReadableMap options;
   protected Uri cameraCaptureURI;
   private Boolean noData = false;
@@ -137,6 +138,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   }
 
   @ReactMethod
+  public void onPickerDidStart(final Callback callback) {
+    this.pickStartCallback = callback;
+  }
+
+  @ReactMethod
   public void showImagePicker(final ReadableMap options, final Callback callback) {
     Activity currentActivity = getCurrentActivity();
 
@@ -159,6 +165,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         {
           return;
         }
+        module.pickStartCallback.invoke();
         module.launchCamera();
       }
 
@@ -169,6 +176,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         {
           return;
         }
+        module.pickStartCallback.invoke();
         module.launchImageLibrary();
       }
 

@@ -12,6 +12,7 @@
 @property (nonatomic, strong) UIAlertController *alertController;
 @property (nonatomic, strong) UIImagePickerController *picker;
 @property (nonatomic, strong) RCTResponseSenderBlock callback;
+@property (nonatomic, strong) RCTResponseSenderBlock pickStartCallback;
 @property (nonatomic, strong) NSDictionary *defaultOptions;
 @property (nonatomic, retain) NSMutableDictionary *options, *response;
 @property (nonatomic, strong) NSArray *customButtons;
@@ -21,6 +22,11 @@
 @implementation ImagePickerManager
 
 RCT_EXPORT_MODULE();
+
+RCT_EXPORT_METHOD(onPickerDidStart:(RCTResponseSenderBlock)callback)
+{
+    self.pickStartCallback = callback;
+}
 
 RCT_EXPORT_METHOD(launchCamera:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
 {
@@ -188,6 +194,9 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     void (^showPickerViewController)() = ^void() {
         dispatch_async(dispatch_get_main_queue(), ^{
             UIViewController *root = RCTPresentedViewController();
+            if (self.pickStartCallback != nil) {
+              self.pickStartCallback(@[[NSNull null]]);
+            }
             [root presentViewController:self.picker animated:YES completion:nil];
         });
     };

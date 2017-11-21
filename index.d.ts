@@ -52,6 +52,7 @@ declare module "react-native-image-picker" {
 
 
     class ImagePicker {
+        static onPickerDidStart(callback: () => void): void;
         static showImagePicker(options: Options, callback: (response: Response) => void): void;
         static launchCamera(options: Options, callback: (response: Response) => void): void;
         static launchImageLibrary(options: Options, callback: (response: Response) => void): void;
