@@ -548,76 +548,76 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     final boolean permissionsGrated = writePermission == PackageManager.PERMISSION_GRANTED &&
             cameraPermission == PackageManager.PERMISSION_GRANTED;
 
-    if (!permissionsGrated)
+    if (permissionsGrated) {
+      return true;
+    }
+    
+    final Boolean dontAskAgain = ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) && ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA);
+
+    if (dontAskAgain)
     {
-      final Boolean dontAskAgain = ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) && ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA);
-
-      if (dontAskAgain)
-      {
-        final AlertDialog dialog = PermissionUtils
-                .explainingDialog(this, options, new PermissionUtils.OnExplainingPermissionCallback()
+      final AlertDialog dialog = PermissionUtils
+              .explainingDialog(this, options, new PermissionUtils.OnExplainingPermissionCallback()
+              {
+                @Override
+                public void onCancel(WeakReference<ImagePickerModule> moduleInstance,
+                                     DialogInterface dialogInterface)
                 {
-                  @Override
-                  public void onCancel(WeakReference<ImagePickerModule> moduleInstance,
-                                       DialogInterface dialogInterface)
+                  final ImagePickerModule module = moduleInstance.get();
+                  if (module == null)
                   {
-                    final ImagePickerModule module = moduleInstance.get();
-                    if (module == null)
-                    {
-                      return;
-                    }
-                    module.doOnCancel();
+                    return;
                   }
+                  module.doOnCancel();
+                }
 
-                  @Override
-                  public void onReTry(WeakReference<ImagePickerModule> moduleInstance,
-                                      DialogInterface dialogInterface)
+                @Override
+                public void onReTry(WeakReference<ImagePickerModule> moduleInstance,
+                                    DialogInterface dialogInterface)
+                {
+                  final ImagePickerModule module = moduleInstance.get();
+                  if (module == null)
                   {
-                    final ImagePickerModule module = moduleInstance.get();
-                    if (module == null)
-                    {
-                      return;
-                    }
-                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                    Uri uri = Uri.fromParts("package", module.getContext().getPackageName(), null);
-                    intent.setData(uri);
-                    final Activity innerActivity = module.getActivity();
-                    if (innerActivity == null)
-                    {
-                      return;
-                    }
-                    innerActivity.startActivityForResult(intent, 1);
+                    return;
                   }
-                });
-        if (dialog != null) {
-          dialog.show();
-        }
-        return false;
+                  Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                  Uri uri = Uri.fromParts("package", module.getContext().getPackageName(), null);
+                  intent.setData(uri);
+                  final Activity innerActivity = module.getActivity();
+                  if (innerActivity == null)
+                  {
+                    return;
+                  }
+                  innerActivity.startActivityForResult(intent, 1);
+                }
+              });
+      if (dialog != null) {
+        dialog.show();
+      }
+      return false;
+    }
+    else
+    {
+      String[] PERMISSIONS = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA};
+      if (activity instanceof ReactActivity)
+      {
+        ((ReactActivity) activity).requestPermissions(PERMISSIONS, requestCode, listener);
+      }
+      else if (activity instanceof OnImagePickerPermissionsCallback)
+      {
+        ((OnImagePickerPermissionsCallback) activity).setPermissionListener(listener);
+        ActivityCompat.requestPermissions(activity, PERMISSIONS, requestCode);
       }
       else
       {
-        String[] PERMISSIONS = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA};
-        if (activity instanceof ReactActivity)
-        {
-          ((ReactActivity) activity).requestPermissions(PERMISSIONS, requestCode, listener);
-        }
-        else if (activity instanceof OnImagePickerPermissionsCallback)
-        {
-          ((OnImagePickerPermissionsCallback) activity).setPermissionListener(listener);
-          ActivityCompat.requestPermissions(activity, PERMISSIONS, requestCode);
-        }
-        else
-        {
-          final String errorDescription = new StringBuilder(activity.getClass().getSimpleName())
-                  .append(" must implement ")
-                  .append(OnImagePickerPermissionsCallback.class.getSimpleName())
-                  .toString();
-          throw new UnsupportedOperationException(errorDescription);
-        }
-        return false;
+        final String errorDescription = new StringBuilder(activity.getClass().getSimpleName())
+                .append(" must implement ")
+                .append(OnImagePickerPermissionsCallback.class.getSimpleName())
+                .toString();
+        throw new UnsupportedOperationException(errorDescription);
       }
+      return false;
     }
-    return true;
   }
 
   private boolean isCameraAvailable() {
