@@ -225,7 +225,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
     this.options = options;
 
-    if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_CAMERA))
+    if (!permissionsCheck(currentActivity, REQUEST_PERMISSIONS_FOR_CAMERA))
     {
       return;
     }
@@ -313,7 +313,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
     this.options = options;
 
-    if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_LIBRARY))
+    if (!permissionsCheck(currentActivity, REQUEST_PERMISSIONS_FOR_LIBRARY))
     {
       return;
     }
@@ -537,7 +537,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   }
 
   private boolean permissionsCheck(@NonNull final Activity activity,
-                                   @NonNull final Callback callback,
                                    @NonNull final int requestCode)
   {
     final int writePermission = ActivityCompat
@@ -551,7 +550,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     if (permissionsGrated) {
       return true;
     }
-    
+
     final Boolean dontAskAgain = ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) && ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA);
 
     if (dontAskAgain)
