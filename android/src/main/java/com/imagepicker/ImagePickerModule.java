@@ -102,7 +102,53 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
       if (!permissionsGranted)
       {
-        responseHelper.invokeError(callback, "Permissions weren't granted");
+        final Boolean shouldShowRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+                getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                && ActivityCompat.shouldShowRequestPermissionRationale(getActivity(), Manifest.permission.CAMERA);
+        // App can ask for the permissions again.
+        if (shouldShowRationale) {
+          responseHelper.invokeError(callback, "Permissions weren't granted");
+          return false;
+        }
+
+        final AlertDialog dialog = PermissionUtils
+                .explainingDialog(ImagePickerModule.this, options, new PermissionUtils.OnExplainingPermissionCallback()
+                {
+                  @Override
+                  public void onCancel(WeakReference<ImagePickerModule> moduleInstance,
+                                       DialogInterface dialogInterface)
+                  {
+                    final ImagePickerModule module = moduleInstance.get();
+                    if (module == null)
+                    {
+                      return;
+                    }
+                    module.doOnCancel();
+                  }
+
+                  @Override
+                  public void onReTry(WeakReference<ImagePickerModule> moduleInstance,
+                                      DialogInterface dialogInterface)
+                  {
+                    final ImagePickerModule module = moduleInstance.get();
+                    if (module == null)
+                    {
+                      return;
+                    }
+                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    Uri uri = Uri.fromParts("package", module.getContext().getPackageName(), null);
+                    intent.setData(uri);
+                    final Activity innerActivity = module.getActivity();
+                    if (innerActivity == null)
+                    {
+                      return;
+                    }
+                    innerActivity.startActivityForResult(intent, 1);
+                  }
+                });
+        if (dialog != null) {
+          dialog.show();
+        }
         return false;
       }
 
