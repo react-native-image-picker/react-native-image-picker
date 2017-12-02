@@ -96,7 +96,7 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and steps 2, 3, and 
 
 ##### Android (Optional)
 
-Customization settings of dialog `android/app/res/values/themes.xml`:
+Customization settings of dialog `android/app/res/values/themes.xml` (`android/app/res/values/style.xml` is a valid path as well):
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
@@ -110,7 +110,7 @@ Customization settings of dialog `android/app/res/values/themes.xml`:
         <!-- Used for the background -->
         <item name="android:background">@color/your_color</item>
     </style>
-<resources>
+</resources>
 ```
 
 If `MainActivity` is not instance of `ReactActivity`, you will need to implement `OnImagePickerPermissionsCallback` to `MainActivity`:
