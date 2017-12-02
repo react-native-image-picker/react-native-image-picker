@@ -8,7 +8,7 @@ iOS | Android
 <img title="iOS" src="https://github.com/marcshilling/react-native-image-picker/blob/master/images/ios-image.png"> | <img title="Android" src="https://github.com/marcshilling/react-native-image-picker/blob/master/images/android-image.png">
 
 #### _Before you open an issue_
-This library started as a basic bridge of the native iOS image picker, and I want to keep it that way. As such, functionality beyond what the native `UIImagePickerController` supports will not be supported here. **Multiple image selection, more control over the crop tool, and landscape support** are things missing from the native iOS functionality - **not issues with my library**. If you need these things, [react-native-image-crop-picker](https://github.com/ivpusic/react-native-image-crop-picker) might be a better choice for you.   
+This library started as a basic bridge of the native iOS image picker, and I want to keep it that way. As such, functionality beyond what the native `UIImagePickerController` supports will not be supported here. **Multiple image selection, more control over the crop tool, and landscape support** are things missing from the native iOS functionality - **not issues with my library**. If you need these things, [react-native-image-crop-picker](https://github.com/ivpusic/react-native-image-crop-picker) might be a better choice for you.
 
 ## Table of contents
 - [Install](#install)
@@ -27,7 +27,7 @@ This library started as a basic bridge of the native iOS image picker, and I wan
 
 `react-native link`
 
-IMPORTANT NOTE: You'll still need to perform step 4 for iOS and steps 2, 3, and 5 for Android of the manual instructions below.
+IMPORTANT NOTE: You'll still need to perform step 4 for iOS and steps 2 and 5 for Android of the manual instructions below.
 
 ### Manual Installation
 
@@ -36,7 +36,23 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and steps 2, 3, and 
 1. In the XCode's "Project navigator", right click on your project's Libraries folder ➜ `Add Files to <...>`
 2. Go to `node_modules` ➜ `react-native-image-picker` ➜ `ios` ➜ select `RNImagePicker.xcodeproj`
 3. Add `RNImagePicker.a` to `Build Phases -> Link Binary With Libraries`
-4. For iOS 10+, Add the `NSPhotoLibraryUsageDescription`, `NSCameraUsageDescription`, and `NSMicrophoneUsageDescription` (if allowing video) keys to your `Info.plist` with strings describing why your app needs these permissions. **Note: You will get a SIGABRT crash if you don't complete this step**
+4. For iOS 10+, Add the `NSPhotoLibraryUsageDescription`, `NSCameraUsageDescription`, `NSPhotoLibraryAddUsageDescription` and `NSMicrophoneUsageDescription` (if allowing video) keys to your `Info.plist` with strings describing why your app needs these permissions. **Note: You will get a SIGABRT crash if you don't complete this step**
+
+```
+<plist version="1.0">
+  <dict>
+    ...
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>$(PRODUCT_NAME) would like access to your photo gallery</string>
+    <key>NSCameraUsageDescription</key>
+    <string>$(PRODUCT_NAME) would like to use your camera</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>$(PRODUCT_NAME) would like to save photos to your photo gallery</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>$(PRODUCT_NAME) would like to your microphone (for videos)</string>
+  </dict>
+</plist>
+```
 5. Compile and have fun
 
 #### Android
@@ -45,7 +61,7 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and steps 2, 3, and 
     include ':react-native-image-picker'
     project(':react-native-image-picker').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-image-picker/android')
     ```
-    
+
 2. Update the android build tools version to `2.2.+` in `android/build.gradle`:
     ```gradle
     buildscript {
@@ -56,27 +72,27 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and steps 2, 3, and 
         ...
     }
     ...
-    ``` 
-    
+    ```
+
 3. Update the gradle version to `2.14.1` in `android/gradle/wrapper/gradle-wrapper.properties`:
     ```
     ...
     distributionUrl=https\://services.gradle.org/distributions/gradle-2.14.1-all.zip
     ```
-    
+
 4. Add the compile line to the dependencies in `android/app/build.gradle`:
     ```gradle
     dependencies {
         compile project(':react-native-image-picker')
     }
     ```
-    
+
 5. Add the required permissions in `AndroidManifest.xml`:
     ```xml
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     ```
-    
+
 6. Add the import and link the package in `MainApplication.java`:
     ```java
     import com.imagepicker.ImagePickerPackage; // <-- add this import
