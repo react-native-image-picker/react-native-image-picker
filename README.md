@@ -71,13 +71,7 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and steps 2, 3, and 
     }
     ```
     
-5. Add the required permissions in `AndroidManifest.xml`:
-    ```xml
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    ```
-    
-6. Add the import and link the package in `MainApplication.java`:
+5. Add the import and link the package in `MainApplication.java`:
     ```java
     import com.imagepicker.ImagePickerPackage; // <-- add this import
 
