@@ -26,7 +26,7 @@ public class RealPathUtil {
 		}
 		else {
 			final String packageName = context.getApplicationContext().getPackageName();
-			final String authority =  new StringBuilder(packageName).append(".provider").toString();
+			final String authority =  new StringBuilder(packageName).append(".image.provider").toString();
 			try {
 				result = FileProvider.getUriForFile(context, authority, file);
 			}
