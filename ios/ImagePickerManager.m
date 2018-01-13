@@ -361,16 +361,17 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             image = [self downscaleImageIfNecessary:image maxWidth:maxWidth maxHeight:maxHeight];
 
             NSData *data;
+            NSString *mimeType;
             if ([[[self.options objectForKey:@"imageFileType"] stringValue] isEqualToString:@"png"]) {
                 data = UIImagePNGRepresentation(image);
-                NSString *mimeType = (__bridge_transfer NSString *)(UTTypeCopyPreferredTagWithClass(kUTTypePNG, kUTTagClassMIMEType));
-                [self.response setObject:mimeType forKey:@"type"];
+                mimeType = (__bridge_transfer NSString *)(UTTypeCopyPreferredTagWithClass(kUTTypePNG, kUTTagClassMIMEType));
             }
             else {
                 data = UIImageJPEGRepresentation(image, [[self.options valueForKey:@"quality"] floatValue]);
-                NSString *mimeType = (__bridge_transfer NSString *)(UTTypeCopyPreferredTagWithClass(kUTTypeJPEG, kUTTagClassMIMEType));
-                [self.response setObject:mimeType forKey:@"type"];
+                mimeType = (__bridge_transfer NSString *)(UTTypeCopyPreferredTagWithClass(kUTTypeJPEG, kUTTagClassMIMEType));
+
             }
+            [self.response setObject:mimeType forKey:@"type"];
             [data writeToFile:path atomically:YES];
 
             if (![[self.options objectForKey:@"noData"] boolValue]) {
