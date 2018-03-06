@@ -331,8 +331,16 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     else
     {
       requestCode = REQUEST_LAUNCH_IMAGE_LIBRARY;
-      libraryIntent = new Intent(Intent.ACTION_PICK,
-      MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+
+      // Original code doesn't work on Android 8 with React Native 0.52.2
+      // libraryIntent = new Intent(Intent.ACTION_PICK,
+      // MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+
+      // Inspired by https://stackoverflow.com/a/5309217
+      Intent imageIntent = new Intent();
+      imageIntent.setType("image/*");
+      imageIntent.setAction(Intent.ACTION_GET_CONTENT);
+      libraryIntent = Intent.createChooser(imageIntent, "Select Picture");
     }
 
     if (libraryIntent.resolveActivity(reactContext.getPackageManager()) == null)
