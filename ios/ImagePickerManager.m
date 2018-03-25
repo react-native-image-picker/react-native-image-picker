@@ -313,8 +313,9 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                 ALAssetsLibrary* assetsLibrary = [[ALAssetsLibrary alloc] init];
                 [assetsLibrary assetForURL:imageURL resultBlock:^(ALAsset *asset) {
                     ALAssetRepresentation *rep = [asset defaultRepresentation];
-                    Byte *buffer = (Byte*)malloc(rep.size);
-                    NSUInteger buffered = [rep getBytes:buffer fromOffset:0.0 length:rep.size error:nil];
+                    const NSUInteger repSize = (NSUInteger)[rep size];
+                    Byte *buffer = (Byte*)malloc(repSize);
+                    NSUInteger buffered = [rep getBytes:buffer fromOffset:0.0 length:repSize error:nil];
                     NSData *data = [NSData dataWithBytesNoCopy:buffer length:buffered freeWhenDone:YES];
                     [data writeToFile:path atomically:YES];
 
@@ -682,7 +683,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     }
     else {
         NSLog(@"Error setting skip backup attribute: file not found");
-        return @NO;
+        return NO;
     }
 }
 
