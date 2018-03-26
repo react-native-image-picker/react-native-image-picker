@@ -214,7 +214,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                 showPickerViewController();
             }];
         };
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_11_0
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 110000
         if (@available(iOS 11.0, *)) {
             // iOS 11 no longer requires permission to access single image
             showPickerViewController();
