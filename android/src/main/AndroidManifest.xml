@@ -5,7 +5,7 @@
   >
     <application>
       <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="com.imagepicker.FileProvider"
             android:authorities="${applicationId}.provider"
             android:exported="false"
             android:grantUriPermissions="true">
