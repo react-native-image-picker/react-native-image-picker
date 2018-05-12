@@ -7,10 +7,12 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableNativeMap;
 import com.imagepicker.ImagePickerModule;
 import com.imagepicker.R;
 
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
 
 /**
  * Created by rusfearuth on 03.03.17.
@@ -26,7 +28,16 @@ public class PermissionUtils
         {
             return null;
         }
+        if (!options.hasKey("permissionDenied"))
+        {
+            return null;
+        }
         final ReadableMap permissionDenied = options.getMap("permissionDenied");
+        if (((ReadableNativeMap) permissionDenied).toHashMap().size()  == 0)
+        {
+            return null;
+        }
+
         final String title = permissionDenied.getString("title");
         final String text = permissionDenied.getString("text");
         final String btnReTryTitle = permissionDenied.getString("reTryTitle");

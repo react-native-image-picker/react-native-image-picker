@@ -1,0 +1,60 @@
+// @flow
+
+export type Response = {
+    customButton: string;
+    didCancel: boolean;
+    error: string;
+    data: string;
+    uri: string;
+    origURL?: string;
+    isVertical: boolean;
+    width: number;
+    height: number;
+    fileSize: number;
+    type?: string;
+    fileName?: string;
+    path?: string;
+    latitude?: number;
+    longitude?: number;
+    timestamp?: string;
+}
+
+export type CustomButtonOptions = {
+    name?: string;
+    title?: string;
+}
+
+export type Options = {
+    title?: string;
+    cancelButtonTitle?: string;
+    takePhotoButtonTitle?: string;
+    chooseFromLibraryButtonTitle?: string;
+    customButtons?: Array<CustomButtonOptions>;
+    cameraType?: 'front' | 'back';
+    mediaType?: 'photo' | 'video' | 'mixed';
+    maxWidth?: number;
+    maxHeight?: number;
+    quality?: number;
+    videoQuality?: 'low' | 'medium' | 'high';
+    durationLimit?: number;
+    rotation?: number;
+    allowsEditing?: boolean;
+    noData?: boolean;
+    storageOptions?: StorageOptions;
+}
+
+export type StorageOptions = {
+    skipBackup?: boolean;
+    path?: string;
+    cameraRoll?: boolean;
+    waitUntilSaved?: boolean;
+}
+
+declare export function showImagePicker(options: ?Options, callback: (response: Response) => any): void;
+declare export function showImagePicker(callback: (response: Response) => any): void;
+
+declare export function launchCamera(options: ?Options, callback: (response: Response) => any): void;
+declare export function launchCamera(callback: (response: Response) => any): void;
+
+declare export function launchImageLibrary(options: ?Options, callback: (response: Response) => any): void;
+declare export function launchImageLibrary(callback: (response: Response) => any): void;
