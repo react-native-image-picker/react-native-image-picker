@@ -20,7 +20,6 @@ import com.imagepicker.media.ImageConfig;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -49,11 +48,7 @@ public class MediaUtils
                 .append(extension)
                 .toString();
 
-        final String directoryEnum = isVideo ? Environment.DIRECTORY_MOVIES : Environment.DIRECTORY_PICTURES;
-
-        final File path = ReadableMapUtils.hasAndNotNullReadableMap(options, "storageOptions") && !forceLocal
-                ? Environment.getExternalStoragePublicDirectory(directoryEnum)
-                : reactContext.getExternalFilesDir(directoryEnum);
+        final File path = reactContext.getFilesDir();
 
         File result = new File(path, filename);
 
