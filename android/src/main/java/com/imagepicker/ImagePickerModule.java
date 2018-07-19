@@ -415,10 +415,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         return;
 
       case REQUEST_LAUNCH_VIDEO_CAPTURE:
-        final String path = getRealPathFromURI(data.getData());
-        responseHelper.putString("uri", data.getData().toString());
+        uri = data.getData();
+        final String path = getRealPathFromURI(uri);
+        responseHelper.putString("uri", uri.toString());
         responseHelper.putString("path", path);
-        fileScan(reactContext, path);
+        fileScan(reactContext, path, uri);
         responseHelper.invokeResponse(callback);
         callback = null;
         return;
@@ -441,12 +442,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     int initialHeight = options.outHeight;
     updatedResultResponse(uri, imageConfig.original.getAbsolutePath());
 
-    // don't create a new file if contraint are respected
+    // don't create a new file if constraints are respected
     if (imageConfig.useOriginal(initialWidth, initialHeight, result.currentRotation))
     {
+      uri = Uri.fromFile(imageConfig.original);
       responseHelper.putInt("width", initialWidth);
       responseHelper.putInt("height", initialHeight);
-      fileScan(reactContext, imageConfig.original.getAbsolutePath());
+      fileScan(reactContext, imageConfig.original.getAbsolutePath(), uri);
     }
     else
     {
@@ -464,7 +466,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         responseHelper.putInt("height", options.outHeight);
 
         updatedResultResponse(uri, imageConfig.resized.getAbsolutePath());
-        fileScan(reactContext, imageConfig.resized.getAbsolutePath());
+        fileScan(reactContext, imageConfig.resized.getAbsolutePath(), uri);
       }
     }
 
@@ -477,6 +479,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         imageConfig = rolloutResult.imageConfig;
         uri = Uri.fromFile(imageConfig.getActualFile());
         updatedResultResponse(uri, imageConfig.getActualFile().getAbsolutePath());
+        fileScan(reactContext,
+                imageConfig.resized == null ? imageConfig.original.getAbsolutePath() : imageConfig.resized.getAbsolutePath(),
+                uri);
       }
       else
       {
