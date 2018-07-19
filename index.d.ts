@@ -1,5 +1,5 @@
 declare module '@mojotech/react-native-image-picker' {
-  interface Response {
+  export interface Response {
     customButton: string;
     didCancel: boolean;
     error: string;
@@ -18,12 +18,12 @@ declare module '@mojotech/react-native-image-picker' {
     timestamp?: string;
   }
 
-  interface CustomButtonOptions {
+  export interface CustomButtonOptions {
     name?: string;
     title?: string;
   }
 
-  interface Options {
+  export interface Options {
     title?: string;
     cancelButtonTitle?: string;
     takePhotoButtonTitle?: string;
@@ -42,7 +42,7 @@ declare module '@mojotech/react-native-image-picker' {
     storageOptions?: StorageOptions;
   }
 
-  interface StorageOptions {
+  export interface StorageOptions {
     skipBackup?: boolean;
     path?: string;
     cameraRoll?: boolean;
@@ -55,5 +55,5 @@ declare module '@mojotech/react-native-image-picker' {
     static launchImageLibrary(options: Options, callback: (response: Response) => void): void;
   }
 
-  export = ImagePicker;
+  export default ImagePicker;
 }
