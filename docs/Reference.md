@@ -90,3 +90,4 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | longitude        | OK                     | OK          | Longitude metadata, if available                                       |
 | timestamp        | OK                     | OK          | Timestamp metadata, if available, in ISO8601 UTC format                |
 | originalRotation | -                      | OK          | Rotation degrees (photos only) _See [#109](/../../issues/199)_         |
+| videoThumbnail         | OK                     | -           | The base64 encoded png thumbnail for video   
