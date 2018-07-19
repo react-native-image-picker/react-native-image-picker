@@ -282,3 +282,4 @@ latitude | OK | OK | Latitude metadata, if available
 longitude | OK | OK | Longitude metadata, if available
 timestamp | OK | OK | Timestamp metadata, if available, in ISO8601 UTC format
 originalRotation | - | OK | Rotation degrees (photos only) *See [#109](/../../issues/199)*
+videoThumbnail | OK | - | The base64 encoded thumbnail for video
