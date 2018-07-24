@@ -7,6 +7,14 @@ def computeVersionName() {
     return json.version
 }
 
+def _ext = rootProject.ext
+
+def _reactNativeVersion = _ext.has('reactNative') ? _ext.reactNative : '+'
+def _compileSdkVersion = _ext.has('compileSdkVersion') ? _ext.compileSdkVersion : 25
+def _buildToolsVersion = _ext.has('buildToolsVersion') ? _ext.buildToolsVersion : '25.0.2'
+def _minSdkVersion = _ext.has('minSdkVersion') ? _ext.minSdkVersion : 16
+def _targetSdkVersion = _ext.has('targetSdkVersion') ? _ext.targetSdkVersion : 25
+
 buildscript {
     repositories {
         jcenter()
@@ -20,12 +28,12 @@ buildscript {
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion _compileSdkVersion
+    buildToolsVersion _buildToolsVersion
 
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 25
+        minSdkVersion _minSdkVersion
+        targetSdkVersion _targetSdkVersion
         versionCode 1
         versionName computeVersionName()
     }
@@ -45,7 +53,7 @@ repositories {
 }
 
 dependencies {
-    compile "com.facebook.react:react-native:+"  // From node_modules
+    compile "com.facebook.react:react-native:${_reactNativeVersion}"  // From node_modules
     
     testCompile "junit:junit:4.10"
     testCompile "org.assertj:assertj-core:1.7.0"
