@@ -1,6 +1,6 @@
 'use strict'
 
-const { NativeModules } = require('react-native');
+const { NativeModules, processColor } = require('react-native');
 const { ImagePickerManager } = NativeModules;
 
 const DEFAULT_OPTIONS = {
@@ -15,7 +15,8 @@ const DEFAULT_OPTIONS = {
     text: 'To be able to take pictures with your camera and choose images from your library.',
     reTryTitle: 're-try',
     okTitle: 'I\'m sure',
-  }
+  },
+  tintColor: processColor('blue'),
 };
 
 module.exports = {
@@ -25,6 +26,13 @@ module.exports = {
       callback = options;
       options = {};
     }
-    return ImagePickerManager.showImagePicker({...DEFAULT_OPTIONS, ...options}, callback)
+    return ImagePickerManager.showImagePicker(
+      {
+        ...DEFAULT_OPTIONS,
+        ...options,
+        tintColor: processColor(options.tintColor)
+      },
+      callback
+    )
   }
 }

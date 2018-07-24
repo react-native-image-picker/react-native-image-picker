@@ -4,6 +4,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import <Photos/Photos.h>
 #import <React/RCTUtils.h>
+#import <React/RCTConvert.h>
 
 @import MobileCoreServices;
 
@@ -49,6 +50,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 
 
     self.alertController = [UIAlertController alertControllerWithTitle:title message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    self.alertController.view.tintColor = [RCTConvert UIColor:options[@"tintColor"]];
 
     UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:cancelTitle style:UIAlertActionStyleCancel handler:^(UIAlertAction * action) {
         self.callback(@[@{@"didCancel": @YES}]); // Return callback for 'cancel' action (if is required)
