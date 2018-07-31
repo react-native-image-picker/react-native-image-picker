@@ -427,6 +427,13 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             NSURL *videoURL = info[UIImagePickerControllerMediaURL];
             NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
 
+            NSNumber *fileSizeValue = nil;
+            NSError *fileSizeError = nil;
+            [videoURL getResourceValue:&fileSizeValue forKey:NSURLFileSizeKey error:&fileSizeError];
+            if (fileSizeValue){
+                [self.response setObject:fileSizeValue forKey:@"fileSize"];
+            }
+
             if (videoRefURL) {
                 PHAsset *pickedAsset = [PHAsset fetchAssetsWithALAssetURLs:@[videoRefURL] options:nil].lastObject;
                 NSString *originalFilename = [self originalFilenameForAsset:pickedAsset assetType:PHAssetResourceTypeVideo];

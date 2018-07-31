@@ -1,11 +1,11 @@
 {
-  "name": "react-native-image-picker",
+  "name": "@mojotech/react-native-image-picker",
   "description": "A React Native module that allows you to use native UI to select media from the device library or directly from the camera",
-  "version": "0.26.7",
+  "version": "0.27.0",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/marcshilling/react-native-image-picker.git"
+    "url": "https://github.com/mojotech/react-native-image-picker.git"
   },
   "nativePackage": true,
   "author": "Marc Shilling (marcshilling)",
@@ -21,8 +21,13 @@
     {
       "name": "Alexander Ustinov",
       "email": "rusfearuth@gmail.com"
+    },
+    {
+      "name": "Craig P Jolicoeur",
+      "email": "craig@mojotech.com"
     }
   ],
+  "license": "MIT",
   "keywords": [
     "react-native",
     "react-native-image-picker",

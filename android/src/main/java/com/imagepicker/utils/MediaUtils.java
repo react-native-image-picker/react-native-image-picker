@@ -1,6 +1,7 @@
 package com.imagepicker.utils;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -217,19 +218,28 @@ public class MediaUtils
     }
 
     public static void fileScan(@Nullable final Context reactContext,
-                                @NonNull final String path)
+                                @NonNull final String path,
+                                @Nullable final Uri uri)
     {
-        if (reactContext == null)
-        {
+        if (reactContext == null) {
             return;
         }
+
+        if (uri != null) {
+          Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+          mediaScanIntent.setData(uri);
+          reactContext.sendBroadcast(mediaScanIntent);
+          return;
+        }
+
         MediaScannerConnection.scanFile(reactContext,
                 new String[] { path }, null,
                 new MediaScannerConnection.OnScanCompletedListener()
                 {
                     public void onScanCompleted(String path, Uri uri)
                     {
-                        Log.i("TAG", new StringBuilder("Finished scanning ").append(path).toString());
+                        Log.i("ReactNative", new StringBuilder("Finished scanning path: ").append(path).toString());
+                        Log.i("ReactNative", new StringBuilder("Finished scanning result: ").append(uri).toString());
                     }
                 });
     }
@@ -299,7 +309,7 @@ public class MediaUtils
 
     public static @Nullable RolloutPhotoResult rolloutPhotoFromCamera(@NonNull final ImageConfig imageConfig)
     {
-        RolloutPhotoResult result = null;
+        RolloutPhotoResult result;
         final File oldFile = imageConfig.resized == null ? imageConfig.original: imageConfig.resized;
         final File newDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
         final File newFile = new File(newDir.getPath(), oldFile.getName());
