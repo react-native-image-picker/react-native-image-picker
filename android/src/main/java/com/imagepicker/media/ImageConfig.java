@@ -107,12 +107,12 @@ public class ImageConfig
         int maxWidth = 0;
         if (options.hasKey("maxWidth"))
         {
-            maxWidth = options.getInt("maxWidth");
+            maxWidth = (int) options.getDouble("maxWidth");
         }
         int maxHeight = 0;
         if (options.hasKey("maxHeight"))
         {
-            maxHeight = options.getInt("maxHeight");
+            maxHeight = (int) options.getDouble("maxHeight");
         }
         int quality = 100;
         if (options.hasKey("quality"))
@@ -122,7 +122,7 @@ public class ImageConfig
         int rotation = 0;
         if (options.hasKey("rotation"))
         {
-            rotation = options.getInt("rotation");
+            rotation = (int) options.getDouble("rotation");
         }
         boolean saveToCameraRoll = false;
         if (options.hasKey("storageOptions"))
