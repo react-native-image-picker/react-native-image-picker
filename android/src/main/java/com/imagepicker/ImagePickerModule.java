@@ -6,6 +6,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -21,21 +22,6 @@ import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Patterns;
 import android.webkit.MimeTypeMap;
-import android.content.pm.PackageManager;
-
-import com.facebook.react.ReactActivity;
-import com.facebook.react.bridge.ActivityEventListener;
-import com.facebook.react.bridge.Callback;
-import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContextBaseJavaModule;
-import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.ReadableMap;
-import com.imagepicker.media.ImageConfig;
-import com.imagepicker.permissions.PermissionUtils;
-import com.imagepicker.permissions.OnImagePickerPermissionsCallback;
-import com.imagepicker.utils.MediaUtils.ReadExifResult;
-import com.imagepicker.utils.RealPathUtil;
-import com.imagepicker.utils.UI;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -48,8 +34,21 @@ import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
-import com.facebook.react.modules.core.PermissionListener;
+import com.facebook.react.ReactActivity;
+import com.facebook.react.bridge.ActivityEventListener;
+import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContextBaseJavaModule;
+import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.modules.core.PermissionAwareActivity;
+import com.facebook.react.modules.core.PermissionListener;
+import com.imagepicker.media.ImageConfig;
+import com.imagepicker.permissions.OnImagePickerPermissionsCallback;
+import com.imagepicker.permissions.PermissionUtils;
+import com.imagepicker.utils.MediaUtils.ReadExifResult;
+import com.imagepicker.utils.RealPathUtil;
+import com.imagepicker.utils.UI;
 
 import static com.imagepicker.utils.MediaUtils.*;
 import static com.imagepicker.utils.MediaUtils.createNewFile;
@@ -199,7 +198,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
   public void doOnCancel()
   {
-    responseHelper.invokeCancel(callback);
+    if (callback != null) {
+      responseHelper.invokeCancel(callback);
+      callback = null;
+    }
   }
 
   public void launchCamera()
