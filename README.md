@@ -110,6 +110,39 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and steps 2 and 5 fo
     }
     ```
 
+7. If `MainActivity` is not instance of `ReactActivity`, you will need to implement `OnImagePickerPermissionsCallback` to `MainActivity`:
+    ```java
+    import com.imagepicker.permissions.OnImagePickerPermissionsCallback; // <- add this import
+    import com.facebook.react.modules.core.PermissionListener; // <- add this import
+
+    public class MainActivity extends YourActivity implements OnImagePickerPermissionsCallback {
+      private PermissionListener listener; // <- add this attribute
+
+      // Your methods here
+
+      // Copy from here
+
+      @Override
+      public void setPermissionListener(PermissionListener listener)
+      {
+        this.listener = listener;
+      }
+
+      @Override
+      public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
+      {
+        if (listener != null)
+        {
+          listener.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+      }
+
+      // To here
+    }
+    ```
+    This code allows to pass result of request permissions to native part.
+
 ##### Android (Optional)
 
 Customization settings of dialog `android/app/res/values/themes.xml` (`android/app/res/values/style.xml` is a valid path as well):
@@ -128,39 +161,6 @@ Customization settings of dialog `android/app/res/values/themes.xml` (`android/a
     </style>
 </resources>
 ```
-
-If `MainActivity` is not instance of `ReactActivity`, you will need to implement `OnImagePickerPermissionsCallback` to `MainActivity`:
-```java
-import com.imagepicker.permissions.OnImagePickerPermissionsCallback; // <- add this import
-import com.facebook.react.modules.core.PermissionListener; // <- add this import
-
-public class MainActivity extends YourActivity implements OnImagePickerPermissionsCallback {
-  private PermissionListener listener; // <- add this attribute
-
-  // Your methods here
-
-  // Copy from here
-
-  @Override
-  public void setPermissionListener(PermissionListener listener)
-  {
-    this.listener = listener;
-  }
-
-  @Override
-  public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
-  {
-    if (listener != null)
-    {
-      listener.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-  }
-
-  // To here
-}
-```
-This code allows to pass result of request permissions to native part.
 
 ## Usage
 
