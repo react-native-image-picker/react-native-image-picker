@@ -324,6 +324,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 
                     BOOL vertical = (image.size.width < image.size.height) ? YES : NO;
                     [gifResponse setObject:@(vertical) forKey:@"isVertical"];
+                    [gifResponse setObject:[rep filename] forKey:@"fileName"];
 
                     if (![[self.options objectForKey:@"noData"] boolValue]) {
                         NSString *dataString = [data base64EncodedStringWithOptions:0];
