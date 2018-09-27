@@ -102,7 +102,7 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and steps 2 and 5 fo
         protected List<ReactPackage> getPackages() {
             return Arrays.<ReactPackage>asList(
                 new MainReactPackage(),
-                new ImagePickerPackage() // <-- add this line
+                new ImagePickerPackage(), // <-- add this line
                 // OR if you want to customize dialog style
                 new ImagePickerPackage(R.style.my_dialog_style)
             );
