@@ -142,6 +142,13 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and steps 2 and 5 fo
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
       }
+      
+      @Override
+      protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // let ReactInstanceManager handle onActivityResult
+        mReactInstanceManager.onActivityResult(this, requestCode, resultCode, data)
+        super.onActivityResult(requestCode, resultCode, data)
+      }
 
       // To here
     }
