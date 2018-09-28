@@ -1,6 +1,5 @@
-'use strict'
+import { NativeModules } from 'react-native';
 
-const { NativeModules } = require('react-native');
 const { ImagePickerManager } = NativeModules;
 
 const DEFAULT_OPTIONS = {
@@ -15,16 +14,16 @@ const DEFAULT_OPTIONS = {
     text: 'To be able to take pictures with your camera and choose images from your library.',
     reTryTitle: 're-try',
     okTitle: 'I\'m sure',
-  }
+  },
 };
 
-module.exports = {
+export default {
   ...ImagePickerManager,
   showImagePicker: function showImagePicker(options, callback) {
     if (typeof options === 'function') {
       callback = options;
       options = {};
     }
-    return ImagePickerManager.showImagePicker({...DEFAULT_OPTIONS, ...options}, callback)
-  }
+    return ImagePickerManager.showImagePicker({ ...DEFAULT_OPTIONS, ...options }, callback);
+  },
 }
