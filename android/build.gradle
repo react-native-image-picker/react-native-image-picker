@@ -20,12 +20,12 @@ buildscript {
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion project.hasProperty('compileSdkVersion') ? project.compileSdkVersion : 25
+    buildToolsVersion project.hasProperty('buildToolsVersion') ? project.buildToolsVersion : "25.0.2"
 
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 25
+        targetSdkVersion project.hasProperty('targetSdkVersion') ? project.targetSdkVersion : 25
         versionCode 1
         versionName computeVersionName()
     }
