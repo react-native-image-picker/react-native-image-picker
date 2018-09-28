@@ -92,7 +92,7 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and steps 2 and 5 fo
     }
     ```
 
-5. Add the required permissions in `AndroidManifest.xml`:
+5. Add the required permissions in `android/app/src/main/AndroidManifest.xml`:
     ```xml
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
