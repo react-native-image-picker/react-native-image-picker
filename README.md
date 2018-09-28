@@ -1,9 +1,9 @@
 
-# React Native Image Picker 
-[![npm version](https://badge.fury.io/js/react-native-image-picker.svg)](https://badge.fury.io/js/react-native-image-picker) 
-[![npm](https://img.shields.io/npm/dt/react-native-image-picker.svg)](https://npmcharts.com/compare/react-native-image-picker?minimal=true) 
-![MIT](https://img.shields.io/dub/l/vibe-d.svg) 
-![Platform - Android and iOS](https://img.shields.io/badge/platform-Android%20%7C%20iOS-yellow.svg) 
+# React Native Image Picker
+[![npm version](https://badge.fury.io/js/react-native-image-picker.svg)](https://badge.fury.io/js/react-native-image-picker)
+[![npm](https://img.shields.io/npm/dt/react-native-image-picker.svg)](https://npmcharts.com/compare/react-native-image-picker?minimal=true)
+![MIT](https://img.shields.io/dub/l/vibe-d.svg)
+![Platform - Android and iOS](https://img.shields.io/badge/platform-Android%20%7C%20iOS-yellow.svg)
 [![Gitter chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/react-native-image-picker/Lobby)
 
 A React Native module that allows you to use native UI to select a photo/video from the device library or directly from the camera, like so:
@@ -149,6 +149,22 @@ IMPORTANT NOTE: You'll still need to perform step 4 for iOS and steps 2 and 5 fo
     This code allows to pass result of request permissions to native part.
 
 ##### Android (Optional)
+
+If you've defined *[project-wide properties](https://developer.android.com/studio/build/gradle-tips.html)* (**recommended**) in your root `build.gradle`, this library will detect the presence of the following properties:
+
+```groovy
+buildscript {...}
+allprojects {...}
+
+/**
+  + Project-wide Gradle configuration properties
+  */
+ext {
+    compileSdkVersion   = 27
+    targetSdkVersion    = 27
+    buildToolsVersion   = "27.0.3"
+}
+```
 
 Customization settings of dialog `android/app/res/values/themes.xml` (`android/app/res/values/style.xml` is a valid path as well):
 ```xml
