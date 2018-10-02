@@ -197,7 +197,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   {
     if (callback != null) {
       responseHelper.invokeCancel(callback);
-           callback = null;
+      callback = null;
     }
   }
 
