@@ -17,13 +17,13 @@ const DEFAULT_OPTIONS = {
   },
 };
 
-export default {
+module.exports = {
   ...ImagePickerManager,
   showImagePicker: function showImagePicker(options, callback) {
     if (typeof options === 'function') {
       callback = options;
       options = {};
     }
-    return ImagePickerManager.showImagePicker({ ...DEFAULT_OPTIONS, ...options }, callback);
-  },
-}
+    return ImagePickerManager.showImagePicker({...DEFAULT_OPTIONS, ...options}, callback)
+  }
+};
