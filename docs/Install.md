@@ -11,7 +11,9 @@ react-native link react-native-image-picker
 
 ### iOS
 
-For iOS 10+, Add the `NSPhotoLibraryUsageDescription`, `NSCameraUsageDescription`, `NSPhotoLibraryAddUsageDescription` and `NSMicrophoneUsageDescription` (if allowing video) keys to your `Info.plist` with strings describing why your app needs these permissions.
+For iOS 10+:
+
+Add the `NSPhotoLibraryUsageDescription`, `NSCameraUsageDescription`, `NSPhotoLibraryAddUsageDescription` and `NSMicrophoneUsageDescription` (if allowing video) keys to your `Info.plist` with strings describing why your app needs these permissions.
 
 **Note: You will get a SIGABRT crash if you don't complete this step**
 
