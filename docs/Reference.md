@@ -14,7 +14,7 @@ Display the image picker.
 
 See [Options](#options) for further information on `options`.
 
-The `callback` will be called with an response object, refer to [The Response Object](#the-response-object).
+The `callback` will be called with a response object, refer to [The Response Object](#the-response-object).
 
 ### `launchCamera()`
 
@@ -26,7 +26,7 @@ Skip the alert dialog and launch the camera directly.
 
 See [Options](#options) for further information on `options`.
 
-The `callback` will be called with an response object, refer to [The Response Object](#the-response-object).
+The `callback` will be called with a response object, refer to [The Response Object](#the-response-object).
 
 ### `launchImageLibrary()`
 
@@ -38,7 +38,7 @@ Skip the alert dialog and launch the image library directly.
 
 See [Options](#options) for further information on `options`.
 
-The `callback` will be called with an response object, refer to [The Response Object](#the-response-object).
+The `callback` will be called with a response object, refer to [The Response Object](#the-response-object).
 
 ## Options
 
@@ -57,7 +57,7 @@ quality | OK | OK | 0 to 1, photos only
 videoQuality | OK |  OK | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android
 durationLimit | OK | OK | Max video recording time, in seconds
 rotation | - | OK | Photos only, 0 to 360 degrees of rotation
-allowsEditing | OK | - | bool - enables built in iOS functionality to resize the image after selection
+allowsEditing | OK | - | bool - enables built-in iOS functionality to resize the image after selection
 noData | OK | OK | If true, disables the base64 `data` field from being generated (greatly improves performance on large photos)
 storageOptions | OK | OK | If this key is provided, the image will be saved in your app's `Documents` directory on iOS, or your app's `Pictures` directory on Android (rather than a temporary directory)
 storageOptions.skipBackup | OK | - | If true, the photo will NOT be backed up to iCloud
