@@ -97,7 +97,7 @@ ImagePicker.launchImageLibrary(options, (response)  => {
 
 On iOS, don't assume that the absolute uri returned will persist. See [#107](/../../issues/107)
 
-For more, read the [API Reference](docs/API-Reference.md).
+For more, read the [API Reference](docs/Reference.md).
 
 ## License
 

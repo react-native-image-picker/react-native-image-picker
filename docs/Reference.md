@@ -4,7 +4,41 @@ This document lays out the current public properties and methods for the React N
 
 ## Methods
 
-TODO
+### `showImagePicker()`
+
+Display the image picker.
+
+```js
+static showImagePicker(options?, callback)
+```
+
+See [Options](#options) for further information on `options`.
+
+The `callback` will be called with an response object, refer to [The Response Object](#the-response-object).
+
+### `launchCamera()`
+
+Skip the alert dialog and launch the camera directly.
+
+```js
+static launchCamera(options?, callback)
+```
+
+See [Options](#options) for further information on `options`.
+
+The `callback` will be called with an response object, refer to [The Response Object](#the-response-object).
+
+### `launchImageLibrary()`
+
+Skip the alert dialog and launch the image library directly.
+
+```js
+static launchImageLibrary(options?, callback)
+```
+
+See [Options](#options) for further information on `options`.
+
+The `callback` will be called with an response object, refer to [The Response Object](#the-response-object).
 
 ## Options
 
