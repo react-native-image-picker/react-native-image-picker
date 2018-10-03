@@ -1,5 +1,5 @@
-
 # React Native Image Picker
+
 [![npm version](https://badge.fury.io/js/react-native-image-picker.svg)](https://badge.fury.io/js/react-native-image-picker)
 [![npm](https://img.shields.io/npm/dt/react-native-image-picker.svg)](https://npmcharts.com/compare/react-native-image-picker?minimal=true)
 ![MIT](https://img.shields.io/dub/l/vibe-d.svg)
@@ -13,6 +13,7 @@ iOS | Android
 <img title="iOS" src="https://github.com/react-community/react-native-image-picker/blob/master/images/ios-image.png"> | <img title="Android" src="https://github.com/react-community/react-native-image-picker/blob/master/images/android-image.png">
 
 #### _Before you open an issue_
+
 This library started as a basic bridge of the native iOS image picker, and I want to keep it that way. As such, functionality beyond what the native `UIImagePickerController` supports will not be supported here. **Multiple image selection, more control over the crop tool, and landscape support** are things missing from the native iOS functionality - **not issues with my library**. If you need these things, [react-native-image-crop-picker](https://github.com/ivpusic/react-native-image-crop-picker) might be a better choice for you.
 
 ## Getting Started
@@ -61,13 +62,14 @@ ImagePicker.showImagePicker(options, (response) => {
     const source = { uri: response.uri };
 
     // You can also display the image using data:
-    // let source = { uri: 'data:image/jpeg;base64,' + response.data };
+    // const source = { uri: 'data:image/jpeg;base64,' + response.data };
 
     this.setState({
       avatarSource: source,
     });
   }
 });
+
 ```
 Then later, if you want to display this image in your render() method:
 ```javascript
@@ -92,10 +94,11 @@ ImagePicker.launchImageLibrary(options, (response)  => {
 ```
 
 #### Notes
+
 On iOS, don't assume that the absolute uri returned will persist. See [#107](/../../issues/107)
 
 For more, read the [API Reference](docs/API-Reference.md).
 
 ## License
 
-MIT
+[MIT](LICENSE.md)
