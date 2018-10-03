@@ -6,11 +6,11 @@ This document lays out the current public properties and methods for the React N
 
 ### `showImagePicker()`
 
-Display the image picker.
-
 ```js
 static showImagePicker(options?, callback)
 ```
+
+Display the image picker.
 
 See [Options](#options) for further information on `options`.
 
@@ -18,11 +18,11 @@ The `callback` will be called with an response object, refer to [The Response Ob
 
 ### `launchCamera()`
 
-Skip the alert dialog and launch the camera directly.
-
 ```js
 static launchCamera(options?, callback)
 ```
+
+Skip the alert dialog and launch the camera directly.
 
 See [Options](#options) for further information on `options`.
 
@@ -30,11 +30,11 @@ The `callback` will be called with an response object, refer to [The Response Ob
 
 ### `launchImageLibrary()`
 
-Skip the alert dialog and launch the image library directly.
-
 ```js
 static launchImageLibrary(options?, callback)
 ```
+
+Skip the alert dialog and launch the image library directly.
 
 See [Options](#options) for further information on `options`.
 
