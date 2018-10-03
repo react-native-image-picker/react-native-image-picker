@@ -15,7 +15,7 @@ For iOS 10+, Add the `NSPhotoLibraryUsageDescription`, `NSCameraUsageDescription
 
 **Note: You will get a SIGABRT crash if you don't complete this step**
 
-```
+```xml
 <plist version="1.0">
   <dict>
     ...
@@ -166,4 +166,7 @@ Customization settings of dialog `android/app/res/values/themes.xml` (`android/a
       // To here
     }
     ```
+
     This code allows to pass result of request permissions to native part.
+
+7. Refer to [Post-install Steps](Install.md#post-install-steps).
