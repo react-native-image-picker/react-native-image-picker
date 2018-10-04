@@ -8,9 +8,9 @@
 
 A React Native module that allows you to use native UI to select a photo/video from the device library or directly from the camera, like so:
 
-iOS | Android
-------- | ----
-<img title="iOS" src="https://github.com/react-community/react-native-image-picker/blob/master/images/ios-image.png"> | <img title="Android" src="https://github.com/react-community/react-native-image-picker/blob/master/images/android-image.png">
+| iOS                                                                                                                   | Android                                                                                                                       |
+| --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| <img title="iOS" src="https://github.com/react-community/react-native-image-picker/blob/master/images/ios-image.png"> | <img title="Android" src="https://github.com/react-community/react-native-image-picker/blob/master/images/android-image.png"> |
 
 #### _Before you open an issue_
 
@@ -33,9 +33,7 @@ import ImagePicker from 'react-native-image-picker';
 // More info on all the options is below in the API Reference... just some common use cases shown here
 const options = {
   title: 'Select Avatar',
-  customButtons: [
-    {name: 'fb', title: 'Choose Photo from Facebook'},
-  ],
+  customButtons: [{ name: 'fb', title: 'Choose Photo from Facebook' }],
   storageOptions: {
     skipBackup: true,
     path: 'images',
@@ -51,14 +49,11 @@ ImagePicker.showImagePicker(options, (response) => {
 
   if (response.didCancel) {
     console.log('User cancelled image picker');
-  }
-  else if (response.error) {
+  } else if (response.error) {
     console.log('ImagePicker Error: ', response.error);
-  }
-  else if (response.customButton) {
+  } else if (response.customButton) {
     console.log('User tapped custom button: ', response.customButton);
-  }
-  else {
+  } else {
     const source = { uri: response.uri };
 
     // You can also display the image using data:
@@ -69,9 +64,10 @@ ImagePicker.showImagePicker(options, (response) => {
     });
   }
 });
-
 ```
+
 Then later, if you want to display this image in your render() method:
+
 ```javascript
 <Image source={this.state.avatarSource} style={styles.uploadAvatar} />
 ```
@@ -83,12 +79,12 @@ do the following:
 
 ```javascript
 // Launch Camera:
-ImagePicker.launchCamera(options, (response)  => {
+ImagePicker.launchCamera(options, (response) => {
   // Same code as in above section!
 });
 
 // Open Image Library:
-ImagePicker.launchImageLibrary(options, (response)  => {
+ImagePicker.launchImageLibrary(options, (response) => {
   // Same code as in above section!
 });
 ```
