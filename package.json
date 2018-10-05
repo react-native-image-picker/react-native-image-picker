@@ -35,9 +35,10 @@
   "types": "./index.d.ts",
   "license": "MIT",
   "devDependencies": {
+    "flow-bin": "0.82.0",
     "husky": "^1.1.0",
     "lint-staged": "^7.3.0",
-    "prettier": "^1.14.3"
+    "prettier": "1.14.3"
   },
   "husky": {
     "hooks": {
