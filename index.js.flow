@@ -60,7 +60,7 @@ declare export function launchImageLibrary(options: ?Options, callback: (respons
 declare export function launchImageLibrary(callback: (response: Response) => any): void;
 
 declare export default {
-  showImagePicker(options: ?Options, callback: (response: Response) => any): void
+  showImagePicker(options: ?Options, callback: (response: Response) => any): void,
   launchCamera(options: ?Options, callback: (response: Response) => any): void,
   launchImageLibrary(callback: (response: Response) => any): void,
 };
