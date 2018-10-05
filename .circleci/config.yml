@@ -23,7 +23,7 @@ jobs:
       - run:
           name: Yarn Install
           command: |
-            yarn install --no-progress --non-interactive --cache-folder ~/.cache/yarn
+            yarn install --frozen-lockfile --no-progress --non-interactive --cache-folder ~/.cache/yarn
       - run:
           name: Flow
           command: |
