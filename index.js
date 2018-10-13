@@ -1,4 +1,4 @@
-import { NativeModules } from 'react-native';
+import { NativeModules, processColor } from 'react-native';
 
 const { ImagePickerManager } = NativeModules;
 
@@ -16,6 +16,7 @@ const DEFAULT_OPTIONS = {
     reTryTitle: 're-try',
     okTitle: "I'm sure",
   },
+  tintColor: processColor('blue'),
 };
 
 module.exports = {
@@ -26,7 +27,7 @@ module.exports = {
       options = {};
     }
     return ImagePickerManager.showImagePicker(
-      { ...DEFAULT_OPTIONS, ...options },
+      { ...DEFAULT_OPTIONS, ...options, tintColor: processColor(options.tintColor) },
       callback,
     );
   },

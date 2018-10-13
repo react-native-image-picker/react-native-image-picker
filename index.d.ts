@@ -41,6 +41,7 @@ declare module "react-native-image-picker" {
         allowsEditing?: boolean;
         noData?: boolean;
         storageOptions?: StorageOptions;
+        tintColor?: string;
     }
 
     interface StorageOptions {

@@ -41,6 +41,7 @@ export type Options = {
     allowsEditing?: boolean;
     noData?: boolean;
     storageOptions?: StorageOptions;
+    tintColor?: string;
 }
 
 export type StorageOptions = {
