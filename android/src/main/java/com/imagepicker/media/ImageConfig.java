@@ -78,11 +78,13 @@ public class ImageConfig
 
     public @NonNull ImageConfig withOriginalFile(@Nullable final File original)
     {
-        //if it is a GIF file, always set quality to 100 to prevent compression
-        String extension = MimeTypeMap.getFileExtensionFromUrl(original.getAbsolutePath());
-        int quality = this.quality;
-        if(extension.contains("gif")){
-            quality = 100;
+        if (original != null) {
+            //if it is a GIF file, always set quality to 100 to prevent compression
+            String extension = MimeTypeMap.getFileExtensionFromUrl(original.getAbsolutePath());
+            int quality = this.quality;
+            if(extension.contains("gif")){
+                quality = 100;
+            }
         }
 
         return new ImageConfig(
