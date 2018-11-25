@@ -13,7 +13,8 @@
 @property (nonatomic, strong) UIImagePickerController *picker;
 @property (nonatomic, strong) RCTResponseSenderBlock callback;
 @property (nonatomic, strong) NSDictionary *defaultOptions;
-@property (nonatomic, retain) NSMutableDictionary *options, *response;
+@property (nonatomic, retain) NSDictionary *options;
+@property (nonatomic, retain) NSMutableDictionary *response;
 @property (nonatomic, strong) NSArray *customButtons;
 
 @end
