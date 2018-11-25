@@ -542,15 +542,20 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
                                    @NonNull final Callback callback,
                                    @NonNull final int requestCode)
   {
-    final int writePermission = ActivityCompat
-            .checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-    final int cameraPermission = ActivityCompat
-            .checkSelfPermission(activity, Manifest.permission.CAMERA);
+    String permission = null;
+    if (requestCode == REQUEST_PERMISSIONS_FOR_CAMERA) {
+      permission = Manifest.permission.CAMERA;
+    } else if (requestCode == REQUEST_PERMISSIONS_FOR_LIBRARY) {
+      permission = Manifest.permission.WRITE_EXTERNAL_STORAGE;
+    }
+    if (permission == null) {
+      return false;
+    }
 
-    final boolean permissionsGrated = writePermission == PackageManager.PERMISSION_GRANTED &&
-            cameraPermission == PackageManager.PERMISSION_GRANTED;
+    final int permissionStatus = ActivityCompat.checkSelfPermission(activity, permission);
+    final boolean permissionGranted = permissionStatus == PackageManager.PERMISSION_GRANTED;
 
-    if (!permissionsGrated)
+    if (!permissionGranted)
     {
       final Boolean dontAskAgain = ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) && ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA);
 
@@ -598,18 +603,18 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       }
       else
       {
-        String[] PERMISSIONS = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA};
+        String[] permissions = {permission};
         if (activity instanceof ReactActivity)
         {
-          ((ReactActivity) activity).requestPermissions(PERMISSIONS, requestCode, listener);
+          ((ReactActivity) activity).requestPermissions(permissions, requestCode, listener);
         }
         else if (activity instanceof PermissionAwareActivity) {
-          ((PermissionAwareActivity) activity).requestPermissions(PERMISSIONS, requestCode, listener);
+          ((PermissionAwareActivity) activity).requestPermissions(permissions, requestCode, listener);
         }
         else if (activity instanceof OnImagePickerPermissionsCallback)
         {
           ((OnImagePickerPermissionsCallback) activity).setPermissionListener(listener);
-          ActivityCompat.requestPermissions(activity, PERMISSIONS, requestCode);
+          ActivityCompat.requestPermissions(activity, permissions, requestCode);
         }
         else
         {
