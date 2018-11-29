@@ -46,9 +46,11 @@ public class MediaUtils
                 .append(".jpg")
                 .toString();
 
-        final File path = ReadableMapUtils.hasAndNotNullReadableMap(options, "storageOptions") && !forceLocal
-                ? Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                : reactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        final File path = ReadableMapUtils.hasAndNotNullReadableMap(options, "storageOptions")
+                && ReadableMapUtils.hasAndNotEmptyString(options.getMap("storageOptions"), "path")
+                ? new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), options.getMap("storageOptions").getString("path"))
+                : (!forceLocal ? Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                              : reactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES));
 
         File result = new File(path, filename);
 
@@ -175,11 +177,9 @@ public class MediaUtils
 
         result = result.withResizedFile(resized);
 
-        FileOutputStream fos;
-        try
+        try (FileOutputStream fos = new FileOutputStream(result.resized))
         {
-            fos = new FileOutputStream(result.resized);
-            fos.write(bytes.toByteArray());
+            bytes.writeTo(fos);
         }
         catch (IOException e)
         {

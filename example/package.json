@@ -1,0 +1,24 @@
+{
+  "name": "example",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "concurrently \"node node_modules/react-native/local-cli/cli.js start\" \"wml add ../ ./node_modules/react-native-image-picker/; wml start\"",
+    "test": "jest"
+  },
+  "dependencies": {
+    "react": "16.6.1",
+    "react-native": "0.57.5"
+  },
+  "devDependencies": {
+    "babel-jest": "23.6.0",
+    "concurrently": "^4.1.0",
+    "jest": "23.6.0",
+    "metro-react-native-babel-preset": "0.49.2",
+    "react-test-renderer": "16.6.1",
+    "wml": "^0.0.83"
+  },
+  "jest": {
+    "preset": "react-native"
+  }
+}
