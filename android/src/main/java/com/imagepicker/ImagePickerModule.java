@@ -160,7 +160,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         {
           return;
         }
-        module.launchCamera();
+        module.launchCamera(options, callback);
       }
 
       @Override
@@ -170,7 +170,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         {
           return;
         }
-        module.launchImageLibrary();
+        module.launchImageLibrary(options, callback);
       }
 
       @Override
