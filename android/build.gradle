@@ -13,7 +13,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.2.+'
+        classpath 'com.android.tools.build:gradle:2.3.0'
     }
 }
 
@@ -46,7 +46,7 @@ repositories {
 
 dependencies {
     compile "com.facebook.react:react-native:+"  // From node_modules
-    
+
     testCompile "junit:junit:4.10"
     testCompile "org.assertj:assertj-core:1.7.0"
     testCompile "org.robolectric:robolectric:3.3.2"
