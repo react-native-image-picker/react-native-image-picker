@@ -33,6 +33,15 @@ Add the `NSPhotoLibraryUsageDescription`, `NSCameraUsageDescription`, `NSPhotoLi
 </plist>
 ```
 
+⚠️ If you are planning on submitting your application to app store:
+
+To be compliant with Guideline 5.1.1 - Legal - Privacy - Data Collection and Storage, the permission request alert should specify how your app will use this feature to help users understand why your app is requesting access to their personal data.
+
+```
+$(PRODUCT_NAME) would like access to your photo gallery to change your profile picture
+```
+
+
 ### Android
 
 Add the required permissions in `AndroidManifest.xml`:
