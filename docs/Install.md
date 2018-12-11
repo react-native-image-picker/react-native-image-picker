@@ -93,7 +93,7 @@ Customization settings of dialog `android/app/res/values/themes.xml` (`android/a
 
 1. In the XCode's "Project navigator", right click on your project's Libraries folder ➜ `Add Files to <...>`.
 1. Go to `node_modules` ➜ `react-native-image-picker` ➜ `ios` ➜ select `RNImagePicker.xcodeproj`.
-1. Add `RNImagePicker.a` to `Build Phases -> Link Binary With Libraries`.
+1. Add `libRNImagePicker.a` to `Build Phases -> Link Binary With Libraries`.
 1. Refer to [Post-install Steps](Install.md#post-install-steps).
 1. Compile and have fun.
 
