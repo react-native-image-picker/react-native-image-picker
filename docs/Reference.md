@@ -83,7 +83,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | width            | OK                     | OK          | Image dimensions (photos only)                                         |
 | height           | OK                     | OK          | Image dimensions (photos only)                                         |
 | fileSize         | OK                     | OK          | The file size (photos only)                                            |
-| type             | -                      | OK          | The file type (photos only)                                            |
+| type             | OK                     | OK          | The file type (photos only)                                            |
 | fileName         | OK (photos and videos) | OK (photos) | The file name, if available
 | path             | -                      | OK          | The file path                                                          |
 | latitude         | OK                     | OK          | Latitude metadata, if available                                        |
