@@ -370,11 +370,11 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             NSData *data;
             NSString *mimeType;
             if ([[self.options objectForKey:@"imageFileType"] isEqualToString:@"png"]) {
-                data = UIImagePNGRepresentation(image);
+                data = UIImagePNGRepresentation(editedImage);
                 mimeType = (__bridge_transfer NSString *)(UTTypeCopyPreferredTagWithClass(kUTTypePNG, kUTTagClassMIMEType));
             }
             else {
-                data = UIImageJPEGRepresentation(image, [[self.options valueForKey:@"quality"] floatValue]);
+                data = UIImageJPEGRepresentation(editedImage, [[self.options valueForKey:@"quality"] floatValue]);
                 mimeType = (__bridge_transfer NSString *)(UTTypeCopyPreferredTagWithClass(kUTTypeJPEG, kUTTagClassMIMEType));
             }
             [self.response setObject:mimeType forKey:@"type"];
