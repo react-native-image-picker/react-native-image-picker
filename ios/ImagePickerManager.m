@@ -203,35 +203,19 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         }];
     }
     else { // RNImagePickerTargetLibrarySingleImage
-        // Wrapper for permission check and showing picker
-        void (^showPickerViewControllerIfPermitted)() = ^() {
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 110000
-            if (@available(iOS 11.0, *)) {
-                // iOS 11 no longer requires permission to access single image
-                showPickerViewController();
-            } else {
-                [self checkPhotosPermissions:^(BOOL granted) {
-                    if (!granted) {
-                        self.callback(@[@{@"error": @"Photo library permissions not granted"}]);
-                        return;
-                    }
-                    
-                    showPickerViewController();
-                }];
-            }
-#else
+        if (@available(iOS 11.0, *)) {
+            // iOS 11 no longer requires permission to access single image
+            showPickerViewController();
+        } else {
             [self checkPhotosPermissions:^(BOOL granted) {
                 if (!granted) {
                     self.callback(@[@{@"error": @"Photo library permissions not granted"}]);
                     return;
                 }
-                
+
                 showPickerViewController();
             }];
-#endif
         };
-
-        showPickerViewControllerIfPermitted();
     }
 }
 
