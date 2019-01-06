@@ -2,6 +2,7 @@ package com.imagepicker.media;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.webkit.MimeTypeMap;
 
 import com.facebook.react.bridge.ReadableMap;
 
@@ -77,9 +78,18 @@ public class ImageConfig
 
     public @NonNull ImageConfig withOriginalFile(@Nullable final File original)
     {
+        if (original != null) {
+            //if it is a GIF file, always set quality to 100 to prevent compression
+            String extension = MimeTypeMap.getFileExtensionFromUrl(original.getAbsolutePath());
+            int quality = this.quality;
+            if(extension.contains("gif")){
+                quality = 100;
+            }
+        }
+
         return new ImageConfig(
                 original, this.resized, this.maxWidth,
-                this.maxHeight, this.quality, this.rotation,
+                this.maxHeight, quality, this.rotation,
                 this.saveToCameraRoll
         );
     }
@@ -107,12 +117,12 @@ public class ImageConfig
         int maxWidth = 0;
         if (options.hasKey("maxWidth"))
         {
-            maxWidth = options.getInt("maxWidth");
+            maxWidth = (int) options.getDouble("maxWidth");
         }
         int maxHeight = 0;
         if (options.hasKey("maxHeight"))
         {
-            maxHeight = options.getInt("maxHeight");
+            maxHeight = (int) options.getDouble("maxHeight");
         }
         int quality = 100;
         if (options.hasKey("quality"))
@@ -122,7 +132,7 @@ public class ImageConfig
         int rotation = 0;
         if (options.hasKey("rotation"))
         {
-            rotation = options.getInt("rotation");
+            rotation = (int) options.getDouble("rotation");
         }
         boolean saveToCameraRoll = false;
         if (options.hasKey("storageOptions"))

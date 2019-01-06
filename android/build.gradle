@@ -9,23 +9,28 @@ def computeVersionName() {
 
 buildscript {
     repositories {
+        google()
         jcenter()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.2.+'
+        classpath 'com.android.tools.build:gradle:3.1.4'
     }
 }
 
 apply plugin: 'com.android.library'
 
+def DEFAULT_COMPILE_SDK_VERSION = 27
+def DEFAULT_BUILD_TOOLS_VERSION = "27.0.3"
+def DEFAULT_TARGET_SDK_VERSION = 26
+
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion rootProject.hasProperty('compileSdkVersion') ? rootProject.compileSdkVersion : DEFAULT_COMPILE_SDK_VERSION
+    buildToolsVersion rootProject.hasProperty('buildToolsVersion') ? rootProject.buildToolsVersion : DEFAULT_BUILD_TOOLS_VERSION
 
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 25
+        targetSdkVersion rootProject.hasProperty('targetSdkVersion') ? rootProject.targetSdkVersion : DEFAULT_TARGET_SDK_VERSION
         versionCode 1
         versionName computeVersionName()
     }
@@ -36,6 +41,7 @@ android {
 
 repositories {
     mavenCentral()
+    google()
     maven {
         url "$projectDir/../Example/node_modules/react-native/android"
     }
@@ -45,15 +51,15 @@ repositories {
 }
 
 dependencies {
-    compile "com.facebook.react:react-native:+"  // From node_modules
-    
-    testCompile "junit:junit:4.10"
-    testCompile "org.assertj:assertj-core:1.7.0"
-    testCompile "org.robolectric:robolectric:3.3.2"
+    implementation "com.facebook.react:react-native:+"  // From node_modules
 
-    testCompile "org.easytesting:fest-assert-core:${FEST_ASSERT_CORE_VERSION}"
-    testCompile "org.powermock:powermock-api-mockito:${POWERMOCK_VERSION}"
-    testCompile "org.powermock:powermock-module-junit4-rule:${POWERMOCK_VERSION}"
-    testCompile "org.powermock:powermock-classloading-xstream:${POWERMOCK_VERSION}"
-    testCompile "org.mockito:mockito-core:${MOCKITO_CORE_VERSION}"
+    testImplementation "junit:junit:4.10"
+    testImplementation "org.assertj:assertj-core:1.7.0"
+    testImplementation "org.robolectric:robolectric:3.3.2"
+
+    testImplementation "org.easytesting:fest-assert-core:${FEST_ASSERT_CORE_VERSION}"
+    testImplementation "org.powermock:powermock-api-mockito:${POWERMOCK_VERSION}"
+    testImplementation "org.powermock:powermock-module-junit4-rule:${POWERMOCK_VERSION}"
+    testImplementation "org.powermock:powermock-classloading-xstream:${POWERMOCK_VERSION}"
+    testImplementation "org.mockito:mockito-core:${MOCKITO_CORE_VERSION}"
 }
