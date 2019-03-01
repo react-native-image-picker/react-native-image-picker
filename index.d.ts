@@ -1,6 +1,6 @@
 declare module "react-native-image-picker" {
 
-    interface Response {
+    interface ImagePickerResponse {
         customButton: string;
         didCancel: boolean;
         error: string;
@@ -19,17 +19,17 @@ declare module "react-native-image-picker" {
         timestamp?: string;
     }
 
-    interface CustomButtonOptions {
+    interface ImagePickerCustomButtonOptions {
         name?: string;
         title?: string;
     }
 
-    interface Options {
+    interface ImagePickerOptions {
         title?: string;
         cancelButtonTitle?: string;
         takePhotoButtonTitle?: string;
         chooseFromLibraryButtonTitle?: string;
-        customButtons?: Array<CustomButtonOptions>;
+        customButtons?: Array<ImagePickerCustomButtonOptions>;
         cameraType?: 'front' | 'back';
         mediaType?: 'photo' | 'video' | 'mixed';
         maxWidth?: number;
@@ -40,10 +40,10 @@ declare module "react-native-image-picker" {
         rotation?: number;
         allowsEditing?: boolean;
         noData?: boolean;
-        storageOptions?: StorageOptions;
+        storageOptions?: ImagePickerStorageOptions;
     }
 
-    interface StorageOptions {
+    interface ImagePickerStorageOptions {
         skipBackup?: boolean;
         path?: string;
         cameraRoll?: boolean;
@@ -51,12 +51,10 @@ declare module "react-native-image-picker" {
     }
 
 
-    class ImagePicker {
-        static showImagePicker(options: Options, callback: (response: Response) => void): void;
-        static launchCamera(options: Options, callback: (response: Response) => void): void;
-        static launchImageLibrary(options: Options, callback: (response: Response) => void): void;
+    export default class ImagePicker {
+        static showImagePicker(options: ImagePickerOptions, callback: (response: ImagePickerResponse) => void): void;
+        static launchCamera(options: ImagePickerOptions, callback: (response: ImagePickerResponse) => void): void;
+        static launchImageLibrary(options: ImagePickerOptions, callback: (response: ImagePickerResponse) => void): void;
     }
-
-    export = ImagePicker;
 
 }
