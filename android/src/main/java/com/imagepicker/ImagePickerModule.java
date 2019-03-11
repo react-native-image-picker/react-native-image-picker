@@ -452,6 +452,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     else
     {
       imageConfig = getResizedImage(reactContext, this.options, imageConfig, initialWidth, initialHeight, requestCode);
+      
+      // some devices allow video anyways in photo only mode e.g Huawei Mate 20 Lite
+      if (imageConfig == null) {
+        responseHelper.invokeError(callback, "Video is not supported in image mode");
+        return;
+      }
+      
       if (imageConfig.resized == null)
       {
         removeUselessFiles(requestCode, imageConfig);
