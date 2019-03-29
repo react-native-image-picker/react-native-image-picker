@@ -307,6 +307,9 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                 if (pickedAsset.creationDate) {
                     self.response[@"timestamp"] = [[ImagePickerManager ISO8601DateFormatter] stringFromDate:pickedAsset.creationDate];
                 }
+            }else if(self.picker.sourceType == UIImagePickerControllerSourceTypeCamera){
+                // If image from camera,`imageURL` will be nil
+                self.response[@"fileName"] = fileName;
             }
 
             // GIFs break when resized, so we handle them differently
