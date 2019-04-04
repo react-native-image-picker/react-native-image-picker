@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:textAppearance="?android:attr/textAppearanceMedium"
-    android:textColor="?android:attr/textColorAlertDialogListItem"
+    android:textColor="#61c3e7"
     android:gravity="center_vertical"
     android:paddingTop="15dp"
     android:paddingBottom="15dp"
