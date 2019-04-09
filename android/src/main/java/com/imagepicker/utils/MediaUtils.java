@@ -48,10 +48,10 @@ public class MediaUtils
                 .toString();
 
         final ReadableMap storageOptions = options.getMap("storageOptions");
-        final String storageSubdirectory = storageOptions.getString("path");
+        final String storageSubdirectory = storageOptions != null ? storageOptions.getString("path") : null;
         File storageDirectory;
 
-        if (storageOptions.getBoolean("saveToCache")) {
+        if (storageOptions != null && storageOptions.getBoolean("saveToCache")) {
             final String cacheDirectory = reactContext.getCacheDir().getAbsolutePath();
             if (!TextUtils.isEmpty(storageSubdirectory)) {
                 storageDirectory = new File(cacheDirectory, storageSubdirectory);
