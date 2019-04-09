@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.facebook.react.bridge.ReadableMap;
@@ -46,17 +47,32 @@ public class MediaUtils
                 .append(".jpg")
                 .toString();
 
-        final File path = ReadableMapUtils.hasAndNotNullReadableMap(options, "storageOptions")
-                && ReadableMapUtils.hasAndNotEmptyString(options.getMap("storageOptions"), "path")
-                ? new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), options.getMap("storageOptions").getString("path"))
-                : (!forceLocal ? Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                              : reactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES));
+        final ReadableMap storageOptions = options.getMap("storageOptions");
+        final String storageSubdirectory = storageOptions.getString("path");
+        File storageDirectory;
 
-        File result = new File(path, filename);
+        if (storageOptions.getBoolean("saveToCache")) {
+            final String cacheDirectory = reactContext.getCacheDir().getAbsolutePath();
+            if (!TextUtils.isEmpty(storageSubdirectory)) {
+                storageDirectory = new File(cacheDirectory, storageSubdirectory);
+            } else {
+                storageDirectory = new File(cacheDirectory);
+            }
+        } else {
+            if (!TextUtils.isEmpty(storageSubdirectory)) {
+                storageDirectory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath(), storageSubdirectory);
+            } else if (forceLocal) {
+                storageDirectory = reactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+            } else {
+                storageDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+            }
+        }
+
+        File result = new File(storageDirectory, filename);
 
         try
         {
-            path.mkdirs();
+            storageDirectory.mkdirs();
             result.createNewFile();
         }
         catch (IOException e)
