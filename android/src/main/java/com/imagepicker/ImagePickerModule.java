@@ -74,6 +74,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   protected Uri cameraCaptureURI;
   private Boolean noData = false;
   private Boolean pickVideo = false;
+  private int frontCamera=0;
   private ImageConfig imageConfig = new ImageConfig(null, null, 0, 0, 100, 0, false);
 
   @Deprecated
@@ -254,6 +255,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     {
       requestCode = REQUEST_LAUNCH_IMAGE_CAPTURE;
       cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+      cameraIntent.putExtra("android.intent.extras.CAMERA_FACING", frontCamera);
 
       final File original = createNewFile(reactContext, this.options, false);
       imageConfig = imageConfig.withOriginalFile(original);
@@ -726,6 +728,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     videoDurationLimit = 0;
     if (options.hasKey("durationLimit")) {
       videoDurationLimit = options.getInt("durationLimit");
+    }
+    frontCamera=0;
+    if(options.hasKey("cameraType") && options.getString("cameraType").equals("front")){
+      frontCamera=1;
     }
   }
 }
