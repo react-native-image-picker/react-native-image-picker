@@ -255,7 +255,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     {
       requestCode = REQUEST_LAUNCH_IMAGE_CAPTURE;
       cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-      cameraIntent.putExtra("android.intent.extras.CAMERA_FACING", frontCamera);
+
+      if(this.hasFrontCamera()){
+        cameraIntent.putExtra("android.intent.extras.CAMERA_FACING", frontCamera);
+      }
 
       final File original = createNewFile(reactContext, this.options, false);
       imageConfig = imageConfig.withOriginalFile(original);
@@ -300,6 +303,18 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       e.printStackTrace();
       responseHelper.invokeError(callback, "Cannot launch camera");
     }
+  }
+
+  private boolean hasFrontCamera() {
+    Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+    int numberOfCameras = Camera.getNumberOfCameras();
+    for (int i = 0; i < numberOfCameras; i++) {
+        Camera.getCameraInfo(i, cameraInfo);
+        if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+            return true;
+        }
+    }
+    return false;
   }
 
   public void launchImageLibrary()
