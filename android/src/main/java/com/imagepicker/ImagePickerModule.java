@@ -75,7 +75,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   protected Uri cameraCaptureURI;
   private Boolean noData = false;
   private Boolean pickVideo = false;
-  private int frontCamera=0;
+  private int frontCamera=Camera.CameraInfo.CAMERA_FACING_BACK;
   private ImageConfig imageConfig = new ImageConfig(null, null, 0, 0, 100, 0, false);
 
   @Deprecated
@@ -745,9 +745,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     if (options.hasKey("durationLimit")) {
       videoDurationLimit = options.getInt("durationLimit");
     }
-    frontCamera=0;
+    frontCamera=Camera.CameraInfo.CAMERA_FACING_BACK;
     if(options.hasKey("cameraType") && options.getString("cameraType").equals("front")){
-      frontCamera=1;
+      frontCamera=Camera.CameraInfo.CAMERA_FACING_FRONT;
     }
   }
 }
