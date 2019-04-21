@@ -259,6 +259,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
       if(this.hasFrontCamera()){
         cameraIntent.putExtra("android.intent.extras.CAMERA_FACING", frontCamera);
+
+        if(frontCamera==Camera.CameraInfo.CAMERA_FACING_FRONT){
+          cameraIntent.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
+        }
       }
 
       final File original = createNewFile(reactContext, this.options, false);
