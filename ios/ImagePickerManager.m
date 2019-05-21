@@ -478,7 +478,10 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             CGImageRef imgRef = [generate copyCGImageAtTime:time actualTime:NULL error:&err];
             UIImage *currentImg = [[UIImage alloc] initWithCGImage:imgRef];
             NSData *imageData = UIImagePNGRepresentation(currentImg);
-            [self.response setObject:[imageData base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength] forKey:@"videoThumbnail"];
+            NSString *thumbnailString = [imageData base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
+            if ([thumbnailString length] != 0) {
+                [self.response setObject:thumbnailString forKey:@"videoThumbnail"];
+            }
 
             NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
             if (storageOptions && [[storageOptions objectForKey:@"cameraRoll"] boolValue] == YES && self.picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
