@@ -1,6 +1,6 @@
 // @flow
 
-export type Response = {
+export type ImagePickerResponse = {
     customButton: string;
     didCancel: boolean;
     error: string;
@@ -19,17 +19,17 @@ export type Response = {
     timestamp?: string;
 }
 
-export type CustomButtonOptions = {
+export type ImagePickerCustomButtonOptions = {
     name?: string;
     title?: string;
 }
 
-export type Options = {
+export type ImagePickerOptions = {
     title?: string;
     cancelButtonTitle?: string;
     takePhotoButtonTitle?: string;
     chooseFromLibraryButtonTitle?: string;
-    customButtons?: Array<CustomButtonOptions>;
+    customButtons?: Array<ImagePickerCustomButtonOptions>;
     cameraType?: 'front' | 'back';
     mediaType?: 'photo' | 'video' | 'mixed';
     maxWidth?: number;
@@ -40,27 +40,27 @@ export type Options = {
     rotation?: number;
     allowsEditing?: boolean;
     noData?: boolean;
-    storageOptions?: StorageOptions;
+    storageOptions?: ImagePickerStorageOptions;
 }
 
-export type StorageOptions = {
+export type ImagePickerStorageOptions = {
     skipBackup?: boolean;
     path?: string;
     cameraRoll?: boolean;
     waitUntilSaved?: boolean;
 }
 
-declare export function showImagePicker(options: ?Options, callback: (response: Response) => any): void;
-declare export function showImagePicker(callback: (response: Response) => any): void;
+declare export function showImagePicker(options: ?ImagePickerOptions, callback: (response: ImagePickerResponse) => any): void;
+declare export function showImagePicker(callback: (response: ImagePickerResponse) => any): void;
 
-declare export function launchCamera(options: ?Options, callback: (response: Response) => any): void;
-declare export function launchCamera(callback: (response: Response) => any): void;
+declare export function launchCamera(options: ?ImagePickerOptions, callback: (response: ImagePickerResponse) => any): void;
+declare export function launchCamera(callback: (response: ImagePickerResponse) => any): void;
 
-declare export function launchImageLibrary(options: ?Options, callback: (response: Response) => any): void;
-declare export function launchImageLibrary(callback: (response: Response) => any): void;
+declare export function launchImageLibrary(options: ?ImagePickerOptions, callback: (response: ImagePickerResponse) => any): void;
+declare export function launchImageLibrary(callback: (response: ImagePickerResponse) => any): void;
 
 declare export default {
-  showImagePicker(options: ?Options, callback: (response: Response) => any): void,
-  launchCamera(options: ?Options, callback: (response: Response) => any): void,
-  launchImageLibrary(options: ?Options, callback: (response: Response) => any): void,
+  showImagePicker(options: ?ImagePickerOptions, callback: (response: ImagePickerResponse) => any): void,
+  launchCamera(options: ?ImagePickerOptions, callback: (response: ImagePickerResponse) => any): void,
+  launchImageLibrary(options: ?ImagePickerOptions, callback: (response: ImagePickerResponse) => any): void,
 };
