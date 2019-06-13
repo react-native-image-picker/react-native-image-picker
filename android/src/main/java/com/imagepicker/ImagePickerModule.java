@@ -22,6 +22,7 @@ import android.util.Base64;
 import android.util.Patterns;
 import android.webkit.MimeTypeMap;
 import android.content.pm.PackageManager;
+import android.media.MediaMetadataRetriever;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.bridge.ActivityEventListener;
@@ -409,17 +410,26 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         break;
 
       case REQUEST_LAUNCH_VIDEO_LIBRARY:
-        responseHelper.putString("uri", data.getData().toString());
-        responseHelper.putString("path", getRealPathFromURI(data.getData()));
-        responseHelper.invokeResponse(callback);
-        callback = null;
-        return;
-
       case REQUEST_LAUNCH_VIDEO_CAPTURE:
-        final String path = getRealPathFromURI(data.getData());
-        responseHelper.putString("uri", data.getData().toString());
+        uri = data.getData();
+
+        final String path = getRealPathFromURI(uri);
+
+        final MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        retriever.setDataSource(reactContext, uri);
+        final String width = retriever.extractMetadata(retriever.METADATA_KEY_VIDEO_WIDTH);
+        final String height = retriever.extractMetadata(retriever.METADATA_KEY_VIDEO_HEIGHT);
+        final String rotation = retriever.extractMetadata(retriever.METADATA_KEY_VIDEO_ROTATION);
+
+        responseHelper.putString("uri", uri.toString());
         responseHelper.putString("path", path);
-        fileScan(reactContext, path);
+        responseHelper.putInt("width", Integer.parseInt(width));
+        responseHelper.putInt("height", Integer.parseInt(height));
+        responseHelper.putBoolean("isVertical", rotation.equals("90"));
+
+        if (requestCode == REQUEST_LAUNCH_VIDEO_CAPTURE) {
+          fileScan(reactContext, path);
+        }
         responseHelper.invokeResponse(callback);
         callback = null;
         return;
