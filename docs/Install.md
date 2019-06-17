@@ -126,11 +126,11 @@ Customization settings of dialog `android/app/res/values/themes.xml` (`android/a
    distributionUrl=https\://services.gradle.org/distributions/gradle-2.14.1-all.zip
    ```
 
-4. Add the compile line to the dependencies in `android/app/build.gradle`:
+4. Add the implementation line to the dependencies in `android/app/build.gradle`:
 
    ```gradle
    dependencies {
-       compile project(':react-native-image-picker')
+       implementation project(':react-native-image-picker')
    }
    ```
 
