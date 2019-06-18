@@ -1,7 +1,7 @@
 package com.imagepicker.media;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.webkit.MimeTypeMap;
 
 import com.facebook.react.bridge.ReadableMap;
