@@ -110,6 +110,13 @@ public class RealPathUtil {
 			// MediaProvider
 			else if (isMediaDocument(uri)) {
 				final String docId = DocumentsContract.getDocumentId(uri);
+
+				// Handle raw file urls differently, we can just return the current string minus
+				// the raw: prefix. https://github.com/Yalantis/uCrop/issues/318
+				if (id != null && id.startsWith("raw:")) {
+					return id.substring(4);
+				}
+
 				final String[] split = docId.split(":");
 				final String type = split[0];
 
