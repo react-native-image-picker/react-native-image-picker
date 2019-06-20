@@ -75,6 +75,13 @@ public class RealPathUtil {
 			else if (isDownloadsDocument(uri)) {
 
 				final String id = DocumentsContract.getDocumentId(uri);
+
+				// Handle raw file urls differently, we can just return the current string minus
+				// the raw: prefix. https://github.com/Yalantis/uCrop/issues/318
+				if (id != null && id.startsWith("raw:")) {
+					return id.substring(4);
+				}
+
 				final Uri contentUri = ContentUris.withAppendedId(
 						Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
 				try {
