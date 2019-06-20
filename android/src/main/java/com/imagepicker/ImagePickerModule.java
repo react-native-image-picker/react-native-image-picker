@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.media.Image;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.provider.Settings;
@@ -17,6 +18,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.util.Base64;
+import android.util.Log;
 import android.util.Patterns;
 import android.webkit.MimeTypeMap;
 import android.content.pm.PackageManager;
@@ -28,6 +30,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.modules.core.PermissionAwareActivity;
 import com.imagepicker.media.ImageConfig;
 import com.imagepicker.permissions.PermissionUtils;
 import com.imagepicker.permissions.OnImagePickerPermissionsCallback;
@@ -44,9 +47,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.facebook.react.modules.core.PermissionListener;
 
+import static android.R.attr.writePermission;
 import static com.imagepicker.utils.MediaUtils.*;
 import static com.imagepicker.utils.MediaUtils.createNewFile;
 import static com.imagepicker.utils.MediaUtils.getResizedImage;
@@ -70,6 +76,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   protected Uri cameraCaptureURI;
   private Boolean noData = false;
   private Boolean pickVideo = false;
+  private Boolean pickMixed = false;
   private ImageConfig imageConfig = new ImageConfig(null, null, 0, 0, 100, 0, false);
 
   @Deprecated
@@ -79,44 +86,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   private int videoDurationLimit = 0;
 
   private ResponseHelper responseHelper = new ResponseHelper();
-  private PermissionListener listener = new PermissionListener()
-  {
-    public boolean onRequestPermissionsResult(final int requestCode,
-                                              @NonNull final String[] permissions,
-                                              @NonNull final int[] grantResults)
-    {
-      boolean permissionsGranted = true;
-      for (int i = 0; i < permissions.length; i++)
-      {
-        final boolean granted = grantResults[i] == PackageManager.PERMISSION_GRANTED;
-        permissionsGranted = permissionsGranted && granted;
-      }
-
-      if (callback == null || options == null)
-      {
-        return false;
-      }
-
-      if (!permissionsGranted)
-      {
-        responseHelper.invokeError(callback, "Permissions weren't granted");
-        return false;
-      }
-
-      switch (requestCode)
-      {
-        case REQUEST_PERMISSIONS_FOR_CAMERA:
-          launchCamera(options, callback);
-          break;
-
-        case REQUEST_PERMISSIONS_FOR_LIBRARY:
-          launchImageLibrary(options, callback);
-          break;
-
-      }
-      return true;
-    }
-  };
 
   public ImagePickerModule(ReactApplicationContext reactContext,
                            @StyleRes final int dialogThemeId)
@@ -195,7 +164,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
   public void doOnCancel()
   {
-    responseHelper.invokeCancel(callback);
+    if (this.callback != null) {
+      responseHelper.invokeCancel(this.callback);
+      this.callback = null;
+    }
   }
 
   public void launchCamera()
@@ -222,7 +194,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
     this.options = options;
 
-    if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_CAMERA))
+    if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_CAMERA, new String[] {Manifest.permission.CAMERA}))
     {
       return;
     }
@@ -231,6 +203,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
     int requestCode;
     Intent cameraIntent;
+
 
     if (pickVideo)
     {
@@ -294,7 +267,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
     this.options = options;
 
-    if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_LIBRARY))
+    if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_LIBRARY, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE}))
     {
       return;
     }
@@ -303,11 +276,24 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
     int requestCode;
     Intent libraryIntent;
-    if (pickVideo)
+    Log.d("PICK MIXED", String.valueOf(pickMixed));
+    Log.d("PICK VIDEO", String.valueOf(pickVideo));
+    if (pickMixed)
     {
       requestCode = REQUEST_LAUNCH_VIDEO_LIBRARY;
       if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
         libraryIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        libraryIntent.addCategory(Intent.CATEGORY_OPENABLE);
+      } else {
+        libraryIntent = new Intent(Intent.ACTION_PICK);
+      }
+      libraryIntent.setType("*/*");
+    } else if (pickVideo)
+    {
+      requestCode = REQUEST_LAUNCH_VIDEO_LIBRARY;
+      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+        libraryIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        libraryIntent.addCategory(Intent.CATEGORY_OPENABLE);
       } else {
         libraryIntent = new Intent(Intent.ACTION_PICK);
       }
@@ -318,9 +304,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       requestCode = REQUEST_LAUNCH_IMAGE_LIBRARY;
       if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
         libraryIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        libraryIntent.addCategory(Intent.CATEGORY_OPENABLE);
       } else {
         libraryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
       }
+      libraryIntent.setType("image/*");
     }
 
     if (libraryIntent.resolveActivity(reactContext.getPackageManager()) == null)
@@ -526,84 +514,124 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
   private boolean permissionsCheck(@NonNull final Activity activity,
                                    @NonNull final Callback callback,
-                                   @NonNull final int requestCode)
+                                   @NonNull final int requestCode,
+                                   @NonNull final String[] permissions)
   {
-    final int writePermission = ActivityCompat
-            .checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-    final int cameraPermission = ActivityCompat
-            .checkSelfPermission(activity, Manifest.permission.CAMERA);
-
-    final boolean permissionsGrated = writePermission == PackageManager.PERMISSION_GRANTED &&
-            cameraPermission == PackageManager.PERMISSION_GRANTED;
-
-    if (!permissionsGrated)
+    final ImagePickerModule imagePickerModule = this;
+    PermissionListener listener = new PermissionListener()
     {
-      final Boolean dontAskAgain = ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) && ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA);
-
-      if (dontAskAgain)
+      public boolean onRequestPermissionsResult(final int requestCode,
+                                                @NonNull final String[] permissions,
+                                                @NonNull final int[] grantResults)
       {
-        final AlertDialog dialog = PermissionUtils
-                .explainingDialog(this, options, new PermissionUtils.OnExplainingPermissionCallback()
-                {
-                  @Override
-                  public void onCancel(WeakReference<ImagePickerModule> moduleInstance,
-                                       DialogInterface dialogInterface)
-                  {
-                    final ImagePickerModule module = moduleInstance.get();
-                    if (module == null)
-                    {
-                      return;
-                    }
-                    module.doOnCancel();
-                  }
+        boolean permissionsGranted = true;
+        for (int i = 0; i < permissions.length; i++)
+        {
+          final boolean granted = grantResults[i] == PackageManager.PERMISSION_GRANTED;
+          permissionsGranted = permissionsGranted && granted;
+        }
 
-                  @Override
-                  public void onReTry(WeakReference<ImagePickerModule> moduleInstance,
-                                      DialogInterface dialogInterface)
-                  {
-                    final ImagePickerModule module = moduleInstance.get();
-                    if (module == null)
+        if (callback == null || options == null)
+        {
+          return false;
+        }
+
+        if (!permissionsGranted)
+        {
+          boolean dontAskAgain = false;
+          for (int i = 0; i < permissions.length; i++) {
+            dontAskAgain = dontAskAgain ||
+                    (grantResults[i] == PackageManager.PERMISSION_DENIED && !ActivityCompat.shouldShowRequestPermissionRationale(activity, permissions[i]));
+          }
+
+          if (dontAskAgain) {
+            final AlertDialog dialog = PermissionUtils
+                    .explainingDialog(imagePickerModule, options, new PermissionUtils.OnExplainingPermissionCallback()
                     {
-                      return;
-                    }
-                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                    Uri uri = Uri.fromParts("package", module.getContext().getPackageName(), null);
-                    intent.setData(uri);
-                    final Activity innerActivity = module.getActivity();
-                    if (innerActivity == null)
-                    {
-                      return;
-                    }
-                    innerActivity.startActivityForResult(intent, 1);
-                  }
-                });
-        dialog.show();
-        return false;
+                      @Override
+                      public void onCancel(WeakReference<ImagePickerModule> moduleInstance,
+                                           DialogInterface dialogInterface)
+                      {
+                        final ImagePickerModule module = moduleInstance.get();
+                        if (module == null)
+                        {
+                          return;
+                        }
+                        module.doOnCancel();
+                      }
+
+                      @Override
+                      public void onReTry(WeakReference<ImagePickerModule> moduleInstance,
+                                          DialogInterface dialogInterface)
+                      {
+                        final ImagePickerModule module = moduleInstance.get();
+                        if (module == null)
+                        {
+                          return;
+                        }
+                        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                        Uri uri = Uri.fromParts("package", module.getContext().getPackageName(), null);
+                        intent.setData(uri);
+                        final Activity innerActivity = module.getActivity();
+                        if (innerActivity == null)
+                        {
+                          return;
+                        }
+                        innerActivity.startActivityForResult(intent, 1);
+                      }
+                    });
+            dialog.show();
+            return false;
+          }
+          responseHelper.invokeError(callback, "Permissions weren't granted");
+          return false;
+        }
+
+        switch (requestCode)
+        {
+          case REQUEST_PERMISSIONS_FOR_CAMERA:
+            launchCamera(options, callback);
+            break;
+
+          case REQUEST_PERMISSIONS_FOR_LIBRARY:
+            launchImageLibrary(options, callback);
+            break;
+
+        }
+        return true;
+      }
+    };
+
+    boolean permissionsGranted = true;
+    for (String permission : permissions) {
+      int grantedStatus = ActivityCompat.checkSelfPermission(activity, permission);
+      permissionsGranted = permissionsGranted && (grantedStatus == PackageManager.PERMISSION_GRANTED);
+    }
+    if (permissionsGranted) {
+      return true;
+    } else {
+      if (activity instanceof ReactActivity)
+      {
+        ((ReactActivity) activity).requestPermissions(permissions, requestCode, listener);
+      }
+      else if (activity instanceof OnImagePickerPermissionsCallback)
+      {
+        ((OnImagePickerPermissionsCallback) activity).setPermissionListener(listener);
+        ActivityCompat.requestPermissions(activity, permissions, requestCode);
+      }
+      else if (activity instanceof PermissionAwareActivity) {
+        ((PermissionAwareActivity) activity).requestPermissions(permissions, requestCode, listener);
       }
       else
       {
-        String[] PERMISSIONS = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA};
-        if (activity instanceof ReactActivity)
-        {
-          ((ReactActivity) activity).requestPermissions(PERMISSIONS, requestCode, listener);
-        }
-        else if (activity instanceof OnImagePickerPermissionsCallback)
-        {
-          ((OnImagePickerPermissionsCallback) activity).setPermissionListener(listener);
-          ActivityCompat.requestPermissions(activity, PERMISSIONS, requestCode);
-        }
-        else
-        {
-          final String errorDescription = new StringBuilder(activity.getClass().getSimpleName())
-                  .append(" must implement ")
-                  .append(OnImagePickerPermissionsCallback.class.getSimpleName())
-                  .toString();
-          throw new UnsupportedOperationException(errorDescription);
-        }
-        return false;
+        final String errorDescription = new StringBuilder(activity.getClass().getSimpleName())
+                .append(" must implement ")
+                .append(OnImagePickerPermissionsCallback.class.getSimpleName())
+                .toString();
+        throw new UnsupportedOperationException(errorDescription);
       }
+      return false;
     }
-    return true;
   }
 
   private boolean isCameraAvailable() {
@@ -694,6 +722,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       noData = options.getBoolean("noData");
     }
     imageConfig = imageConfig.updateFromOptions(options);
+    pickMixed = false;
+    if (options.hasKey("mediaType") && options.getString("mediaType").equals("mixed")) {
+      pickMixed = true;
+    }
     pickVideo = false;
     if (options.hasKey("mediaType") && options.getString("mediaType").equals("video")) {
       pickVideo = true;

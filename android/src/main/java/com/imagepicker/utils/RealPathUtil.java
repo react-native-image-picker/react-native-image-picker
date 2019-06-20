@@ -13,8 +13,20 @@ import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
+import android.util.Log;
+import android.provider.OpenableColumns;
 
 import java.io.File;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.DecimalFormat;
+import java.util.Comparator;
 
 public class RealPathUtil {
 
@@ -43,6 +55,8 @@ public class RealPathUtil {
 
 		final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
 
+		final String Tag = "PadletRealPathUtil";
+
 		// DocumentProvider
 		if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
 			// ExternalStorageProvider
@@ -63,8 +77,35 @@ public class RealPathUtil {
 				final String id = DocumentsContract.getDocumentId(uri);
 				final Uri contentUri = ContentUris.withAppendedId(
 						Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
+				try {
+					return getDataColumn(context, contentUri, null, null);
+				}
+				catch(Exception e) {
+					e.printStackTrace();
+				}
 
-				return getDataColumn(context, contentUri, null, null);
+				// File couldn't be loaded so we have to create a temporary file and then stream
+				// the contents into that file, some of this code has been implemented from
+				// https://github.com/coltoscosmin/FileUtils/blob/master/FileUtils.java 
+				
+				String fileName = getFileName(context, uri);
+				File cacheDir = new File(context.getCacheDir(), "documents");
+				if (!cacheDir.exists()) cacheDir.mkdirs();
+				File file = new File(cacheDir, fileName);
+				try {
+					file.createNewFile();
+				}
+				catch(Exception e) {
+					e.printStackTrace();
+				}
+				String destinationPath = file.getAbsolutePath();
+				Log.d(Tag, "Destination path: " + destinationPath);
+				if (file != null) {
+					destinationPath = file.getAbsolutePath();
+					saveFileFromUri(context, uri, destinationPath);
+				}
+
+				return destinationPath;
 			}
 			// MediaProvider
 			else if (isMediaDocument(uri)) {
@@ -205,5 +246,68 @@ public class RealPathUtil {
 		final File appDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 		final File file = new File(appDir, uri.getLastPathSegment());
 		return file.exists() ? file.toString(): null;
+	}
+
+	private static void saveFileFromUri(Context context, Uri uri, String destinationPath) {
+		InputStream is = null;
+		BufferedOutputStream bos = null;
+		try {
+			is = context.getContentResolver().openInputStream(uri);
+			bos = new BufferedOutputStream(new FileOutputStream(destinationPath, false));
+			byte[] buf = new byte[1024];
+			is.read(buf);
+			do {
+				bos.write(buf);
+			} while (is.read(buf) != -1);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (is != null) is.close();
+				if (bos != null) bos.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public static String getFileName(@NonNull Context context, Uri uri) {
+		String mimeType = context.getContentResolver().getType(uri);
+		String filename = null;
+
+		if (mimeType == null && context != null) {
+			String path = getPath(context, uri);
+			if (path == null) {
+				filename = getName(uri.toString());
+			} else {
+				File file = new File(path);
+				filename = file.getName();
+			}
+		} else {
+			Cursor returnCursor = context.getContentResolver().query(uri, null,
+					null, null, null);
+			if (returnCursor != null) {
+				int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+				returnCursor.moveToFirst();
+				filename = returnCursor.getString(nameIndex);
+				returnCursor.close();
+			}
+		}
+
+		return filename;
+	}
+
+	public static String getName(String filename) {
+		if (filename == null) {
+			return null;
+		}
+		int index = filename.lastIndexOf('/');
+		return filename.substring(index + 1);
+	}
+
+	public static String getPath(final Context context, final Uri uri) {
+		String absolutePath = getRealPathFromURI(context, uri);
+		// String absolutePath = getLocalPath(context, uri);
+		return absolutePath != null ? absolutePath : uri.toString();
 	}
 }
