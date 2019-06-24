@@ -10,7 +10,7 @@ All work on React Native ImagePicker happens directly on GitHub. Contributors se
 3. Now you are ready to make your changes!
 
 ## Tests & Verifications
-Currently we use `flow` for typechecking, `eslint` with `prettier` for linting and formatting the code, and `jest` for unit testing. 
+Currently we use `TypeScript` for typechecking, `eslint` with `prettier` for linting and formatting the code, and `jest` for unit testing. 
 
 * `yarn test`: Run all tests and validations.
 * `yarn validate:android`: Run Spotless style checker on the Java code.
