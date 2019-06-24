@@ -26,23 +26,49 @@ const DEFAULT_OPTIONS = {
   },
 };
 
-export default {
-  ...NativeInterface,
-  showImagePicker: (
-    options: ImagePickerOptions,
-    callback: (response: ImagePickerResponse) => void,
-  ) => {
-    if (typeof options === 'function') {
-      callback = options;
-      options = {};
+type Callback = (response: ImagePickerResponse) => void;
+type OptionsOrCallback = ImagePickerOptions | Callback;
+
+class ImagePicker {
+  showImagePicker(options: ImagePickerOptions, callback: Callback): void;
+  showImagePicker(callback: Callback): void;
+
+  showImagePicker(
+    optionsOrCallback: OptionsOrCallback,
+    callback?: Callback,
+  ): void {
+    if (typeof optionsOrCallback === 'function') {
+      return NativeInterface.showImagePicker(
+        DEFAULT_OPTIONS,
+        optionsOrCallback,
+      );
     }
 
-    // @ts-ignore - if this is undefined, then nativeInterface will throw an exception
+    if (callback == null) {
+      throw new Error('callback cannot be undefined');
+    }
+
     return NativeInterface.showImagePicker(
+      {...DEFAULT_OPTIONS, ...optionsOrCallback},
+      callback,
+    );
+  }
+
+  launchCamera(options: ImagePickerOptions, callback: Callback): void {
+    return NativeInterface.launchCamera(
       {...DEFAULT_OPTIONS, ...options},
       callback,
     );
-  },
-};
+  }
+
+  launchImageLibrary(options: ImagePickerOptions, callback: Callback): void {
+    return NativeInterface.launchImageLibrary(
+      {...DEFAULT_OPTIONS, ...options},
+      callback,
+    );
+  }
+}
+
+export default new ImagePicker();
 
 export * from './internal/types';

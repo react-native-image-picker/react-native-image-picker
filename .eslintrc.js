@@ -42,5 +42,11 @@ module.exports = {
         '@typescript-eslint/explicit-function-return-type': 'off',
       },
     },
+    {
+      files: ['*.ts', '*.tsx'],
+      rules: {
+        'no-dupe-class-members': 'off',
+      },
+    },
   ],
 };

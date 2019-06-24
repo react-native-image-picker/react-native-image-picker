@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "A React Native module that allows you to use native UI to select media from the device library or directly from the camera",
   "react-native": "src/index.ts",
-  "types": "lib/typescript/src/index.d.ts",
+  "types": "lib/typescript/index.d.ts",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
   "files": [
@@ -16,6 +16,11 @@
   ],
   "author": "Marc Shilling (marcshilling)",
   "contributors": [
+    {
+      "name": "Johan du Toit",
+      "email": "jdutoit.dev@gmail.com",
+      "url": "https://github.com/johan-dutoit"
+    },
     {
       "name": "Matheus Santos",
       "email": "vorj.dux@gmail.com"
@@ -33,7 +38,7 @@
   "license": "MIT",
   "scripts": {
     "start": "react-native start",
-    "test": "yarn validate:eslint&& yarn validate:typescript",
+    "test": "yarn validate:eslint && yarn validate:typescript",
     "validate:eslint": "eslint \"src/**/*.{js,ts,tsx}\" \"example/**/*.{js,ts,tsx}\"",
     "validate:typescript": "tsc --project ./ --noEmit",
     "test:jest": "jest \"/src/\"",
@@ -71,9 +76,9 @@
     "lint-staged": "^8.2.1",
     "metro-react-native-babel-preset": "^0.54.1",
     "prettier": "^1.18.2",
-    "react": "16.8.3",
-    "react-native": "0.59.9",
-    "react-test-renderer": "16.8.3",
+    "react": "16.8.6",
+    "react-native": "0.60.0-rc.2",
+    "react-test-renderer": "16.8.6",
     "rimraf": "^2.6.3",
     "semantic-release": "15.13.16",
     "ts-jest": "^24.0.2",
@@ -87,6 +92,12 @@
     "source": "src",
     "output": "lib",
     "targets": [
+      [
+        "aar",
+        {
+          "reverseJetify": true
+        }
+      ],
       "commonjs",
       "module",
       "typescript"
