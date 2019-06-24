@@ -5,28 +5,56 @@
  * @format
  */
 
-import React from 'react';
+import * as React from 'react';
 import {
+  AppRegistry,
   Image,
   PixelRatio,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  ImageSourcePropType,
 } from 'react-native';
-import ImagePicker from 'react-native-image-picker';
 
-class App extends React.Component {
-  state = {
-    avatarSource: null,
-    videoSource: null,
-  };
+import ImagePicker, {ImagePickerOptions} from '../src';
 
-  constructor(props) {
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5FCFF',
+  },
+  avatarContainer: {
+    borderColor: '#9B9B9B',
+    borderWidth: 1 / PixelRatio.get(),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatar: {
+    borderRadius: 75,
+    width: 150,
+    height: 150,
+  },
+});
+
+interface State {
+  avatarSource: ImageSourcePropType | null;
+  videoSource: string | null;
+}
+
+class App extends React.Component<{}, State> {
+  constructor(props: {}) {
     super(props);
 
     this.selectPhotoTapped = this.selectPhotoTapped.bind(this);
     this.selectVideoTapped = this.selectVideoTapped.bind(this);
+
+    this.state = {
+      avatarSource: null,
+      videoSource: null,
+    };
   }
 
   selectPhotoTapped() {
@@ -54,15 +82,15 @@ class App extends React.Component {
         // You can also display the image using data:
         // let source = { uri: 'data:image/jpeg;base64,' + response.data };
 
-        this.setState({
+        this.setState(() => ({
           avatarSource: source,
-        });
+        }));
       }
     });
   }
 
   selectVideoTapped() {
-    const options = {
+    const options: ImagePickerOptions = {
       title: 'Video Picker',
       takePhotoButtonTitle: 'Take Video...',
       mediaType: 'video',
@@ -79,23 +107,25 @@ class App extends React.Component {
       } else if (response.customButton) {
         console.log('User tapped custom button: ', response.customButton);
       } else {
-        this.setState({
+        this.setState(() => ({
           videoSource: response.uri,
-        });
+        }));
       }
     });
   }
 
   render() {
+    const {avatarSource, videoSource} = this.state;
+
     return (
       <View style={styles.container}>
         <TouchableOpacity onPress={this.selectPhotoTapped.bind(this)}>
           <View
             style={[styles.avatar, styles.avatarContainer, {marginBottom: 20}]}>
-            {this.state.avatarSource === null ? (
+            {avatarSource === null ? (
               <Text>Select a Photo</Text>
             ) : (
-              <Image style={styles.avatar} source={this.state.avatarSource} />
+              <Image style={styles.avatar} source={avatarSource} />
             )}
           </View>
         </TouchableOpacity>
@@ -106,34 +136,12 @@ class App extends React.Component {
           </View>
         </TouchableOpacity>
 
-        {this.state.videoSource && (
-          <Text style={{margin: 8, textAlign: 'center'}}>
-            {this.state.videoSource}
-          </Text>
+        {videoSource && (
+          <Text style={{margin: 8, textAlign: 'center'}}>{videoSource}</Text>
         )}
       </View>
     );
   }
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  avatarContainer: {
-    borderColor: '#9B9B9B',
-    borderWidth: 1 / PixelRatio.get(),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatar: {
-    borderRadius: 75,
-    width: 150,
-    height: 150,
-  },
-});
-
-export default App;
+AppRegistry.registerComponent('ImagePickerExample', () => App);
