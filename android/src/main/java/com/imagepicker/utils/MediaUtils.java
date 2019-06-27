@@ -7,10 +7,13 @@ import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 import com.facebook.react.bridge.ReadableMap;
 import com.imagepicker.ImagePickerModule;
@@ -20,7 +23,6 @@ import com.imagepicker.media.ImageConfig;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -37,9 +39,10 @@ import static com.imagepicker.ImagePickerModule.REQUEST_LAUNCH_IMAGE_CAPTURE;
 
 public class MediaUtils
 {
-    public static @Nullable File createNewFile(@NonNull final Context reactContext,
-                                               @NonNull final ReadableMap options,
-                                               @NonNull final boolean forceLocal)
+    public static @Nullable
+    File createNewFile(@NonNull final Context reactContext,
+                       @NonNull final ReadableMap options,
+                       @NonNull final boolean forceLocal)
     {
         final String filename = new StringBuilder("image-")
                 .append(UUID.randomUUID().toString())
@@ -78,6 +81,7 @@ public class MediaUtils
      * @param initialHeight
      * @return updated ImageConfig
      */
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public static @NonNull ImageConfig getResizedImage(@NonNull final Context context,
                                                        @NonNull final ReadableMap options,
                                                        @NonNull final ImageConfig imageConfig,
@@ -390,3 +394,4 @@ public class MediaUtils
         }
     }
 }
+
