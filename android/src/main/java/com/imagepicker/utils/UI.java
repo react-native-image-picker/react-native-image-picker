@@ -2,11 +2,11 @@ package com.imagepicker.utils;
 
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.drawable.ColorDrawable;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AlertDialog;
 import android.widget.ArrayAdapter;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 
 import com.facebook.react.bridge.ReadableMap;
 import com.imagepicker.ImagePickerModule;
@@ -20,9 +20,10 @@ import java.util.List;
  */
 public class UI
 {
-    public static @NonNull AlertDialog chooseDialog(@Nullable final ImagePickerModule module,
-                                                    @NonNull final ReadableMap options,
-                                                    @Nullable final OnAction callback)
+    public static @NonNull
+    AlertDialog chooseDialog(@Nullable final ImagePickerModule module,
+                             @NonNull final ReadableMap options,
+                             @Nullable final OnAction callback)
     {
         final Context context = module.getActivity();
         if (context == null)
