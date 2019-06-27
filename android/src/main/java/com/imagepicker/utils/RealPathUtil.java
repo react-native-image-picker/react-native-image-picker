@@ -1,6 +1,7 @@
 package com.imagepicker.utils;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
@@ -193,8 +194,9 @@ public class RealPathUtil {
 	 * @param uri The Uri is checked by functions
 	 * @return File path or null if file is missing
 	 */
+	@TargetApi(Build.VERSION_CODES.FROYO)
 	public static @Nullable String getFileProviderPath(@NonNull final Context context,
-	                                                   @NonNull final Uri uri)
+													   @NonNull final Uri uri)
 	{
 		final File appDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 		final File file = new File(appDir, uri.getLastPathSegment());
