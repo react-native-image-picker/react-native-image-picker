@@ -1,6 +1,6 @@
 package com.imagepicker;
 
-import android.support.annotation.StyleRes;
+import androidx.annotation.StyleRes;
 
 import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.JavaScriptModule;
@@ -14,7 +14,8 @@ import java.util.List;
 
 public class ImagePickerPackage implements ReactPackage {
   public static final int DEFAULT_EXPLAINING_PERMISSION_DIALIOG_THEME = R.style.DefaultExplainingPermissionsTheme;
-  private @StyleRes final int dialogThemeId;
+  private @StyleRes
+  final int dialogThemeId;
 
   public ImagePickerPackage()
   {
@@ -41,3 +42,4 @@ public class ImagePickerPackage implements ReactPackage {
     return Collections.emptyList();
   }
 }
+
