@@ -6,22 +6,23 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.StyleRes;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Patterns;
 import android.webkit.MimeTypeMap;
-import android.content.pm.PackageManager;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StyleRes;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.bridge.ActivityEventListener;
@@ -30,9 +31,11 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.modules.core.PermissionAwareActivity;
+import com.facebook.react.modules.core.PermissionListener;
 import com.imagepicker.media.ImageConfig;
-import com.imagepicker.permissions.PermissionUtils;
 import com.imagepicker.permissions.OnImagePickerPermissionsCallback;
+import com.imagepicker.permissions.PermissionUtils;
 import com.imagepicker.utils.MediaUtils.ReadExifResult;
 import com.imagepicker.utils.RealPathUtil;
 import com.imagepicker.utils.UI;
@@ -48,12 +51,13 @@ import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
-import com.facebook.react.modules.core.PermissionListener;
-import com.facebook.react.modules.core.PermissionAwareActivity;
-
-import static com.imagepicker.utils.MediaUtils.*;
+import static com.imagepicker.utils.MediaUtils.RolloutPhotoResult;
 import static com.imagepicker.utils.MediaUtils.createNewFile;
+import static com.imagepicker.utils.MediaUtils.fileScan;
 import static com.imagepicker.utils.MediaUtils.getResizedImage;
+import static com.imagepicker.utils.MediaUtils.readExifInterface;
+import static com.imagepicker.utils.MediaUtils.removeUselessFiles;
+import static com.imagepicker.utils.MediaUtils.rolloutPhotoFromCamera;
 
 public class ImagePickerModule extends ReactContextBaseJavaModule
         implements ActivityEventListener
@@ -451,7 +455,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     }
     else
     {
-      imageConfig = getResizedImage(reactContext, this.options, imageConfig, initialWidth, initialHeight, requestCode);
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        imageConfig = getResizedImage(reactContext, this.options, imageConfig, initialWidth, initialHeight, requestCode);
+      }
       if (imageConfig.resized == null)
       {
         removeUselessFiles(requestCode, imageConfig);
@@ -729,3 +735,4 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     }
   }
 }
+
