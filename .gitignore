@@ -30,7 +30,7 @@ DerivedData
 project.xcworkspace
 
 # CocoaPods
-59	/ios/Pods/
+/ios/Pods/
 
 # Android/IntelliJ
 #
