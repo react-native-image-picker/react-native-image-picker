@@ -41,6 +41,7 @@ declare module "react-native-image-picker" {
         allowsEditing?: boolean;
         noData?: boolean;
         storageOptions?: ImagePickerStorageOptions;
+        permissionDenied?: ImagePickerPermissionDeniedOptions;
     }
 
     interface ImagePickerStorageOptions {
@@ -50,6 +51,12 @@ declare module "react-native-image-picker" {
         waitUntilSaved?: boolean;
     }
 
+    interface ImagePickerPermissionDeniedOptions {
+        title: string;
+        text: string;
+        reTryTitle: string;
+        okTitle: string;
+    }
 
     export default class ImagePicker {
         static showImagePicker(options: ImagePickerOptions, callback: (response: ImagePickerResponse) => void): void;
