@@ -41,7 +41,7 @@ declare module "react-native-image-picker" {
         allowsEditing?: boolean;
         noData?: boolean;
         storageOptions?: ImagePickerStorageOptions;
-        permissionOptions?: ImagePickerPermissionOptions;
+        permissionDenied?: ImagePickerPermissionDeniedOptions;
     }
 
     interface ImagePickerStorageOptions {
@@ -51,7 +51,7 @@ declare module "react-native-image-picker" {
         waitUntilSaved?: boolean;
     }
 
-    interface ImagePickerPermissionOptions {
+    interface ImagePickerPermissionDeniedOptions {
         title: string;
         text: string;
         reTryTitle: string;
