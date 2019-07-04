@@ -581,8 +581,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     switch (requestCode) {
       case REQUEST_PERMISSIONS_FOR_LIBRARY:
         permissionsGranted = writePermission == PackageManager.PERMISSION_GRANTED;
+        break;
       case REQUEST_PERMISSIONS_FOR_CAMERA:
         permissionsGranted = cameraPermission == PackageManager.PERMISSION_GRANTED;
+        break;
     }
 
     if (!permissionsGranted)
