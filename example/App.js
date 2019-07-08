@@ -2,7 +2,6 @@
 
 import React from 'react';
 import {
-  AppRegistry,
   Image,
   PixelRatio,
   StyleSheet,
@@ -35,7 +34,7 @@ export default class App extends React.Component {
       },
     };
 
-    ImagePicker.showImagePicker(options, (response) => {
+    ImagePicker.showImagePicker(options, response => {
       console.log('Response = ', response);
 
       if (response.didCancel) {
@@ -45,7 +44,7 @@ export default class App extends React.Component {
       } else if (response.customButton) {
         console.log('User tapped custom button: ', response.customButton);
       } else {
-        let source = { uri: response.uri };
+        let source = {uri: response.uri};
 
         // You can also display the image using data:
         // let source = { uri: 'data:image/jpeg;base64,' + response.data };
@@ -65,7 +64,7 @@ export default class App extends React.Component {
       videoQuality: 'medium',
     };
 
-    ImagePicker.showImagePicker(options, (response) => {
+    ImagePicker.showImagePicker(options, response => {
       console.log('Response = ', response);
 
       if (response.didCancel) {
@@ -87,12 +86,7 @@ export default class App extends React.Component {
       <View style={styles.container}>
         <TouchableOpacity onPress={this.selectPhotoTapped.bind(this)}>
           <View
-            style={[
-              styles.avatar,
-              styles.avatarContainer,
-              { marginBottom: 20 },
-            ]}
-          >
+            style={[styles.avatar, styles.avatarContainer, {marginBottom: 20}]}>
             {this.state.avatarSource === null ? (
               <Text>Select a Photo</Text>
             ) : (
@@ -108,7 +102,7 @@ export default class App extends React.Component {
         </TouchableOpacity>
 
         {this.state.videoSource && (
-          <Text style={{ margin: 8, textAlign: 'center' }}>
+          <Text style={{margin: 8, textAlign: 'center'}}>
             {this.state.videoSource}
           </Text>
         )}
