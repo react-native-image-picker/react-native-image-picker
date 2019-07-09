@@ -91,7 +91,12 @@
     "source": "src",
     "output": "lib",
     "targets": [
-      "commonjs",
+      [
+        "commonjs",
+        {
+          "flow": true
+        }
+      ],
       "module",
       "typescript"
     ]
