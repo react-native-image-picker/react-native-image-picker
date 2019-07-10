@@ -19,7 +19,7 @@ This library started as a basic bridge of the native iOS image picker, and I wan
 ## React Native Compatibility
 To use this library you need to ensure you are using the correct version of React Native. If you are using a version of React Native that is lower than `0.57` you will need to upgrade that before attempting to use this library.
 
-| `@react-native-community/netinfo` version | Required React Native Version                                                     |
+| `@react-native-community/imagepicker` version | Required React Native Version                                                     |
 | ----------------------------------------- | --------------------------------------------------------------------------------- |
 | `1.x.x`                                   | `>= 0.60` or `>= 0.59` if using [Jetifier](https://github.com/mikehardy/jetifier) |
 | `0.x.x`                                   | `<= 0.59`                                                                         |
