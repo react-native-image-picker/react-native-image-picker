@@ -18,7 +18,8 @@ This library started as a basic bridge of the native iOS image picker, and I wan
 
 ## React Native Compatibility
 To use this library you need to ensure you match up with the correct version of React Native you are using.
-p.s. React Native introduced AndroidX support in 0.60, which is a *breaking change* for most libraries (incl. this one) using native Android functionality.
+
+p.s. React Native introduced AndroidX support in 0.60, which is a **breaking change** for most libraries (incl. this one) using native Android functionality.
 
 | `@react-native-community/imagepicker` version | Required React Native Version                                                     |
 | ----------------------------------------- | --------------------------------------------------------------------------------- |
