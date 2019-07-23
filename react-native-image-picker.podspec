@@ -7,12 +7,12 @@ Pod::Spec.new do |s|
   s.version      = package['version']
   s.summary      = package['description']
 
-  s.authors      = { 'Marc Shilling' => 'marcshilling@gmail.com' }
+  s.authors      = { 'Clément Bock' => 'clement@zap.lu' }
   s.homepage     = package['homepage']
   s.license      = package['license']
   s.platform     = :ios, "7.0"
 
-  s.source       = { :git => "https://github.com/marcshilling/react-native-image-picker" }
+  s.source       = { :git => "https://github.com/zapsa/react-native-image-picker" }
   s.source_files  = "ios/*.{h,m}"
 
   s.dependency 'React'
