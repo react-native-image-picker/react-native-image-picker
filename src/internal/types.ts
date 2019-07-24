@@ -49,7 +49,7 @@ export interface ImagePickerOptions {
   noData?: boolean;
   storageOptions?: ImagePickerStorageOptions;
   permissionDenied?: ImagePickerPermissionDeniedOptions;
-  tintColor?: string;
+  tintColor?: number;
 }
 
 export interface ImagePickerStorageOptions {
