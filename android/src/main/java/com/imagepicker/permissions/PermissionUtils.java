@@ -2,17 +2,15 @@ package com.imagepicker.permissions;
 
 import android.app.Activity;
 import android.content.DialogInterface;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AlertDialog;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeMap;
 import com.imagepicker.ImagePickerModule;
-import com.imagepicker.R;
 
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
 
 /**
  * Created by rusfearuth on 03.03.17.
