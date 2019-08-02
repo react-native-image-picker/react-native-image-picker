@@ -62,6 +62,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 {
   public static final String NAME = "ImagePickerManager";
 
+  public static final int DEFAULT_EXPLAINING_PERMISSION_DIALIOG_THEME = R.style.DefaultExplainingPermissionsTheme;
+
   public static final int REQUEST_LAUNCH_IMAGE_CAPTURE    = 13001;
   public static final int REQUEST_LAUNCH_IMAGE_LIBRARY    = 13002;
   public static final int REQUEST_LAUNCH_VIDEO_LIBRARY    = 13003;
@@ -124,6 +126,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       return true;
     }
   };
+
+  public ImagePickerModule(ReactApplicationContext reactContext)
+  {
+    this(reactContext, DEFAULT_EXPLAINING_PERMISSION_DIALIOG_THEME);
+  }
 
   public ImagePickerModule(ReactApplicationContext reactContext,
                            @StyleRes final int dialogThemeId)
