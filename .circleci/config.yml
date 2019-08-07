@@ -24,8 +24,4 @@ jobs:
           name: Yarn Install
           command: |
             yarn install --frozen-lockfile --no-progress --non-interactive --cache-folder ~/.cache/yarn
-      - run:
-          name: Flow
-          command: |
-            yarn flow
       - save_cache: *save-cache-yarn
