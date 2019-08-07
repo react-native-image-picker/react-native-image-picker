@@ -36,6 +36,7 @@ export interface ImagePickerOptions {
   cancelButtonTitle?: string;
   takePhotoButtonTitle?: string;
   chooseFromLibraryButtonTitle?: string;
+  chooseWhichLibraryTitle?: string;
   customButtons?: ImagePickerCustomButtonOptions[];
   cameraType?: 'front' | 'back';
   mediaType?: 'photo' | 'video' | 'mixed';
