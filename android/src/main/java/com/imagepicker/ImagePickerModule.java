@@ -79,6 +79,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   protected Uri cameraCaptureURI;
   private Boolean noData = false;
   private Boolean pickVideo = false;
+  private Boolean pickBoth = false;
   private ImageConfig imageConfig = new ImageConfig(null, null, 0, 0, 100, 0, false);
 
   @Deprecated
@@ -347,6 +348,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       requestCode = REQUEST_LAUNCH_IMAGE_LIBRARY;
       libraryIntent = new Intent(Intent.ACTION_PICK,
       MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+
+      if (pickBoth) 
+      {
+        libraryIntent.setType("image/* video/*");
+      }
     }
 
     if (libraryIntent.resolveActivity(reactContext.getPackageManager()) == null)
@@ -726,6 +732,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     }
     imageConfig = imageConfig.updateFromOptions(options);
     pickVideo = false;
+    pickBoth = false;
+    if (options.hasKey("mediaType") && options.getString("mediaType").equals("mixed")) {
+      pickBoth = true;
+    }
     if (options.hasKey("mediaType") && options.getString("mediaType").equals("video")) {
       pickVideo = true;
     }
