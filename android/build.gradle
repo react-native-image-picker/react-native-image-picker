@@ -56,4 +56,5 @@ dependencies {
     testCompile "org.powermock:powermock-module-junit4-rule:${POWERMOCK_VERSION}"
     testCompile "org.powermock:powermock-classloading-xstream:${POWERMOCK_VERSION}"
     testCompile "org.mockito:mockito-core:${MOCKITO_CORE_VERSION}"
+    implementation "androidx.annotation:annotation:1.1.0"
 }

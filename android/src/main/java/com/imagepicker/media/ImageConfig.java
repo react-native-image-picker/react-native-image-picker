@@ -1,7 +1,8 @@
 package com.imagepicker.media;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.ReadableMap;
 
@@ -13,7 +14,8 @@ import java.io.File;
 
 public class ImageConfig
 {
-    public @Nullable final File original;
+    public @Nullable
+    final File original;
     public @Nullable final File resized;
     public final int maxWidth;
     public final int maxHeight;
@@ -38,7 +40,8 @@ public class ImageConfig
         this.saveToCameraRoll = saveToCameraRoll;
     }
 
-    public @NonNull ImageConfig withMaxWidth(final int maxWidth)
+    public @NonNull
+    ImageConfig withMaxWidth(final int maxWidth)
     {
         return new ImageConfig(
                 this.original, this.resized, maxWidth,

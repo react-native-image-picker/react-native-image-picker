@@ -1,6 +1,7 @@
 package com.imagepicker;
 
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
@@ -19,7 +20,8 @@ public class ResponseHelper
         response = Arguments.createMap();
     }
 
-    public @NonNull WritableMap getResponse()
+    public @NonNull
+    WritableMap getResponse()
     {
         return response;
     }

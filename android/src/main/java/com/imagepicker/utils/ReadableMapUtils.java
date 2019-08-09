@@ -1,7 +1,8 @@
 package com.imagepicker.utils;
 
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
+
+import androidx.annotation.NonNull;
 
 import com.facebook.react.bridge.ReadableMap;
 
@@ -11,9 +12,10 @@ import com.facebook.react.bridge.ReadableMap;
 
 public class ReadableMapUtils
 {
-    public static @NonNull boolean hasAndNotEmpty(@NonNull Class clazz,
-                                                  @NonNull final ReadableMap target,
-                                                  @NonNull final String key)
+    public static @NonNull
+    boolean hasAndNotEmpty(@NonNull Class clazz,
+                           @NonNull final ReadableMap target,
+                           @NonNull final String key)
     {
         if (!target.hasKey(key))
         {
