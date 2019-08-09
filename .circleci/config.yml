@@ -1,0 +1,31 @@
+aliases:
+  - &save-cache-yarn
+    key: yarn-packages-{{ checksum "yarn.lock" }}
+    paths:
+      - ~/.cache/yarn
+  - &restore-cache-yarn
+    name: Restore Yarn Package Cache
+    keys:
+      - yarn-packages-{{ checksum "yarn.lock" }}
+
+defaults: &defaults
+  working_directory: ~/react-native-image-picker
+  docker:
+    - image: circleci/node:10
+
+version: 2
+jobs:
+  build:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache: *restore-cache-yarn
+      - run:
+          name: Yarn Install
+          command: |
+            yarn install --frozen-lockfile --no-progress --non-interactive --cache-folder ~/.cache/yarn
+      - run:
+          name: Flow
+          command: |
+            yarn flow
+      - save_cache: *save-cache-yarn
