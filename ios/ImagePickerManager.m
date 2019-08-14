@@ -204,14 +204,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         }];
     }
     else { // RNImagePickerTargetLibrarySingleImage
-        [self checkPhotosPermissions:^(BOOL granted) {
-            if (!granted) {
-                self.callback(@[@{@"error": @"Photo library permissions not granted"}]);
-                return;
-            }
-
-            showPickerViewController();
-        }];
+        showPickerViewController();
     }
 }
 
