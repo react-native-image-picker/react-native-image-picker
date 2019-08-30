@@ -50,6 +50,7 @@ export interface ImagePickerOptions {
   noData?: boolean;
   storageOptions?: ImagePickerStorageOptions;
   permissionDenied?: ImagePickerPermissionDeniedOptions;
+  tintColor?: number | string;
 }
 
 export interface ImagePickerStorageOptions {
