@@ -35,6 +35,7 @@ import com.imagepicker.media.ImageConfig;
 import com.imagepicker.permissions.PermissionUtils;
 import com.imagepicker.permissions.OnImagePickerPermissionsCallback;
 import com.imagepicker.utils.MediaUtils.ReadExifResult;
+import com.imagepicker.utils.ReadableMapUtils;
 import com.imagepicker.utils.RealPathUtil;
 import com.imagepicker.utils.UI;
 
@@ -363,7 +364,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
     try
     {
-      currentActivity.startActivityForResult(libraryIntent, requestCode);
+      String chooseWhichLibraryTitle = null;
+      if (ReadableMapUtils.hasAndNotEmptyString(options, "chooseWhichLibraryTitle"))
+      {
+        chooseWhichLibraryTitle = options.getString("chooseWhichLibraryTitle");
+      }
+
+      currentActivity.startActivityForResult(Intent.createChooser(libraryIntent, chooseWhichLibraryTitle), requestCode);
     }
     catch (ActivityNotFoundException e)
     {
