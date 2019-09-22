@@ -47,7 +47,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         }
         NSString *cancelTitle = [self.options valueForKey:@"cancelButtonTitle"];
         NSString *takePhotoButtonTitle = [self.options valueForKey:@"takePhotoButtonTitle"];
-        NSString *chooseFromLibraryButtonTitle = [self.options valueForKey:@"chooseFromLibraryButtonTitle"];        
+        NSString *chooseFromLibraryButtonTitle = [self.options valueForKey:@"chooseFromLibraryButtonTitle"];
 
         UIAlertController *alertController = [UIAlertController alertControllerWithTitle:title message:nil preferredStyle:UIAlertControllerStyleActionSheet];
         alertController.view.tintColor = [RCTConvert UIColor:options[@"tintColor"]];
@@ -303,6 +303,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             if (imageURL) {
                 PHAsset *pickedAsset = [PHAsset fetchAssetsWithALAssetURLs:@[imageURL] options:nil].lastObject;
                 NSString *originalFilename = [self originalFilenameForAsset:pickedAsset assetType:PHAssetResourceTypePhoto];
+
                 self.response[@"fileName"] = originalFilename ?: [NSNull null];
                 if (pickedAsset.location) {
                     self.response[@"latitude"] = @(pickedAsset.location.coordinate.latitude);
@@ -313,8 +314,12 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                 }
             }
 
+
+
+
+            BOOL isGifImage = (imageURL && [[imageURL absoluteString] rangeOfString:@"ext=GIF"].location != NSNotFound) ? YES : NO;
             // GIFs break when resized, so we handle them differently
-            if (imageURL && [[imageURL absoluteString] rangeOfString:@"ext=GIF"].location != NSNotFound) {
+            if (isGifImage) {
                 ALAssetsLibrary* assetsLibrary = [[ALAssetsLibrary alloc] init];
                 [assetsLibrary assetForURL:imageURL resultBlock:^(ALAsset *asset) {
                     ALAssetRepresentation *rep = [asset defaultRepresentation];
@@ -337,13 +342,25 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                     }
 
                     NSURL *fileURL = [NSURL fileURLWithPath:path];
-                    [gifResponse setObject:[fileURL absoluteString] forKey:@"uri"];
+                    NSString *filePath = [fileURL absoluteString];
+                    [gifResponse setObject:filePath forKey:@"uri"];
 
                     NSNumber *fileSizeValue = nil;
                     NSError *fileSizeError = nil;
                     [fileURL getResourceValue:&fileSizeValue forKey:NSURLFileSizeKey error:&fileSizeError];
                     if (fileSizeValue){
                         [gifResponse setObject:fileSizeValue forKey:@"fileSize"];
+                    }
+
+                    NSString *mimeType;
+                    mimeType = (__bridge_transfer NSString *)(UTTypeCopyPreferredTagWithClass(kUTTypeGIF, kUTTagClassMIMEType));
+                    [gifResponse setObject:mimeType forKey:@"type"];
+
+                    // get Filename
+                    PHAsset *pickedAsset = [PHAsset fetchAssetsWithALAssetURLs:@[imageURL] options:nil].lastObject;
+                    NSString *originalFilename = [self originalFilenameForAsset:pickedAsset assetType:PHAssetResourceTypePhoto];
+                    if (originalFilename) {
+                        [gifResponse setObject:originalFilename forKey:@"fileName"];
                     }
 
                     self.callback(@[gifResponse]);
