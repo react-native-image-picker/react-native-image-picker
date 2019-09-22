@@ -350,7 +350,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       libraryIntent = new Intent(Intent.ACTION_PICK,
       MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 
-      if (pickBoth) 
+      if (pickBoth)
       {
         libraryIntent.setType("image/* video/*");
       }
@@ -716,19 +716,27 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   private void putExtraFileInfo(@NonNull final String path,
                                 @NonNull final ResponseHelper responseHelper)
   {
+
     // size && filename
     try {
       File f = new File(path);
       responseHelper.putDouble("fileSize", f.length());
       responseHelper.putString("fileName", f.getName());
+      // type
+      String extension = MimeTypeMap.getFileExtensionFromUrl(path);
+      String fileName = f.getName();
+      if (extension != "") {
+        responseHelper.putString("type", MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension));
+      } else {
+        int i = fileName.lastIndexOf('.');
+        if (i > 0) {
+          extension = fileName.substring(i+1);
+          responseHelper.putString("type", MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension));
+        }
+      }
+
     } catch (Exception e) {
       e.printStackTrace();
-    }
-
-    // type
-    String extension = MimeTypeMap.getFileExtensionFromUrl(path);
-    if (extension != null) {
-      responseHelper.putString("type", MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension));
     }
   }
 
