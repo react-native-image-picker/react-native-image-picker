@@ -10,6 +10,7 @@ import android.content.pm.ResolveInfo;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import androidx.annotation.NonNull;
@@ -30,6 +31,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.module.annotations.ReactModule;
 import com.imagepicker.media.ImageConfig;
 import com.imagepicker.permissions.PermissionUtils;
@@ -57,6 +59,11 @@ import static com.imagepicker.utils.MediaUtils.*;
 import static com.imagepicker.utils.MediaUtils.createNewFile;
 import static com.imagepicker.utils.MediaUtils.getResizedImage;
 
+import droidninja.filepicker.FilePickerBuilder;
+import droidninja.filepicker.FilePickerConst;
+import java.util.ArrayList;
+import android.net.Uri;
+
 @ReactModule(name = ImagePickerModule.NAME)
 public class ImagePickerModule extends ReactContextBaseJavaModule
         implements ActivityEventListener
@@ -69,8 +76,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   public static final int REQUEST_LAUNCH_IMAGE_LIBRARY    = 13002;
   public static final int REQUEST_LAUNCH_VIDEO_LIBRARY    = 13003;
   public static final int REQUEST_LAUNCH_VIDEO_CAPTURE    = 13004;
+  public static final int REQUEST_LAUNCH_DOCUMENT_LIBRARY = 13005;
+  public static final int REQUEST_LAUNCH_FILE_BROWSER     = 13006;
   public static final int REQUEST_PERMISSIONS_FOR_CAMERA  = 14001;
   public static final int REQUEST_PERMISSIONS_FOR_LIBRARY = 14002;
+
+  private static final String OPTION_TYPE = "type";
+  private static final String OPTION_MULIPLE = "multiple";
 
   private final ReactApplicationContext reactContext;
   private final int dialogThemeId;
@@ -128,6 +140,15 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       return true;
     }
   };
+
+  private String[] readableArrayToStringArray(ReadableArray readableArray) {
+    int l = readableArray.size();
+    String[] array = new String[l];
+    for (int i = 0; i < l; ++i) {
+      array[i] = readableArray.getString(i);
+    }
+    return array;
+  }
 
   public ImagePickerModule(ReactApplicationContext reactContext)
   {
@@ -379,8 +400,89 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     }
   }
 
+  @ReactMethod
+  public void launchDocumentLibrary(final ReadableMap options, final Callback callback)
+  {
+    final Activity currentActivity = getCurrentActivity();
+    if (currentActivity == null) {
+      responseHelper.invokeError(callback, "can't find current Activity");
+      return;
+    }
+
+    this.callback = callback;
+    this.options = options;
+
+    if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_LIBRARY))
+    {
+      return;
+    }
+
+    try
+    {
+      ArrayList<String> docPaths = new ArrayList<>();
+      FilePickerBuilder.getInstance().setMaxCount(1)
+               .setSelectedFiles(docPaths)
+               .setActivityTheme(R.style.LibAppTheme)
+               .pickFile(currentActivity, REQUEST_LAUNCH_DOCUMENT_LIBRARY);
+    }
+    catch (ActivityNotFoundException e)
+    {
+      e.printStackTrace();
+      responseHelper.invokeError(callback, "Cannot launch document library");
+    }
+  }
+
+  @ReactMethod
+  public void launchFileBrowser(final ReadableMap options, final Callback callback)
+  {
+    final Activity currentActivity = getCurrentActivity();
+    if (currentActivity == null) {
+      responseHelper.invokeError(callback, "can't find current Activity");
+      return;
+    }
+
+    this.callback = callback;
+    this.options = options;
+
+    try {
+      Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+      intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+      intent.setType("*/*");
+      // if (!options.isNull(OPTION_TYPE)) {
+      //   ReadableArray types = options.getArray(OPTION_TYPE);
+      //   if (types.size() > 1) {
+      //     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+      //       String[] mimeTypes = readableArrayToStringArray(types);
+      //       intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+      //     } else {
+      //       System.out.println("Multiple type values not supported below API level 19");
+      //     }
+      //   } else if (types.size() == 1) {
+      //     intent.setType(types.getString(0));
+      //   }
+      // }
+
+      // boolean multiple = !options.isNull(OPTION_MULIPLE) && options.getBoolean(OPTION_MULIPLE);
+      // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+      //   intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, multiple);
+      // }
+
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+        intent = Intent.createChooser(intent, null);
+      }
+
+      currentActivity.startActivityForResult(intent, REQUEST_LAUNCH_FILE_BROWSER, Bundle.EMPTY);
+    } catch (Exception e) {
+      e.printStackTrace();
+      responseHelper.invokeError(callback, "Cannot launch file browser");
+    }
+  }
+
   @Override
   public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
+    System.out.println("Imagepicker:: onActivityResult requestcode: " +  requestCode + " resultCode: " + resultCode);
+
     //robustness code
     if (passResult(requestCode))
     {
@@ -438,6 +540,16 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         callback = null;
         return;
 
+      case REQUEST_LAUNCH_DOCUMENT_LIBRARY:
+        System.out.println("IMGPICK:: onActivityResult4");
+        ArrayList<String> docPaths = new ArrayList<>();
+        docPaths.addAll(data.getStringArrayListExtra(FilePickerConst.KEY_SELECTED_DOCS));
+        responseHelper.putString("uri", docPaths.get(0));
+        responseHelper.putString("path", getRealPathFromURI(Uri.parse(docPaths.get(0))));
+        responseHelper.invokeResponse(callback);
+        callback = null;        
+        return;
+
       case REQUEST_LAUNCH_VIDEO_CAPTURE:
         final String path = getRealPathFromURI(data.getData());
         responseHelper.putString("uri", data.getData().toString());
@@ -446,6 +558,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         responseHelper.invokeResponse(callback);
         callback = null;
         return;
+
+      case REQUEST_LAUNCH_FILE_BROWSER:
+        responseHelper.putString("uri", data.getData().toString());
+        responseHelper.putString("path", getRealPathFromURI(data.getData()));
+        responseHelper.invokeResponse(callback);
+        callback = null;
+        return;        
     }
 
     final ReadExifResult result = readExifInterface(responseHelper, imageConfig);
@@ -545,7 +664,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   {
     return callback == null || (cameraCaptureURI == null && requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE)
             || (requestCode != REQUEST_LAUNCH_IMAGE_CAPTURE && requestCode != REQUEST_LAUNCH_IMAGE_LIBRARY
-            && requestCode != REQUEST_LAUNCH_VIDEO_LIBRARY && requestCode != REQUEST_LAUNCH_VIDEO_CAPTURE);
+            && requestCode != REQUEST_LAUNCH_VIDEO_LIBRARY && requestCode != REQUEST_LAUNCH_VIDEO_CAPTURE
+            && requestCode !=  REQUEST_LAUNCH_DOCUMENT_LIBRARY && requestCode != REQUEST_LAUNCH_FILE_BROWSER);
   }
 
   private void updatedResultResponse(@Nullable final Uri uri,

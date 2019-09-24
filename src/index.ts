@@ -86,6 +86,28 @@ class ImagePicker {
       callback,
     );
   }
+
+  launchDocumentLibrary(options: ImagePickerOptions, callback: Callback): void {
+    return NativeInterface.launchDocumentLibrary(
+      {
+        ...DEFAULT_OPTIONS,
+        ...options,
+        tintColor: processColor(options.tintColor || DEFAULT_OPTIONS.tintColor),
+      },
+      callback,
+    );
+  }  
+
+  launchFileBrowser(options: ImagePickerOptions, callback: Callback): void {
+    return NativeInterface.launchFileBrowser(
+      {
+        ...DEFAULT_OPTIONS,
+        ...options,
+        tintColor: processColor(options.tintColor || DEFAULT_OPTIONS.tintColor),
+      },
+      callback,
+    );
+  }    
 }
 
 export default new ImagePicker();
