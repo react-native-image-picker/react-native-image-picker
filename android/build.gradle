@@ -46,7 +46,7 @@ repositories {
 
 dependencies {
     api "com.facebook.react:react-native:+"  // From node_modules
-    compile "com.droidninja:filepicker:2.2.1"
+    implementation "com.droidninja:filepicker:2.2.1"
 
     testImplementation "junit:junit:4.10"
     testImplementation "org.assertj:assertj-core:1.7.0"
