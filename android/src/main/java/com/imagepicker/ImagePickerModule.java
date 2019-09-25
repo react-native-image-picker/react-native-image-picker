@@ -35,6 +35,7 @@ import com.imagepicker.media.ImageConfig;
 import com.imagepicker.permissions.PermissionUtils;
 import com.imagepicker.permissions.OnImagePickerPermissionsCallback;
 import com.imagepicker.utils.MediaUtils.ReadExifResult;
+import com.imagepicker.utils.ReadableMapUtils;
 import com.imagepicker.utils.RealPathUtil;
 import com.imagepicker.utils.UI;
 
@@ -79,6 +80,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   protected Uri cameraCaptureURI;
   private Boolean noData = false;
   private Boolean pickVideo = false;
+  private Boolean pickBoth = false;
   private ImageConfig imageConfig = new ImageConfig(null, null, 0, 0, 100, 0, false);
 
   @Deprecated
@@ -347,6 +349,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       requestCode = REQUEST_LAUNCH_IMAGE_LIBRARY;
       libraryIntent = new Intent(Intent.ACTION_PICK,
       MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+
+      if (pickBoth) 
+      {
+        libraryIntent.setType("image/* video/*");
+      }
     }
 
     if (libraryIntent.resolveActivity(reactContext.getPackageManager()) == null)
@@ -357,7 +364,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
     try
     {
-      currentActivity.startActivityForResult(libraryIntent, requestCode);
+      String chooseWhichLibraryTitle = null;
+      if (ReadableMapUtils.hasAndNotEmptyString(options, "chooseWhichLibraryTitle"))
+      {
+        chooseWhichLibraryTitle = options.getString("chooseWhichLibraryTitle");
+      }
+
+      currentActivity.startActivityForResult(Intent.createChooser(libraryIntent, chooseWhichLibraryTitle), requestCode);
     }
     catch (ActivityNotFoundException e)
     {
@@ -726,6 +739,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     }
     imageConfig = imageConfig.updateFromOptions(options);
     pickVideo = false;
+    pickBoth = false;
+    if (options.hasKey("mediaType") && options.getString("mediaType").equals("mixed")) {
+      pickBoth = true;
+    }
     if (options.hasKey("mediaType") && options.getString("mediaType").equals("video")) {
       pickVideo = true;
     }
