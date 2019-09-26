@@ -1,0 +1,12 @@
+{
+  "include": ["src/**/*.ts"],
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "strict": true,
+    "moduleResolution": "node",
+    "lib": ["es2015", "es2016", "esnext"],
+    "jsx": "react-native"
+  },
+  "exclude": ["node_modules"]
+}

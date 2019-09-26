@@ -1,16 +1,25 @@
 {
   "name": "react-native-image-picker",
+  "version": "1.1.0",
   "description": "A React Native module that allows you to use native UI to select media from the device library or directly from the camera",
-  "version": "0.28.1",
-  "main": "index.js",
-  "homepage": "https://github.com/react-community/react-native-image-picker",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/react-community/react-native-image-picker.git"
-  },
-  "nativePackage": true,
+  "react-native": "src/index.ts",
+  "types": "lib/typescript/index.d.ts",
+  "main": "lib/commonjs/index.js",
+  "module": "lib/module/index.js",
+  "files": [
+    "/android",
+    "!/android/build",
+    "/ios",
+    "/src",
+    "/lib",
+    "/*.podspec"
+  ],
   "author": "Marc Shilling (marcshilling)",
   "contributors": [
+    {
+      "name": "Johan du Toit",
+      "email": "jdutoit.dev@gmail.com"
+    },
     {
       "name": "Matheus Santos",
       "email": "vorj.dux@gmail.com"
@@ -24,6 +33,18 @@
       "email": "rusfearuth@gmail.com"
     }
   ],
+  "homepage": "https://github.com/react-community/react-native-image-picker#readme",
+  "license": "MIT",
+  "scripts": {
+    "start": "react-native start",
+    "test": "yarn validate:eslint && yarn validate:typescript",
+    "validate:eslint": "eslint \"src/**/*.{js,ts,tsx}\" \"example/**/*.{js,ts,tsx}\"",
+    "validate:typescript": "tsc --project ./ --noEmit",
+    "test:jest": "jest \"/src/\"",
+    "ci:publish": "yarn semantic-release",
+    "semantic-release": "semantic-release",
+    "prepare": "bob build"
+  },
   "keywords": [
     "react-native",
     "react-native-image-picker",
@@ -32,23 +53,67 @@
     "image",
     "picker"
   ],
-  "scripts": {},
-  "types": "./index.d.ts",
-  "license": "MIT",
+  "dependencies": {},
   "devDependencies": {
-    "flow-bin": "0.82.0",
-    "husky": "^1.1.0",
-    "lint-staged": "^7.3.0",
-    "prettier": "1.14.3"
+    "@babel/core": "^7.4.5",
+    "@babel/runtime": "^7.4.5",
+    "@react-native-community/bob": "^0.6.0",
+    "@react-native-community/eslint-config": "^0.0.5",
+    "@semantic-release/changelog": "^3.0.4",
+    "@semantic-release/git": "7.0.12",
+    "@types/jest": "^24.0.15",
+    "@types/react": "^16.8.22",
+    "@types/react-native": "^0.57.63",
+    "@typescript-eslint/eslint-plugin": "^1.11.0",
+    "@typescript-eslint/parser": "^1.11.0",
+    "babel-jest": "^24.8.0",
+    "eslint": "5.16.0",
+    "eslint-config-prettier": "^5.0.0",
+    "eslint-plugin-prettier": "3.0.1",
+    "husky": "^2.4.1",
+    "jest": "^24.8.0",
+    "lint-staged": "^8.2.1",
+    "metro-react-native-babel-preset": "^0.54.1",
+    "prettier": "^1.18.2",
+    "react": "16.8.6",
+    "react-native": "0.60.0-rc.2",
+    "react-test-renderer": "16.8.6",
+    "rimraf": "^2.6.3",
+    "semantic-release": "15.13.16",
+    "ts-jest": "^24.0.2",
+    "typescript": "^3.5.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/react-native-community/react-native-image-picker.git"
+  },
+  "@react-native-community/bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      [
+        "commonjs",
+        {
+          "flow": true
+        }
+      ],
+      "module",
+      "typescript"
+    ]
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "lint-staged",
+      "pre-push": "yarn test"
     }
   },
   "lint-staged": {
-    "*.{js,json,css,md}": [
-      "prettier --write",
+    "*.{js,ts,tsx}": [
+      "yarn eslint --fix",
+      "git add"
+    ],
+    "*.java": [
+      "cd android && ./graldew spotlessApply",
       "git add"
     ]
   }
