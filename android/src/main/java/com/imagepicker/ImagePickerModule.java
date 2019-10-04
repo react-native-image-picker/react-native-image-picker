@@ -565,15 +565,24 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
                                    @NonNull final Callback callback,
                                    @NonNull final int requestCode)
   {
-    final int writePermission = ActivityCompat
+    int selfCheckResult = 0;
+    switch (requestCode)
+      {
+        case REQUEST_PERMISSIONS_FOR_CAMERA:
+          selfCheckResult = ActivityCompat
             .checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-    final int cameraPermission = ActivityCompat
+          break;
+
+        case REQUEST_PERMISSIONS_FOR_LIBRARY:
+          selfCheckResult = ActivityCompat
             .checkSelfPermission(activity, Manifest.permission.CAMERA);
+          break;
 
-    final boolean permissionsGrated = writePermission == PackageManager.PERMISSION_GRANTED &&
-            cameraPermission == PackageManager.PERMISSION_GRANTED;
+      }
 
-    if (!permissionsGrated)
+    final boolean permissionsGranted = selfCheckResult == PackageManager.PERMISSION_GRANTED;
+
+    if (!permissionsGranted)
     {
       final Boolean dontAskAgain = ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) && ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA);
 
@@ -621,7 +630,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       }
       else
       {
-        String[] PERMISSIONS = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA};
+        String[] PERMISSIONS = {Manifest.permission.CAMERA};
+        if (requestCode == REQUEST_PERMISSIONS_FOR_LIBRARY )
+        {
+            PERMISSIONS[0] = Manifest.permission.WRITE_EXTERNAL_STORAGE;
+        }
+
         if (activity instanceof ReactActivity)
         {
           ((ReactActivity) activity).requestPermissions(PERMISSIONS, requestCode, listener);
@@ -644,7 +658,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
                   .toString();
           throw new UnsupportedOperationException(errorDescription);
         }
-        return false;
       }
     }
     return true;
