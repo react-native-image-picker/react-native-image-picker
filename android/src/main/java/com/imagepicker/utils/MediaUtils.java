@@ -8,8 +8,8 @@ import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.facebook.react.bridge.ReadableMap;
@@ -20,6 +20,7 @@ import com.imagepicker.media.ImageConfig;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -156,8 +157,9 @@ public class MediaUtils
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         scaledPhoto.compress(Bitmap.CompressFormat.JPEG, result.quality, bytes);
 
-        final boolean forceLocal = requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE;
-        final File resized = createNewFile(context, options, !forceLocal);
+        final boolean forceLocal = requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE && !(ReadableMapUtils.hasAndNotNullReadableMap(options, "storageOptions")
+                && ReadableMapUtils.hasAndNotEmptyString(options.getMap("storageOptions"), "path"));
+        final File resized = createNewFile(context, options, forceLocal);
 
         if (resized == null)
         {
