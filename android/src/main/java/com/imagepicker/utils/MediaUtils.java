@@ -77,7 +77,7 @@ public class MediaUtils
      * @param initialHeight
      * @return updated ImageConfig
      */
-    public static @NonNull ImageConfig getResizedImage(@NonNull final Context context,
+    public static @Nullable ImageConfig getResizedImage(@NonNull final Context context,
                                                        @NonNull final ReadableMap options,
                                                        @NonNull final ImageConfig imageConfig,
                                                        int initialWidth,

@@ -350,7 +350,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       libraryIntent = new Intent(Intent.ACTION_PICK,
       MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 
-      if (pickBoth) 
+      if (pickBoth)
       {
         libraryIntent.setType("image/* video/*");
       }
@@ -474,7 +474,15 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     }
     else
     {
-      imageConfig = getResizedImage(reactContext, this.options, imageConfig, initialWidth, initialHeight, requestCode);
+      ImageConfig resizedImageConfig = getResizedImage(reactContext, this.options, imageConfig, initialWidth, initialHeight, requestCode);
+      if (resizedImageConfig == null) {
+        // probably an unsupported file type
+        removeUselessFiles(requestCode, imageConfig);
+        responseHelper.invokeError(callback, "Error resizing image. Check if the file type is supported on Android.");
+        callback = null;
+        return;
+      }
+      imageConfig = resizedImageConfig;
       if (imageConfig.resized == null)
       {
         removeUselessFiles(requestCode, imageConfig);
