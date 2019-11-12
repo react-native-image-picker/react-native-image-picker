@@ -83,20 +83,12 @@ public class MediaUtils
                                                        @NonNull final ImageConfig imageConfig,
                                                        int initialWidth,
                                                        int initialHeight,
+                                                       Boolean forceLocal,
                                                        final int requestCode)
     {
         BitmapFactory.Options imageOptions = new BitmapFactory.Options();
         imageOptions.inScaled = false;
-        imageOptions.inSampleSize = 1;
-
-        if (imageConfig.maxWidth != 0 || imageConfig.maxHeight != 0) {
-            while ((imageConfig.maxWidth == 0 || initialWidth > 2 * imageConfig.maxWidth) &&
-                   (imageConfig.maxHeight == 0 || initialHeight > 2 * imageConfig.maxHeight)) {
-                imageOptions.inSampleSize *= 2;
-                initialHeight /= 2;
-                initialWidth /= 2;
-            }
-        }
+        imageOptions.inSampleSize = 2;
 
         Bitmap photo = BitmapFactory.decodeFile(imageConfig.original.getAbsolutePath(), imageOptions);
 
@@ -112,7 +104,7 @@ public class MediaUtils
         {
             result = result.withMaxWidth(initialWidth);
         }
-        if (imageConfig.maxHeight == 0 || imageConfig.maxWidth > initialHeight)
+        if (imageConfig.maxHeight == 0 || imageConfig.maxHeight > initialHeight)
         {
             result = result.withMaxHeight(initialHeight);
         }
@@ -157,8 +149,7 @@ public class MediaUtils
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         scaledPhoto.compress(Bitmap.CompressFormat.JPEG, result.quality, bytes);
 
-        final boolean forceLocal = requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE;
-        final File resized = createNewFile(context, options, !forceLocal);
+        final File resized = createNewFile(context, options, forceLocal);
 
         if (resized == null)
         {
@@ -390,3 +381,4 @@ public class MediaUtils
         }
     }
 }
+
