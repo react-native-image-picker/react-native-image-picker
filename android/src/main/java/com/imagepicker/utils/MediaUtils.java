@@ -88,7 +88,7 @@ public class MediaUtils
     {
         BitmapFactory.Options imageOptions = new BitmapFactory.Options();
         imageOptions.inScaled = false;
-        imageOptions.inSampleSize = 2;
+        imageOptions.inSampleSize = 1;
 
         Bitmap photo = BitmapFactory.decodeFile(imageConfig.original.getAbsolutePath(), imageOptions);
 
@@ -379,6 +379,10 @@ public class MediaUtils
             this.currentRotation = currentRotation;
             this.error = error;
         }
+    }
+
+    public static String getExtensionFromFile(String filename) {
+        return filename.isEmpty() ? "": filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
     }
 }
 
