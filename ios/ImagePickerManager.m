@@ -580,17 +580,18 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     if (resizeFileTypes == nil)
         return true;
     
-    NSArray *types = [resizeFileTypes componentsSeparatedByString:@","];
+    NSString* imageURLstring = [imageURL absoluteString];
+
+    NSArray *types = [[resizeFileTypes uppercaseString] componentsSeparatedByString:@","];
     
-    for (NSString* type in types) {
-        NSString* uppercaseType = [type uppercaseString];
-        NSString* extTest = [NSString stringWithFormat: @"ext=%@", uppercaseType];
-        if ([[imageURL absoluteString] rangeOfString: extTest].location != NSNotFound) {
-            return true;
-        }
-    }
-    
-    return false;
+    // this is only to get the extension of the file attachment
+    NSString* type = [imageURLstring substringWithRange:
+                      [[[NSRegularExpression regularExpressionWithPattern:
+                         @"ext=(\\w+)" options:0 error:nil]
+                            firstMatchInString:imageURLstring options:0 range:NSMakeRange(0, imageURLstring.length)]
+                                rangeAtIndex:1]];
+     
+    return [types containsObject:type];
 }
 
 - (UIImage*)downscaleImageIfNecessary:(UIImage*)image maxWidth:(float)maxWidth maxHeight:(float)maxHeight resizeFileTypes:(NSString*)resizeFileTypes resizeMaxAspectRatio:(float)resizeMaxAspectRatio URL:(NSURL*)imageURL
@@ -601,7 +602,8 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     if (image.size.width <= maxWidth && image.size.height <= maxHeight) {
         return newImage;
     }
-    if (resizeMaxAspectRatio > 0 && image.size.width / image.size.height > resizeMaxAspectRatio) {
+    float actualAspectRatio = image.size.width > image.size.height ? image.size.width / image.size.height : image.size.height / image.size.width;
+    if (resizeMaxAspectRatio > 0 && actualAspectRatio > resizeMaxAspectRatio) {
         return newImage;
     }
     if (![self allowResizeFileType:resizeFileTypes forImageURL:imageURL]) {
