@@ -353,13 +353,22 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             // If needed, downscale image
             float maxWidth = editedImage.size.width;
             float maxHeight = editedImage.size.height;
+            NSString* resizeFileTypes = nil;
+            float resizeMaxAspectRatio = 0.0;
+            
             if ([self.options valueForKey:@"maxWidth"]) {
                 maxWidth = [[self.options valueForKey:@"maxWidth"] floatValue];
             }
             if ([self.options valueForKey:@"maxHeight"]) {
                 maxHeight = [[self.options valueForKey:@"maxHeight"] floatValue];
             }
-            editedImage = [self downscaleImageIfNecessary:editedImage maxWidth:maxWidth maxHeight:maxHeight];
+            if ([self.options valueForKey:@"resizeFileTypes"]) {
+                resizeFileTypes = [[self.options valueForKey:@"resizeFileTypes"] stringValue];
+            }
+            if ([self.options valueForKey:@"resizeMaxAspectRatio"]) {
+                resizeMaxAspectRatio = [[self.options valueForKey:@"resizeMaxAspectRatio"] floatValue];
+            }
+            editedImage = [self downscaleImageIfNecessary:editedImage maxWidth:maxWidth maxHeight:maxHeight resizeFileTypes:resizeFileTypes resizeMaxAspectRatio:resizeMaxAspectRatio URL:imageURL];
 
             NSData *data;
             if ([[[self.options objectForKey:@"imageFileType"] stringValue] isEqualToString:@"png"]) {
@@ -566,12 +575,36 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
     }
 }
 
-- (UIImage*)downscaleImageIfNecessary:(UIImage*)image maxWidth:(float)maxWidth maxHeight:(float)maxHeight
+- (Boolean)allowResizeFileType: (NSString*)resizeFileTypes forImageURL:(NSURL*)imageURL
+{
+    if (resizeFileTypes == nil)
+        return true;
+    
+    NSArray *types = [resizeFileTypes componentsSeparatedByString:@","];
+    
+    for (NSString* type in types) {
+        NSString* uppercaseType = [type uppercaseString];
+        NSString* extTest = [NSString stringWithFormat: @"ext=%@", uppercaseType];
+        if ([[imageURL absoluteString] rangeOfString: extTest].location != NSNotFound) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+- (UIImage*)downscaleImageIfNecessary:(UIImage*)image maxWidth:(float)maxWidth maxHeight:(float)maxHeight resizeFileTypes:(NSString*)resizeFileTypes resizeMaxAspectRatio:(float)resizeMaxAspectRatio URL:(NSURL*)imageURL
 {
     UIImage* newImage = image;
 
     // Nothing to do here
     if (image.size.width <= maxWidth && image.size.height <= maxHeight) {
+        return newImage;
+    }
+    if (resizeMaxAspectRatio > 0 && image.size.width / image.size.height > resizeMaxAspectRatio) {
+        return newImage;
+    }
+    if (![self allowResizeFileType:resizeFileTypes forImageURL:imageURL]) {
         return newImage;
     }
 
