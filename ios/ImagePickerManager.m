@@ -313,6 +313,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                 ALAssetsLibrary* assetsLibrary = [[ALAssetsLibrary alloc] init];
                 [assetsLibrary assetForURL:imageURL resultBlock:^(ALAsset *asset) {
                     ALAssetRepresentation *rep = [asset defaultRepresentation];
+                    NSString *originalFilename = [rep filename];
                     const NSUInteger repSize = (NSUInteger)[rep size];
                     Byte *buffer = (Byte*)malloc(repSize);
                     NSUInteger buffered = [rep getBytes:buffer fromOffset:0.0 length:repSize error:nil];
@@ -322,6 +323,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                     NSMutableDictionary *gifResponse = [[NSMutableDictionary alloc] init];
                     [gifResponse setObject:@(originalImage.size.width) forKey:@"width"];
                     [gifResponse setObject:@(originalImage.size.height) forKey:@"height"];
+                    [gifResponse setObject:(originalFilename ?: [NSNull null]) forKey:@"fileName"];
 
                     BOOL vertical = (originalImage.size.width < originalImage.size.height) ? YES : NO;
                     [gifResponse setObject:@(vertical) forKey:@"isVertical"];
