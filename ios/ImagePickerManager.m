@@ -363,7 +363,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                 maxHeight = [[self.options valueForKey:@"maxHeight"] floatValue];
             }
             if ([self.options valueForKey:@"resizeFileTypes"]) {
-                resizeFileTypes = [[self.options valueForKey:@"resizeFileTypes"] stringValue];
+                resizeFileTypes = [self.options valueForKey:@"resizeFileTypes"];
             }
             if ([self.options valueForKey:@"resizeMaxAspectRatio"]) {
                 resizeMaxAspectRatio = [[self.options valueForKey:@"resizeMaxAspectRatio"] floatValue];
