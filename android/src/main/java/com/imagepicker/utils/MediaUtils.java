@@ -88,7 +88,7 @@ public class MediaUtils
     {
         BitmapFactory.Options imageOptions = new BitmapFactory.Options();
         imageOptions.inScaled = false;
-        imageOptions.inSampleSize = 1;
+        imageOptions.inSampleSize = calculateInSampleSize(initialWidth, initialHeight, imageConfig.maxWidth, imageConfig.maxHeight);
 
         Bitmap photo = BitmapFactory.decodeFile(imageConfig.original.getAbsolutePath(), imageOptions);
 
@@ -109,8 +109,8 @@ public class MediaUtils
             result = result.withMaxHeight(initialHeight);
         }
 
-        double widthRatio = (double) result.maxWidth / initialWidth;
-        double heightRatio = (double) result.maxHeight / initialHeight;
+        double widthRatio = (double) result.maxWidth / ((double) initialWidth/imageOptions.inSampleSize);
+        double heightRatio = (double) result.maxHeight / ((double) initialHeight/imageOptions.inSampleSize);
 
         double ratio = (widthRatio < heightRatio)
                 ? widthRatio
@@ -144,7 +144,7 @@ public class MediaUtils
         {
             e.printStackTrace();
         }
-
+        
         scaledPhoto = Bitmap.createBitmap(photo, 0, 0, photo.getWidth(), photo.getHeight(), matrix, true);
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         scaledPhoto.compress(Bitmap.CompressFormat.JPEG, result.quality, bytes);
@@ -383,6 +383,23 @@ public class MediaUtils
 
     public static String getExtensionFromFile(String filename) {
         return filename.isEmpty() ? "": filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
+    }
+
+    private static int calculateInSampleSize(int width, int height, int reqWidth, int reqHeight) {
+        int inSampleSize = 1;
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) >= reqHeight
+                    && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+        return inSampleSize;
     }
 }
 
