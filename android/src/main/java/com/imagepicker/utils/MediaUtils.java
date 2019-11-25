@@ -109,7 +109,7 @@ public class MediaUtils
             result = result.withMaxHeight(initialHeight);
         }
 
-        double postScaleRatio = sampleSizeAndRatio.DesiredScalingRatio / (1.0 / sampleSizeAndRatio.InSampleSize);
+        double postScaleRatio = sampleSizeAndRatio.DesiredScalingRatio * sampleSizeAndRatio.InSampleSize;
         Matrix matrix = new Matrix();
         matrix.postRotate(result.rotation);
         matrix.postScale((float) postScaleRatio, (float) postScaleRatio);
