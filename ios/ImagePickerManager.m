@@ -139,6 +139,10 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         self.callback(@[@{@"error": @"Camera not available on simulator"}]);
         return;
 #else
+        if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+          self.callback(@[@{@"error": @"Source not available"}]);
+          return;
+        }
         self.picker.sourceType = UIImagePickerControllerSourceTypeCamera;
         if ([[self.options objectForKey:@"cameraType"] isEqualToString:@"front"]) {
             self.picker.cameraDevice = UIImagePickerControllerCameraDeviceFront;
@@ -149,6 +153,10 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 #endif
     }
     else { // RNImagePickerTargetLibrarySingleImage
+        if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypePhotoLibrary]) {
+          self.callback(@[@{@"error": @"Source not available"}]);
+          return;
+        }
         self.picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
     }
 
