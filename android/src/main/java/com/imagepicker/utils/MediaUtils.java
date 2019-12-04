@@ -39,11 +39,13 @@ public class MediaUtils
 {
     public static @Nullable File createNewFile(@NonNull final Context reactContext,
                                                @NonNull final ReadableMap options,
-                                               @NonNull final boolean forceLocal)
+                                               @NonNull final boolean forceLocal,
+                                               @NonNull String extension)
     {
         final String filename = new StringBuilder("image-")
                 .append(UUID.randomUUID().toString())
-                .append(".jpg")
+                .append(".")
+                .append(extension)
                 .toString();
 
         final File path = ReadableMapUtils.hasAndNotNullReadableMap(options, "storageOptions")
@@ -84,6 +86,7 @@ public class MediaUtils
                                                        int initialWidth,
                                                        int initialHeight,
                                                        Boolean forceLocal,
+                                                       String extension,
                                                        final int requestCode)
     {
         BitmapFactory.Options imageOptions = new BitmapFactory.Options();
@@ -147,9 +150,10 @@ public class MediaUtils
         
         scaledPhoto = Bitmap.createBitmap(photo, 0, 0, photo.getWidth(), photo.getHeight(), matrix, true);
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        scaledPhoto.compress(Bitmap.CompressFormat.JPEG, result.quality, bytes);
+        Bitmap.CompressFormat format = extension.equals("png") ? Bitmap.CompressFormat.PNG: Bitmap.CompressFormat.JPEG;
+        scaledPhoto.compress(format, result.quality, bytes);
 
-        final File resized = createNewFile(context, options, forceLocal);
+        final File resized = createNewFile(context, options, forceLocal, extension);
 
         if (resized == null)
         {

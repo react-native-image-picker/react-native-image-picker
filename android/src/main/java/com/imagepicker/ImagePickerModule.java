@@ -259,7 +259,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       requestCode = REQUEST_LAUNCH_IMAGE_CAPTURE;
       cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-      final File original = createNewFile(reactContext, this.options, this.forceLocal);
+      final File original = createNewFile(reactContext, this.options, this.forceLocal, "jpg");
       imageConfig = imageConfig.withOriginalFile(original);
 
       if (imageConfig.original != null) {
@@ -458,7 +458,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     }
     else
     {
-      imageConfig = getResizedImage(reactContext, this.options, imageConfig, initialWidth, initialHeight, this.forceLocal, requestCode);
+      imageConfig = getResizedImage(reactContext, this.options, imageConfig, initialWidth, initialHeight, this.forceLocal, extension, requestCode);
       if (imageConfig.resized == null)
       {
         removeUselessFiles(requestCode, imageConfig);

@@ -244,7 +244,8 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             if (imageURL && [[imageURL absoluteString] rangeOfString:@"ext=GIF"].location != NSNotFound) {
                 fileName = [tempFileName stringByAppendingString:@".gif"];
             }
-            else if ([[[self.options objectForKey:@"imageFileType"] stringValue] isEqualToString:@"png"]) {
+            else if (([[[self.options objectForKey:@"imageFileType"] stringValue] isEqualToString:@"png"]) 
+                || (imageURL && [[imageURL absoluteString] rangeOfString:@"ext=PNG"].location != NSNotFound)) {
                 fileName = [tempFileName stringByAppendingString:@".png"];
             }
             else {
@@ -373,7 +374,8 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             editedImage = [self downscaleImageIfNecessary:editedImage maxWidth:maxWidth maxHeight:maxHeight resizeFileTypes:resizeFileTypes resizeMaxAspectRatio:resizeMaxAspectRatio URL:imageURL];
 
             NSData *data;
-            if ([[[self.options objectForKey:@"imageFileType"] stringValue] isEqualToString:@"png"]) {
+            if (([[[self.options objectForKey:@"imageFileType"] stringValue] isEqualToString:@"png"])
+                || (imageURL && [[imageURL absoluteString] rangeOfString:@"ext=PNG"].location != NSNotFound)) {
                 data = UIImagePNGRepresentation(editedImage);
             }
             else {
