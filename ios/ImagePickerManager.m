@@ -581,7 +581,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 
 - (Boolean)allowResizeFileType: (NSString*)resizeFileTypes forImageURL:(NSURL*)imageURL
 {
-    if (resizeFileTypes == nil)
+    if (resizeFileTypes == nil || imageURL == nil)
         return true;
     
     NSString* imageURLstring = [imageURL absoluteString];

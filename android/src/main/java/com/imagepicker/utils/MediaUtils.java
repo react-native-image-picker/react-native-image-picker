@@ -20,7 +20,6 @@ import com.imagepicker.media.ImageConfig;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -91,7 +90,8 @@ public class MediaUtils
     {
         BitmapFactory.Options imageOptions = new BitmapFactory.Options();
         imageOptions.inScaled = false;
-        imageOptions.inSampleSize = calculateInSampleSize(initialWidth, initialHeight, imageConfig.maxWidth, imageConfig.maxHeight);
+        SampleSizeRatioCalculation sampleSizeAndRatio = calculateInSampleSizeAndRatio(initialWidth, initialHeight, imageConfig.maxWidth, imageConfig.maxHeight);
+        imageOptions.inSampleSize = sampleSizeAndRatio.InSampleSize;
 
         Bitmap photo = BitmapFactory.decodeFile(imageConfig.original.getAbsolutePath(), imageOptions);
 
@@ -112,16 +112,10 @@ public class MediaUtils
             result = result.withMaxHeight(initialHeight);
         }
 
-        double widthRatio = (double) result.maxWidth / ((double) initialWidth/imageOptions.inSampleSize);
-        double heightRatio = (double) result.maxHeight / ((double) initialHeight/imageOptions.inSampleSize);
-
-        double ratio = (widthRatio < heightRatio)
-                ? widthRatio
-                : heightRatio;
-
+        double postScaleRatio = sampleSizeAndRatio.DesiredScalingRatio * sampleSizeAndRatio.InSampleSize;
         Matrix matrix = new Matrix();
         matrix.postRotate(result.rotation);
-        matrix.postScale((float) ratio, (float) ratio);
+        matrix.postScale((float) postScaleRatio, (float) postScaleRatio);
 
         ExifInterface exif;
         try
@@ -153,7 +147,8 @@ public class MediaUtils
         Bitmap.CompressFormat format = extension.equals("png") ? Bitmap.CompressFormat.PNG: Bitmap.CompressFormat.JPEG;
         scaledPhoto.compress(format, result.quality, bytes);
 
-        final File resized = createNewFile(context, options, forceLocal, extension);
+        final boolean finalForceLocal = (requestCode != REQUEST_LAUNCH_IMAGE_CAPTURE) || forceLocal;
+        final File resized = createNewFile(context, options, finalForceLocal, extension);
 
         if (resized == null)
         {
@@ -389,21 +384,28 @@ public class MediaUtils
         return filename.isEmpty() ? "": filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
     }
 
-    private static int calculateInSampleSize(int width, int height, int reqWidth, int reqHeight) {
-        int inSampleSize = 1;
-        if (height > reqHeight || width > reqWidth) {
-
-            final int halfHeight = height / 2;
-            final int halfWidth = width / 2;
-
-            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
-            // height and width larger than the requested height and width.
-            while ((halfHeight / inSampleSize) >= reqHeight
-                    && (halfWidth / inSampleSize) >= reqWidth) {
-                inSampleSize *= 2;
-            }
+    private static SampleSizeRatioCalculation calculateInSampleSizeAndRatio(int width, int height, int reqWidth, int reqHeight) {
+        SampleSizeRatioCalculation calc = new SampleSizeRatioCalculation();
+        double desiredWidthRatio = 1.0;
+        double desiredHeightRatio = 1.0;
+        if (reqWidth != 0 && reqWidth < width) {
+            desiredWidthRatio = (double)width / (double)reqWidth;
         }
-        return inSampleSize;
+        if (reqHeight != 0 && reqHeight < height) {
+            desiredHeightRatio = (double)height / (double)reqHeight;
+        }
+        double targetRatio = desiredWidthRatio > desiredHeightRatio ? desiredWidthRatio : desiredHeightRatio;
+        calc.DesiredScalingRatio = 1.0 / targetRatio;
+        while (targetRatio / 2 > 1.0) {
+            calc.InSampleSize *= 2;
+            targetRatio /= 2;
+        }
+        return calc;
     }
+
 }
 
+class SampleSizeRatioCalculation {
+    public int InSampleSize = 1;
+    public double DesiredScalingRatio = 1.0;
+}
