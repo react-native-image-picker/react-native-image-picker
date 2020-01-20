@@ -204,18 +204,18 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         }];
     }
     else { // RNImagePickerTargetLibrarySingleImage
-        if ([[[UIDevice currentDevice] systemVersion] floatValue] < 11) {
-            [self checkPhotosPermissions:^(BOOL granted) {
-                if (!granted) {
-                    self.callback(@[@{@"error": @"Photo library permissions not granted"}]);
-                    return;
-                }
+      if (@available(iOS 11.0, *)) {
+        showPickerViewController();
+      } else {
+        [self checkPhotosPermissions:^(BOOL granted) {
+          if (!granted) {
+            self.callback(@[@{@"error": @"Photo library permissions not granted"}]);
+            return;
+          }
 
-                showPickerViewController();
-            }];
-        } else {
           showPickerViewController();
-        }
+        }];
+      }
     }
 }
 
@@ -301,7 +301,13 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             }
 
             if (imageURL) {
-                PHAsset *pickedAsset = [PHAsset fetchAssetsWithALAssetURLs:@[imageURL] options:nil].lastObject;
+                PHAsset *pickedAsset;
+                if (@available(iOS 11.0, *)) {
+                  pickedAsset = [info objectForKey: UIImagePickerControllerPHAsset];
+                } else {
+                  pickedAsset = [PHAsset fetchAssetsWithALAssetURLs:@[imageURL] options:nil].lastObject;
+                }
+                
                 NSString *originalFilename = [self originalFilenameForAsset:pickedAsset assetType:PHAssetResourceTypePhoto];
                 self.response[@"fileName"] = originalFilename ?: [NSNull null];
                 if (pickedAsset.location) {
