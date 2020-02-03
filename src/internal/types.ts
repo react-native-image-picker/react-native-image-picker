@@ -58,6 +58,7 @@ export interface ImagePickerStorageOptions {
   path?: string;
   cameraRoll?: boolean;
   waitUntilSaved?: boolean;
+  privateDirectory?: boolean;
 }
 
 export interface ImagePickerPermissionDeniedOptions {
