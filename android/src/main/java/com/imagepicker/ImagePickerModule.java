@@ -353,7 +353,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     else
     {
       requestCode = REQUEST_LAUNCH_IMAGE_LIBRARY;
-      libraryIntent = new Intent(Intent.ACTION_PICK,
+      libraryIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT,
       MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 
       if (pickBoth) 
