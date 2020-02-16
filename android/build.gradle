@@ -30,6 +30,12 @@ android {
     lintOptions {
         abortOnError false
     }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
 }
 
 repositories {
@@ -47,13 +53,13 @@ repositories {
 dependencies {
     api "com.facebook.react:react-native:+"  // From node_modules
 
-    testImplementation "junit:junit:4.10"
-    testImplementation "org.assertj:assertj-core:1.7.0"
-    testImplementation "org.robolectric:robolectric:3.3.2"
+    testImplementation('org.robolectric:robolectric:4.3.1') {
+        // https://github.com/robolectric/robolectric/issues/5245
+        exclude group: 'com.google.auto.service', module: 'auto-service'
+    }
 
-    testImplementation "org.easytesting:fest-assert-core:${FEST_ASSERT_CORE_VERSION}"
     testImplementation "org.powermock:powermock-api-mockito:${POWERMOCK_VERSION}"
+    testImplementation "org.powermock:powermock-module-junit4:${POWERMOCK_VERSION}"
     testImplementation "org.powermock:powermock-module-junit4-rule:${POWERMOCK_VERSION}"
     testImplementation "org.powermock:powermock-classloading-xstream:${POWERMOCK_VERSION}"
-    testImplementation "org.mockito:mockito-core:${MOCKITO_CORE_VERSION}"
 }
