@@ -388,7 +388,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   @Override
   public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
     //robustness code
-    if (passResult(requestCode))
+    if (passResult(requestCode, data.getData()))
     {
       return;
     }
@@ -547,9 +547,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   }
 
 
-  private boolean passResult(int requestCode)
+  private boolean passResult(int requestCode, Uri data)
   {
     return callback == null || (cameraCaptureURI == null && requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE)
+            || data == null
             || (requestCode != REQUEST_LAUNCH_IMAGE_CAPTURE && requestCode != REQUEST_LAUNCH_IMAGE_LIBRARY
             && requestCode != REQUEST_LAUNCH_VIDEO_LIBRARY && requestCode != REQUEST_LAUNCH_VIDEO_CAPTURE);
   }
