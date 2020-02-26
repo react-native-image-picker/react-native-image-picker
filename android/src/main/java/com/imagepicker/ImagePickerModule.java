@@ -583,7 +583,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         permissionsGranted = writePermission == PackageManager.PERMISSION_GRANTED;
         break;
       case REQUEST_PERMISSIONS_FOR_CAMERA:
-        permissionsGranted = cameraPermission == PackageManager.PERMISSION_GRANTED;
+        permissionsGranted = cameraPermission == PackageManager.PERMISSION_GRANTED && writePermission == PackageManager.PERMISSION_GRANTED;
         break;
     }
 
@@ -641,13 +641,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
             PERMISSIONS = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE};
             break;
           case REQUEST_PERMISSIONS_FOR_CAMERA:
-            PERMISSIONS = new String[]{Manifest.permission.CAMERA};
+            PERMISSIONS = new String[]{Manifest.permission.CAMERA,Manifest.permission.WRITE_EXTERNAL_STORAGE};
             break;
           default:
             PERMISSIONS = new String[]{};
             break;
         }
-        
+
         if (activity instanceof ReactActivity)
         {
           ((ReactActivity) activity).requestPermissions(PERMISSIONS, requestCode, listener);
