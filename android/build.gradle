@@ -30,6 +30,11 @@ android {
     lintOptions {
         abortOnError false
     }
+    testOptions {
+        unitTests.all {
+            systemProperty 'robolectric.dependency.repo.url', 'https://repo1.maven.org/maven2'
+        }
+    }
 }
 
 repositories {
