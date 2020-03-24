@@ -246,7 +246,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     this.callback = callback;
     this.options = options;
 
-    if(this.options === null) 
+    if(this.options == null) 
     {
       return;
     }
@@ -340,7 +340,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     this.callback = callback;
     this.options = options;
 
-    if(this.options === null) 
+    if(this.options == null) 
     {
       return;
     }
