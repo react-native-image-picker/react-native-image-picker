@@ -246,6 +246,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     this.callback = callback;
     this.options = options;
 
+    if(this.options === null) 
+    {
+      return;
+    }
+
     if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_CAMERA))
     {
       return;
@@ -334,6 +339,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
     this.callback = callback;
     this.options = options;
+
+    if(this.options === null) 
+    {
+      return;
+    }
 
     if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_LIBRARY))
     {
