@@ -25,9 +25,11 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.TimeZone;
 import java.util.UUID;
 
+import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO;
 import static com.imagepicker.ImagePickerModule.REQUEST_LAUNCH_IMAGE_CAPTURE;
 
 /**
@@ -36,6 +38,8 @@ import static com.imagepicker.ImagePickerModule.REQUEST_LAUNCH_IMAGE_CAPTURE;
 
 public class MediaUtils
 {
+    private static final String TAG = "MediaUtils";
+
     public static @Nullable File createNewFile(@NonNull final Context reactContext,
                                                @NonNull final ReadableMap options,
                                                @NonNull final boolean forceLocal)
@@ -48,7 +52,7 @@ public class MediaUtils
         // defaults to Public Pictures Directory
         File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
 
-        if (ReadableMapUtils.hasAndNotNullReadableMap(options, "storageOptions")) 
+        if (ReadableMapUtils.hasAndNotNullReadableMap(options, "storageOptions"))
         {
             final ReadableMap storageOptions = options.getMap("storageOptions");
 
@@ -409,4 +413,42 @@ public class MediaUtils
             this.error = error;
         }
     }
+
+    // Please check this : https://stackoverflow.com/questions/18120775/android-android-provider-mediastore-action-video-capture-return-null-onactivityr
+
+    public static Uri getOutputMediaFile(int type)
+    {
+        // To be safe, you should check that the SDCard is mounted
+
+        if(Environment.getExternalStorageState() != null) {
+            // this works for Android 2.2 and above
+            File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "SMW_VIDEO");
+
+            // This location works best if you want the created images to be shared
+            // between applications and persist after your app has been uninstalled.
+
+            // Create the storage directory if it does not exist
+            if (! mediaStorageDir.exists()) {
+                if (! mediaStorageDir.mkdirs()) {
+                    Log.d(TAG, "failed to create directory");
+                    return null;
+                }
+            }
+
+            // Create a media file name
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            File mediaFile;
+            if(type == MEDIA_TYPE_VIDEO) {
+                mediaFile = new File(mediaStorageDir.getPath() + File.separator +
+                        "VID_"+ timeStamp + ".mp4");
+            } else {
+                return null;
+            }
+
+            return Uri.fromFile(mediaFile);
+        }
+
+        return null;
+    }
 }
+

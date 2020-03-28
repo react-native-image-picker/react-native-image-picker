@@ -53,6 +53,7 @@ import java.util.List;
 import com.facebook.react.modules.core.PermissionListener;
 import com.facebook.react.modules.core.PermissionAwareActivity;
 
+import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO;
 import static com.imagepicker.utils.MediaUtils.*;
 import static com.imagepicker.utils.MediaUtils.createNewFile;
 import static com.imagepicker.utils.MediaUtils.getResizedImage;
@@ -260,6 +261,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     {
       requestCode = REQUEST_LAUNCH_VIDEO_CAPTURE;
       cameraIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+			Uri fileUri = getOutputMediaFile(MEDIA_TYPE_VIDEO);  // create a file to save the video in specific folder (this works for video only)
+			cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
       cameraIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, videoQuality);
       if (videoDurationLimit > 0)
       {
@@ -583,7 +586,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         permissionsGranted = writePermission == PackageManager.PERMISSION_GRANTED;
         break;
       case REQUEST_PERMISSIONS_FOR_CAMERA:
-        permissionsGranted = cameraPermission == PackageManager.PERMISSION_GRANTED && writePermission == PackageManager.PERMISSION_GRANTED;
+        permissionsGranted = cameraPermission == PackageManager.PERMISSION_GRANTED;
         break;
     }
 
@@ -641,13 +644,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
             PERMISSIONS = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE};
             break;
           case REQUEST_PERMISSIONS_FOR_CAMERA:
-            PERMISSIONS = new String[]{Manifest.permission.CAMERA,Manifest.permission.WRITE_EXTERNAL_STORAGE};
+            PERMISSIONS = new String[]{Manifest.permission.CAMERA};
             break;
           default:
             PERMISSIONS = new String[]{};
             break;
         }
-
+        
         if (activity instanceof ReactActivity)
         {
           ((ReactActivity) activity).requestPermissions(PERMISSIONS, requestCode, listener);
