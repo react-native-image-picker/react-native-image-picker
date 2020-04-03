@@ -381,7 +381,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
           } catch (Exception e) {
             // image not in cache
             responseHelper.putString("error", "Could not read photo");
-            responseHelper.putString("uri", uri.toString());
+            responseHelper.putString("uri", uri != null ? uri.toString() : "null");
             responseHelper.invokeResponse(callback);
             callback = null;
             return;
@@ -500,7 +500,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
   private void updatedResultResponse(@Nullable final Uri uri,
                                      @NonNull final String path) {
-    responseHelper.putString("uri", uri.toString());
+    responseHelper.putString("uri", uri != null ? uri.toString() : "null");
     responseHelper.putString("path", path);
 
     if (!noData) {
