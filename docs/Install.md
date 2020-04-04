@@ -147,12 +147,11 @@ Customization settings of dialog `android/app/res/values/themes.xml` (`android/a
    public class MainApplication extends Application implements ReactApplication {
        @Override
        protected List<ReactPackage> getPackages() {
-           return Arrays.<ReactPackage>asList(
-               new MainReactPackage(),
-               new ImagePickerPackage(), // <-- add this line
-               // OR if you want to customize dialog style
-               new ImagePickerPackage(R.style.my_dialog_style)
-           );
+          List<ReactPackage> packages = new PackageList(this).getPackages();
+          packages.add(new ImagePickerPackage()); // <-- add this line
+          // OR if you want to customize dialog style
+          packages.add(new ImagePickerPackage(R.style.my_dialog_style));
+          return packages;
        }
    }
    ```
