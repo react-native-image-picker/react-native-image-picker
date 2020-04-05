@@ -81,7 +81,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   protected Uri cameraCaptureURI;
   private Boolean noData = false;
   private Boolean pickVideo = false;
-  private int frontCamera=Camera.CameraInfo.CAMERA_FACING_BACK;
+  private int cameraFacing=Camera.CameraInfo.CAMERA_FACING_BACK;
   private Boolean pickBoth = false;
   private ImageConfig imageConfig = new ImageConfig(null, null, 0, 0, 100, 0, false);
 
@@ -270,9 +270,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
       if(this.hasFrontCamera()){
-        cameraIntent.putExtra("android.intent.extras.CAMERA_FACING", frontCamera);
+        cameraIntent.putExtra("android.intent.extras.CAMERA_FACING", cameraFacing);
 
-        if(frontCamera==Camera.CameraInfo.CAMERA_FACING_FRONT){
+        if(cameraFacing==Camera.CameraInfo.CAMERA_FACING_FRONT){
           cameraIntent.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
         }
       }
@@ -776,9 +776,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     if (options.hasKey("durationLimit")) {
       videoDurationLimit = options.getInt("durationLimit");
     }
-    frontCamera=Camera.CameraInfo.CAMERA_FACING_BACK;
+    cameraFacing=Camera.CameraInfo.CAMERA_FACING_BACK;
     if(options.hasKey("cameraType") && options.getString("cameraType").equals("front")){
-      frontCamera=Camera.CameraInfo.CAMERA_FACING_FRONT;
+      cameraFacing=Camera.CameraInfo.CAMERA_FACING_FRONT;
     }
   }
 }
