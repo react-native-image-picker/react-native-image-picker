@@ -2,6 +2,8 @@ package com.imagepicker.permissions;
 
 import android.app.Activity;
 import android.content.DialogInterface;
+import android.os.Build;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -9,6 +11,7 @@ import androidx.appcompat.app.AlertDialog;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeMap;
 import com.imagepicker.ImagePickerModule;
+import com.imagepicker.utils.ReadableMapUtils;
 
 import java.lang.ref.WeakReference;
 
@@ -79,5 +82,17 @@ public class PermissionUtils
     public interface OnExplainingPermissionCallback {
         void onCancel(WeakReference<ImagePickerModule> moduleInstance, DialogInterface dialogInterface);
         void onReTry(WeakReference<ImagePickerModule> moduleInstance, DialogInterface dialogInterface);
+    }
+
+    public static boolean needsExternalStoragePermission(@NonNull final ReadableMap options) {
+        // SDK < 21 always require WRITE_EXTERNAL_STORAGE
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) return true;
+
+        // SDK >= 21 only requires WRITE_EXTERNAL_STORAGE when writing to public directory
+        // which is the default, except when storageOptions.privateDirectory is set to true
+        if (!ReadableMapUtils.hasAndNotNullReadableMap(options, "storageOptions")) return true;
+        final ReadableMap storageOptions = options.getMap("storageOptions");
+        if (storageOptions == null || !storageOptions.hasKey("privateDirectory")) return true;
+        return !storageOptions.getBoolean("privateDirectory");
     }
 }

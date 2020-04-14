@@ -246,7 +246,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     this.callback = callback;
     this.options = options;
 
-    if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_CAMERA))
+    if (!permissionsCheck(currentActivity, options, callback, REQUEST_PERMISSIONS_FOR_CAMERA))
     {
       return;
     }
@@ -335,7 +335,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     this.callback = callback;
     this.options = options;
 
-    if (!permissionsCheck(currentActivity, callback, REQUEST_PERMISSIONS_FOR_LIBRARY))
+    if (!permissionsCheck(currentActivity, options, callback, REQUEST_PERMISSIONS_FOR_LIBRARY))
     {
       return;
     }
@@ -541,7 +541,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     return this.dialogThemeId;
   }
 
-  public @NonNull Activity getActivity()
+  public @Nullable Activity getActivity()
   {
     return getCurrentActivity();
   }
@@ -568,33 +568,46 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   }
 
   private boolean permissionsCheck(@NonNull final Activity activity,
+                                   @NonNull ReadableMap options,
                                    @NonNull final Callback callback,
-                                   @NonNull final int requestCode)
+                                   final int requestCode)
   {
-    final int writePermission = ActivityCompat
-            .checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-    final int cameraPermission = ActivityCompat
-            .checkSelfPermission(activity, Manifest.permission.CAMERA);
+    boolean permissionsGranted = true;
+    boolean needsWritePermission = requestCode == REQUEST_PERMISSIONS_FOR_LIBRARY || PermissionUtils.needsExternalStoragePermission(options);
 
-    boolean permissionsGranted = false;
-
+    String[] PERMISSIONS;
     switch (requestCode) {
       case REQUEST_PERMISSIONS_FOR_LIBRARY:
-        permissionsGranted = writePermission == PackageManager.PERMISSION_GRANTED;
+        PERMISSIONS = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE};
         break;
       case REQUEST_PERMISSIONS_FOR_CAMERA:
-        permissionsGranted = cameraPermission == PackageManager.PERMISSION_GRANTED && writePermission == PackageManager.PERMISSION_GRANTED;
+        if (needsWritePermission) {
+          PERMISSIONS = new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE};
+        } else {
+          PERMISSIONS = new String[]{Manifest.permission.CAMERA};
+        }
         break;
+      default:
+        PERMISSIONS = new String[]{};
+        break;
+    }
+
+    // check if all permissions are granted
+    for (String permission : PERMISSIONS) {
+      if (ActivityCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
+        permissionsGranted = false;
+        break;
+      }
     }
 
     if (!permissionsGranted)
     {
-      final Boolean dontAskAgain = ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) && ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA);
+      final boolean dontAskAgain = ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) && ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA);
 
       if (dontAskAgain)
       {
         final AlertDialog dialog = PermissionUtils
-                .explainingDialog(this, options, new PermissionUtils.OnExplainingPermissionCallback()
+                .explainingDialog(this, this.options, new PermissionUtils.OnExplainingPermissionCallback()
                 {
                   @Override
                   public void onCancel(WeakReference<ImagePickerModule> moduleInstance,
@@ -635,19 +648,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       }
       else
       {
-        String[] PERMISSIONS;
-        switch (requestCode) {
-          case REQUEST_PERMISSIONS_FOR_LIBRARY:
-            PERMISSIONS = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE};
-            break;
-          case REQUEST_PERMISSIONS_FOR_CAMERA:
-            PERMISSIONS = new String[]{Manifest.permission.CAMERA,Manifest.permission.WRITE_EXTERNAL_STORAGE};
-            break;
-          default:
-            PERMISSIONS = new String[]{};
-            break;
-        }
-
         if (activity instanceof ReactActivity)
         {
           ((ReactActivity) activity).requestPermissions(PERMISSIONS, requestCode, listener);
