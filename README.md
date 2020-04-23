@@ -1,6 +1,6 @@
 # React Native Image Picker
 
-##NOTE – This branch has been created and pointed to within Regroop, it intends to create a stable location for for a version of the ImagePicker it relies on (with the monkey patches to ensure it works correctly).
+## NOTE – This branch has been created and pointed to within Regroop, it intends to create a stable location for for a version of the ImagePicker it relies on (with the monkey patches to ensure it works correctly).
 
 
 
