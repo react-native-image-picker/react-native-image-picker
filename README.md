@@ -1,5 +1,11 @@
 # React Native Image Picker
 
+##NOTE – This branch has been created and pointed to within Regroop, it intends to create a stable location for for a version of the ImagePicker it relies on (with the monkey patches to ensure it works correctly).
+
+
+
+
+
 [![npm version](https://badge.fury.io/js/react-native-image-picker.svg)](https://badge.fury.io/js/react-native-image-picker)
 [![npm](https://img.shields.io/npm/dt/react-native-image-picker.svg)](https://npmcharts.com/compare/react-native-image-picker?minimal=true)
 ![MIT](https://img.shields.io/dub/l/vibe-d.svg)

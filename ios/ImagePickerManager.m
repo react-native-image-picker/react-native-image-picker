@@ -456,7 +456,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 
                 if (videoURL) { // Protect against reported crash
                   NSError *error = nil;
-                  [fileManager moveItemAtURL:videoURL toURL:videoDestinationURL error:&error];
+                  [fileManager copyItemAtURL:videoURL toURL:videoDestinationURL error:&error];
                   if (error) {
                       self.callback(@[@{@"error": error.localizedFailureReason}]);
                       return;
