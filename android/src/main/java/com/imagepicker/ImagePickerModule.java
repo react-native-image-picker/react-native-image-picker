@@ -10,6 +10,7 @@ import android.content.pm.ResolveInfo;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.Settings;
 
@@ -370,7 +371,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
       case REQUEST_LAUNCH_IMAGE_LIBRARY:
         uri = data.getData();
-        String realPath = getRealPathFromURI(uri);
+        String realPath = getRealPathFromURI(uri, Environment.DIRECTORY_PICTURES);
         final boolean isUrl = !TextUtils.isEmpty(realPath) &&
                 Patterns.WEB_URL.matcher(realPath).matches();
         if (realPath == null || isUrl) {
@@ -381,7 +382,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
           } catch (Exception e) {
             // image not in cache
             responseHelper.putString("error", "Could not read photo");
-            responseHelper.putString("uri", uri.toString());
+            responseHelper.putString("uri", uri != null ? uri.toString() : null);
             responseHelper.invokeResponse(callback);
             callback = null;
             return;
@@ -393,7 +394,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       case REQUEST_LAUNCH_VIDEO_LIBRARY:
         if (data != null && data.getData() != null) {
           responseHelper.putString("uri", data.getData().toString());
-          responseHelper.putString("path", getRealPathFromURI(data.getData()));
+          responseHelper.putString("path", getRealPathFromURI(data.getData(),Environment.DIRECTORY_MOVIES));
           responseHelper.invokeResponse(callback);
           callback = null;
         }
@@ -401,7 +402,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
       case REQUEST_LAUNCH_VIDEO_CAPTURE:
         if (data != null && data.getData() != null) {
-          final String path = getRealPathFromURI(data.getData());
+          final String path = getRealPathFromURI(data.getData(),Environment.DIRECTORY_MOVIES);
           responseHelper.putString("uri", data.getData().toString());
           responseHelper.putString("path", path);
           fileScan(reactContext, path);
@@ -500,7 +501,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
 
   private void updatedResultResponse(@Nullable final Uri uri,
                                      @NonNull final String path) {
-    responseHelper.putString("uri", uri.toString());
+    responseHelper.putString("uri", uri != null ? uri.toString() : null);
     responseHelper.putString("path", path);
 
     if (!noData) {
@@ -608,8 +609,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
   }
 
   private @NonNull
-  String getRealPathFromURI(@NonNull final Uri uri) {
-    return RealPathUtil.getRealPathFromURI(reactContext, uri);
+  String getRealPathFromURI(@NonNull final Uri uri,String directoryType) {
+    return RealPathUtil.getRealPathFromURI(reactContext, uri,directoryType);
   }
 
   /**
