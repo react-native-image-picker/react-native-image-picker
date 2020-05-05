@@ -237,7 +237,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     if (pickVideo) {
       requestCode = REQUEST_LAUNCH_VIDEO_CAPTURE;
       cameraIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-      Uri fileUri = getOutputMediaFile(MEDIA_TYPE_VIDEO);  // create a file to save the video in specific folder (this works for video only)
+      Uri fileUri = getOutputMediaFile(reactContext,MEDIA_TYPE_VIDEO);  // create a file to save the video in specific folder (this works for video only)
       cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
       cameraIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, videoQuality);
       if (videoDurationLimit > 0) {
