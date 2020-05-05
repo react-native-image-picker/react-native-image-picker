@@ -7,10 +7,12 @@ import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.FileProvider;
 
 import android.util.Log;
 
@@ -362,7 +364,7 @@ public class MediaUtils {
 
   // Please check this : https://stackoverflow.com/questions/18120775/android-android-provider-mediastore-action-video-capture-return-null-onactivityr
 
-  public static Uri getOutputMediaFile(int type) {
+  public static Uri getOutputMediaFile(Context context, int type) {
     // To be safe, you should check that the SDCard is mounted
 
     if (Environment.getExternalStorageState() != null) {
@@ -389,9 +391,15 @@ public class MediaUtils {
       } else {
         return null;
       }
-
-      return Uri.fromFile(mediaFile);
-    }
+      Uri resultUri;
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+        resultUri = Uri.fromFile(mediaFile);
+      } else {
+        resultUri = FileProvider.getUriForFile(context,
+                context.getApplicationContext().getPackageName() + ".provider",
+                mediaFile);
+      }
+      return resultUri;    }
 
     return null;
   }
