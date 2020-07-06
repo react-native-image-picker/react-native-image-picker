@@ -25,13 +25,17 @@ RCT_EXPORT_MODULE();
 RCT_EXPORT_METHOD(launchCamera:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
 {
     self.callback = callback;
-    [self launchImagePicker:RNImagePickerTargetCamera options:options];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self launchImagePicker:RNImagePickerTargetCamera options:options];
+    });
 }
 
 RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
 {
     self.callback = callback;
-    [self launchImagePicker:RNImagePickerTargetLibrarySingleImage options:options];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self launchImagePicker:RNImagePickerTargetLibrarySingleImage options:options];
+    });
 }
 
 RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
