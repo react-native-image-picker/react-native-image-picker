@@ -1,6 +1,6 @@
 #import "ImagePickerManager.h"
 #import <React/RCTConvert.h>
-#import <AssetsLibrary/AssetsLibrary.h>
+//#import <AssetsLibrary/AssetsLibrary.h>
 #import <AVFoundation/AVFoundation.h>
 #import <Photos/Photos.h>
 #import <React/RCTUtils.h>
@@ -94,7 +94,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         alertController.popoverPresentationController.sourceView = root.view;
         alertController.popoverPresentationController.sourceRect = CGRectMake(root.view.bounds.size.width / 2.0, root.view.bounds.size.height, 1.0, 1.0);
 
-        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
             alertController.popoverPresentationController.permittedArrowDirections = 0;
             for (id subview in alertController.view.subviews) {
                 if ([subview isMemberOfClass:[UIView class]]) {
@@ -244,7 +244,7 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 {
     dispatch_block_t dismissCompletionBlock = ^{
 
-        NSURL *imageURL = [info valueForKey:UIImagePickerControllerReferenceURL];
+        NSURL *imageURL = [info valueForKey:UIImagePickerControllerPHAsset];
         NSString *mediaType = [info objectForKey:UIImagePickerControllerMediaType];
 
         NSString *fileName;
@@ -308,8 +308,6 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                 PHAsset *pickedAsset;
                 if (@available(iOS 11.0, *)) {
                   pickedAsset = [info objectForKey: UIImagePickerControllerPHAsset];
-                } else {
-                  pickedAsset = [PHAsset fetchAssetsWithALAssetURLs:@[imageURL] options:nil].lastObject;
                 }
                 
                 NSString *originalFilename = [self originalFilenameForAsset:pickedAsset assetType:PHAssetResourceTypePhoto];
@@ -321,46 +319,6 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                 if (pickedAsset.creationDate) {
                     self.response[@"timestamp"] = [[ImagePickerManager ISO8601DateFormatter] stringFromDate:pickedAsset.creationDate];
                 }
-            }
-
-            // GIFs break when resized, so we handle them differently
-            if (imageURL && [[imageURL absoluteString] rangeOfString:@"ext=GIF"].location != NSNotFound) {
-                ALAssetsLibrary* assetsLibrary = [[ALAssetsLibrary alloc] init];
-                [assetsLibrary assetForURL:imageURL resultBlock:^(ALAsset *asset) {
-                    ALAssetRepresentation *rep = [asset defaultRepresentation];
-                    const NSUInteger repSize = (NSUInteger)[rep size];
-                    Byte *buffer = (Byte*)malloc(repSize);
-                    NSUInteger buffered = [rep getBytes:buffer fromOffset:0.0 length:repSize error:nil];
-                    NSData *data = [NSData dataWithBytesNoCopy:buffer length:buffered freeWhenDone:YES];
-                    [data writeToFile:path atomically:YES];
-
-                    NSMutableDictionary *gifResponse = [[NSMutableDictionary alloc] init];
-                    [gifResponse setObject:@(originalImage.size.width) forKey:@"width"];
-                    [gifResponse setObject:@(originalImage.size.height) forKey:@"height"];
-
-                    BOOL vertical = (originalImage.size.width < originalImage.size.height) ? YES : NO;
-                    [gifResponse setObject:@(vertical) forKey:@"isVertical"];
-
-                    if (![[self.options objectForKey:@"noData"] boolValue]) {
-                        NSString *dataString = [data base64EncodedStringWithOptions:0];
-                        [gifResponse setObject:dataString forKey:@"data"];
-                    }
-
-                    NSURL *fileURL = [NSURL fileURLWithPath:path];
-                    [gifResponse setObject:[fileURL absoluteString] forKey:@"uri"];
-
-                    NSNumber *fileSizeValue = nil;
-                    NSError *fileSizeError = nil;
-                    [fileURL getResourceValue:&fileSizeValue forKey:NSURLFileSizeKey error:&fileSizeError];
-                    if (fileSizeValue){
-                        [gifResponse setObject:fileSizeValue forKey:@"fileSize"];
-                    }
-
-                    self.callback(@[gifResponse]);
-                } failureBlock:^(NSError *error) {
-                    self.callback(@[@{@"error": error.localizedFailureReason}]);
-                }];
-                return;
             }
 
             UIImage *editedImage = [self fixOrientation:originalImage];  // Rotate the image for upload to web
@@ -415,128 +373,10 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
 
             [self.response setObject:@(editedImage.size.width) forKey:@"width"];
             [self.response setObject:@(editedImage.size.height) forKey:@"height"];
-
-            NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
-            if (storageOptions && [[storageOptions objectForKey:@"cameraRoll"] boolValue] == YES && self.picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
-                ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
-                if ([[storageOptions objectForKey:@"waitUntilSaved"] boolValue]) {
-                    [library writeImageToSavedPhotosAlbum:originalImage.CGImage metadata:[info valueForKey:UIImagePickerControllerMediaMetadata] completionBlock:^(NSURL *assetURL, NSError *error) {
-                        if (error) {
-                            NSLog(@"Error while saving picture into photo album");
-                        } else {
-                            // when the image has been saved in the photo album
-                            if (assetURL) {
-                                PHAsset *capturedAsset = [PHAsset fetchAssetsWithALAssetURLs:@[assetURL] options:nil].lastObject;
-                                NSString *originalFilename = [self originalFilenameForAsset:capturedAsset assetType:PHAssetResourceTypePhoto];
-                                self.response[@"fileName"] = originalFilename ?: [NSNull null];
-                                // This implementation will never have a location for the captured image, it needs to be added manually with CoreLocation code here.
-                                if (capturedAsset.creationDate) {
-                                    self.response[@"timestamp"] = [[ImagePickerManager ISO8601DateFormatter] stringFromDate:capturedAsset.creationDate];
-                                }
-                            }
-                            self.callback(@[self.response]);
-                        }
-                    }];
-                } else {
-                    [library writeImageToSavedPhotosAlbum:originalImage.CGImage metadata:[info valueForKey:UIImagePickerControllerMediaMetadata] completionBlock:nil];
-                }
-            }
-        }
-        else { // VIDEO
-            NSURL *videoRefURL = info[UIImagePickerControllerReferenceURL];
-            NSURL *videoURL = info[UIImagePickerControllerMediaURL];
-            NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
-
-            if (videoRefURL) {
-                PHAsset *pickedAsset = [PHAsset fetchAssetsWithALAssetURLs:@[videoRefURL] options:nil].lastObject;
-                NSString *originalFilename = [self originalFilenameForAsset:pickedAsset assetType:PHAssetResourceTypeVideo];
-                self.response[@"fileName"] = originalFilename ?: [NSNull null];
-                if (pickedAsset.location) {
-                    self.response[@"latitude"] = @(pickedAsset.location.coordinate.latitude);
-                    self.response[@"longitude"] = @(pickedAsset.location.coordinate.longitude);
-                }
-                if (pickedAsset.creationDate) {
-                    self.response[@"timestamp"] = [[ImagePickerManager ISO8601DateFormatter] stringFromDate:pickedAsset.creationDate];
-                }
-            }
-
-            if ([videoURL.URLByResolvingSymlinksInPath.path isEqualToString:videoDestinationURL.URLByResolvingSymlinksInPath.path] == NO) {
-                NSFileManager *fileManager = [NSFileManager defaultManager];
-
-                // Delete file if it already exists
-                if ([fileManager fileExistsAtPath:videoDestinationURL.path]) {
-                    [fileManager removeItemAtURL:videoDestinationURL error:nil];
-                }
-
-                if (videoURL) { // Protect against reported crash
-                  NSError *error = nil;
-
-                  // If we have write access to the source file, move it. Otherwise use copy. 
-                  if ([fileManager isWritableFileAtPath:[videoURL path]]) {
-                    [fileManager moveItemAtURL:videoURL toURL:videoDestinationURL error:&error];
-                  } else {
-                    [fileManager copyItemAtURL:videoURL toURL:videoDestinationURL error:&error];
-                  }
-    
-                  if (error) {
-                      self.callback(@[@{@"error": error.localizedFailureReason}]);
-                      return;
-                  }
-                }
-            }
-
-            [self.response setObject:videoDestinationURL.absoluteString forKey:@"uri"];
-            if (videoRefURL.absoluteString) {
-                [self.response setObject:videoRefURL.absoluteString forKey:@"origURL"];
-            }
-
-            NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
-            if (storageOptions && [[storageOptions objectForKey:@"cameraRoll"] boolValue] == YES && self.picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
-                ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
-                [library writeVideoAtPathToSavedPhotosAlbum:videoDestinationURL completionBlock:^(NSURL *assetURL, NSError *error) {
-                    if (error) {
-                        self.callback(@[@{@"error": error.localizedFailureReason}]);
-                        return;
-                    } else {
-                        NSLog(@"Save video succeed.");
-                        if ([[storageOptions objectForKey:@"waitUntilSaved"] boolValue]) {
-                            if (assetURL) {
-                                PHAsset *capturedAsset = [PHAsset fetchAssetsWithALAssetURLs:@[assetURL] options:nil].lastObject;
-                                NSString *originalFilename = [self originalFilenameForAsset:capturedAsset assetType:PHAssetResourceTypeVideo];
-                                self.response[@"fileName"] = originalFilename ?: [NSNull null];
-                                // This implementation will never have a location for the captured image, it needs to be added manually with CoreLocation code here.
-                                if (capturedAsset.creationDate) {
-                                    self.response[@"timestamp"] = [[ImagePickerManager ISO8601DateFormatter] stringFromDate:capturedAsset.creationDate];
-                                }
-                            }
-
-                            self.callback(@[self.response]);
-                        }
-                    }
-                }];
-            }
-        }
-
-        // If storage options are provided, check the skipBackup flag
-        if ([self.options objectForKey:@"storageOptions"] && [[self.options objectForKey:@"storageOptions"] isKindOfClass:[NSDictionary class]]) {
-            NSDictionary *storageOptions = [self.options objectForKey:@"storageOptions"];
-
-            if ([[storageOptions objectForKey:@"skipBackup"] boolValue]) {
-                [self addSkipBackupAttributeToItemAtPath:path]; // Don't back up the file to iCloud
-            }
-
-            if ([[storageOptions objectForKey:@"waitUntilSaved"] boolValue] == NO ||
-                [[storageOptions objectForKey:@"cameraRoll"] boolValue] == NO ||
-                self.picker.sourceType != UIImagePickerControllerSourceTypeCamera)
-            {
-                self.callback(@[self.response]);
-            }
-        }
-        else {
             self.callback(@[self.response]);
         }
     };
-
+      
     dispatch_async(dispatch_get_main_queue(), ^{
         [picker dismissViewControllerAnimated:YES completion:dismissCompletionBlock];
     });
