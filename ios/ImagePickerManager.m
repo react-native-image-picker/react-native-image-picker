@@ -4,7 +4,7 @@
 #import <Photos/Photos.h>
 #import <React/RCTUtils.h>
 #if !TARGET_OS_MACCATALYST
-@import AssetsLibrary
+#import <AssetsLibrary/AssetsLibrary.h>
 #endif
 
 @import MobileCoreServices;
