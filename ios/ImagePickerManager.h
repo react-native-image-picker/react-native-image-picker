@@ -2,8 +2,8 @@
 #import <UIKit/UIKit.h>
 
 typedef NS_ENUM(NSInteger, RNImagePickerTarget) {
-  RNImagePickerTargetCamera = 1,
-  RNImagePickerTargetLibrarySingleImage,
+  camera = 1,
+  library
 };
 
 @interface ImagePickerManager : NSObject <RCTBridgeModule, UINavigationControllerDelegate, UIActionSheetDelegate, UIImagePickerControllerDelegate>
