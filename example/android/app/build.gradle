@@ -184,6 +184,7 @@ dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     //noinspection GradleDynamicVersion
     implementation "com.facebook.react:react-native:+"  // From node_modules
+    implementation project (":react-native-image-picker")
 
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
 
