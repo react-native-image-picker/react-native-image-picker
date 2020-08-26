@@ -69,7 +69,7 @@ public class RealPathUtil {
 
 				final String id = DocumentsContract.getDocumentId(uri);
 
-				if (id != null)
+				if (id != null) {
 					// Handle raw file urls differently, we can just return the current string minus
 					// the raw: prefix. https://github.com/Yalantis/uCrop/issues/318
 					if (id.startsWith("raw:")) {
