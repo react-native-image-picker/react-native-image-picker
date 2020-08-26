@@ -1,32 +1,25 @@
 package com.imagepicker.utils;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
+import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
-import android.content.ContentUris;
-import android.os.Environment;
+import android.provider.OpenableColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
-import android.provider.OpenableColumns;
 
-import java.io.File;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.text.DecimalFormat;
-import java.util.Comparator;
 
 public class RealPathUtil {
 
@@ -76,19 +69,23 @@ public class RealPathUtil {
 
 				final String id = DocumentsContract.getDocumentId(uri);
 
-				// Handle raw file urls differently, we can just return the current string minus
-				// the raw: prefix. https://github.com/Yalantis/uCrop/issues/318
-				if (id != null && id.startsWith("raw:")) {
-					return id.substring(4);
-				}
+				if (id != null)
+					// Handle raw file urls differently, we can just return the current string minus
+					// the raw: prefix. https://github.com/Yalantis/uCrop/issues/318
+					if (id.startsWith("raw:")) {
+						return id.substring(4);
+					}
 
-				final Uri contentUri = ContentUris.withAppendedId(
-						Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
-				try {
-					return getDataColumn(context, contentUri, null, null);
-				}
-				catch(Exception e) {
-					e.printStackTrace();
+					try {
+						final Uri contentUri = ContentUris.withAppendedId(
+								Uri.parse("content://downloads/public_downloads"), Long.parseLong(id));
+						return getDataColumn(context, contentUri, null, null);
+					} catch (NumberFormatException e) {
+						Log.w(Tag, "Non-numeric document id: " + id);
+						// This will fallback to creating a temporary file.
+					} catch(Exception e) {
+						e.printStackTrace();
+					}
 				}
 
 				// File couldn't be loaded so we have to create a temporary file and then stream
