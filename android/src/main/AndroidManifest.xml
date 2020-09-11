@@ -6,12 +6,12 @@
     <application>
       <provider
             android:name="com.imagepicker.FileProvider"
-            android:authorities="${applicationId}.provider"
+            android:authorities="${applicationId}.PickProvider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/provider_paths" />
+                android:resource="@xml/pick_provider_paths" />
         </provider>
     </application>
 </manifest>

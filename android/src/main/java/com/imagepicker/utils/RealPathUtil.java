@@ -25,7 +25,7 @@ public class RealPathUtil {
 		}
 		else {
 			final String packageName = context.getApplicationContext().getPackageName();
-			final String authority =  new StringBuilder(packageName).append(".provider").toString();
+			final String authority =  new StringBuilder(packageName).append(".PickProvider").toString();
 			try {
 				result = FileProvider.getUriForFile(context, authority, file);
 			}
@@ -182,7 +182,7 @@ public class RealPathUtil {
 	public static boolean isFileProviderUri(@NonNull final Context context,
 	                                        @NonNull final Uri uri) {
 		final String packageName = context.getPackageName();
-		final String authority = new StringBuilder(packageName).append(".provider").toString();
+		final String authority = new StringBuilder(packageName).append(".PickProvider").toString();
 		return authority.equals(uri.getAuthority());
 	}
 
@@ -194,7 +194,7 @@ public class RealPathUtil {
 	public static @Nullable String getFileProviderPath(@NonNull final Context context,
 	                                                   @NonNull final Uri uri)
 	{
-		final File appDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+		final File appDir = context.getFilesDir();
 		final File file = new File(appDir, uri.getLastPathSegment());
 		return file.exists() ? file.toString(): null;
 	}
