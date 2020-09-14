@@ -24,6 +24,7 @@ export interface ImagePickerResponse {
   latitude?: number;
   longitude?: number;
   timestamp?: string;
+  originalRotation?: number;
 }
 
 export interface ImagePickerCustomButtonOptions {
