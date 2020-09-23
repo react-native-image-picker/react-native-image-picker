@@ -26,20 +26,20 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.UUID;
 
 
 public class Utils {
-    public static Uri createUri(Context reactContext, String mimeType, boolean forResize) {
+    public static String fileNamePrefix = "rn_imager_picker_lib_temp_";
+
+    public static Uri createUri(Context reactContext, String mimeType) {
         try {
-            String filename = "imager_picker" + (forResize ? "_resize" : "") + "." + getFileTypeFromMime(mimeType);
+            String filename = fileNamePrefix  + UUID.randomUUID() + "." + getFileTypeFromMime(mimeType);
 
             File fileDir = reactContext.getExternalFilesDir(null);
+            deleteTempFiles(fileDir);
+
             File file = new File(fileDir, filename);
-
-            if (file.exists()) {
-                file.delete();
-            }
-
             file.createNewFile();
             String authority = reactContext.getApplicationContext().getPackageName() + ".imagepickerprovider";
             return FileProvider.getUriForFile(reactContext, authority, file);
@@ -47,6 +47,14 @@ public class Utils {
         } catch (Exception e) {
             e.printStackTrace();
             return null;
+        }
+    }
+
+    public static void deleteTempFiles(File fileDir) {
+        for (File f : fileDir.listFiles()) {
+            if (f.getName().startsWith(fileNamePrefix)) {
+                f.delete();
+            }
         }
     }
 
@@ -114,7 +122,7 @@ public class Utils {
             Bitmap b = BitmapFactory.decodeStream(imageStream);
             b = Bitmap.createScaledBitmap(b, newDimens[0], newDimens[1], true);
 
-            Uri newUri = createUri(context, mimeType, true);
+            Uri newUri = createUri(context, mimeType);
             OutputStream os = context.getContentResolver().openOutputStream(newUri);
             b.compress(getBitmapCompressFormat(mimeType), options.quality, os);
             return newUri;

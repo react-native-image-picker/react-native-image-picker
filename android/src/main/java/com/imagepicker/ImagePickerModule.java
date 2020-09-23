@@ -79,7 +79,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         } else {
             requestCode = REQUEST_LAUNCH_IMAGE_CAPTURE;
             cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            cameraCaptureURI = createUri(reactContext, null, false);
+            cameraCaptureURI = createUri(reactContext, null);
             cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraCaptureURI);
         }
 
@@ -126,17 +126,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         currentActivity.startActivityForResult(Intent.createChooser(libraryIntent, this.options.chooseWhichLibraryTitle), requestCode);
     }
 
-    void onImageObtained(Uri uri, boolean shouldDeleteOriginalImage) {
+    void onImageObtained(Uri uri) {
         if (uri == null) {
             callback.invoke(getErrorMap("Image uri error"));
         }
-
         Uri newUri = resizeImage(uri, reactContext, options);
-
-        if (newUri != uri && shouldDeleteOriginalImage) {
-            deleteFile(uri, reactContext);
-        }
-
         callback.invoke(getResponseMap(newUri, options, reactContext));
     }
 
@@ -157,11 +151,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
         switch (requestCode) {
             case REQUEST_LAUNCH_IMAGE_CAPTURE:
-                onImageObtained(cameraCaptureURI, true);
+                onImageObtained(cameraCaptureURI);
                 break;
 
             case REQUEST_LAUNCH_IMAGE_LIBRARY:
-                onImageObtained(data.getData(), false);
+                onImageObtained(data.getData());
                 break;
 
             case REQUEST_LAUNCH_VIDEO_LIBRARY:
