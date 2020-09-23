@@ -130,20 +130,19 @@ public class Utils {
         int height = origHeight;
 
         if (options.maxWidth == 0 || options.maxHeight == 0) {
-            return new int[]{origWidth, origHeight};
+            return new int[]{width, height};
         }
 
-        float aspectRatio =  ((float)origHeight / origWidth);
-
-        if (options.maxWidth < origWidth) {
+        if (options.maxWidth < width) {
+            height = (int) (((float) options.maxWidth / width) * height);
             width = options.maxWidth;
         }
 
-        while (width * aspectRatio > options.maxHeight) {
-            --width;
+        if (options.maxHeight < height) {
+            width = (int) (((float) options.maxHeight / height) * width);
+            height = options.maxHeight;
         }
 
-        height = (int) (width * aspectRatio);
         return new int[]{width, height};
     }
 
