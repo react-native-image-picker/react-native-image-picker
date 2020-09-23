@@ -3,7 +3,8 @@ import {
   StyleSheet,
   Text,
   View,
-  Button
+  Button,
+  Image
 } from 'react-native';
 import ImagePicker from '../src';
 
@@ -49,6 +50,13 @@ export default class App extends React.Component {
         />
 
         <Text>{JSON.stringify(this.state.response)}</Text>
+
+        {this.state.response && (
+          <Image
+            style={{width: 100, height: 100}}
+            source={{uri: this.state.response.uri}}
+          />
+        )}
       </View>
     );
   }
