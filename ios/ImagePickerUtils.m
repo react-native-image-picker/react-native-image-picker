@@ -6,12 +6,7 @@
 + (void) setupPickerFromOptions:(UIImagePickerController *)picker options:(NSDictionary *)options target:(RNImagePickerTarget)target {
     if (target == camera) {
         picker.sourceType = UIImagePickerControllerSourceTypeCamera;
-        if ([[options objectForKey:@"cameraType"] isEqualToString:@"front"]) {
-            picker.cameraDevice = UIImagePickerControllerCameraDeviceFront;
-        }
-        else {
-            picker.cameraDevice = UIImagePickerControllerCameraDeviceRear;
-        }
+        picker.cameraDevice = UIImagePickerControllerCameraDeviceRear;
     }
     else {
         picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
@@ -27,12 +22,6 @@
         }
         else {
             picker.videoQuality = UIImagePickerControllerQualityTypeMedium;
-        }
-
-        id durationLimit = [options objectForKey:@"durationLimit"];
-        if (durationLimit) {
-            picker.videoMaximumDuration = [durationLimit doubleValue];
-            picker.allowsEditing = NO;
         }
         
         picker.mediaTypes = @[(NSString *)kUTTypeMovie];
