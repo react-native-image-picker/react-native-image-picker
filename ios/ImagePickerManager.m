@@ -21,6 +21,10 @@
 
 @implementation ImagePickerManager
 
+NSString *errCameraUnavailable = @"camera_unavailable";
+NSString *errPermission = @"permission";
+NSString *errOthers = @"others";
+
 RCT_EXPORT_MODULE();
 
 RCT_EXPORT_METHOD(launchCamera:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
@@ -42,7 +46,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     self.callback = callback;
     
     if (target == camera && [ImagePickerUtils isSimulator]) {
-        self.callback(@[@{@"error": @"Camera not available on simulator"}]);
+        self.callback(@[@{@"errorCode": errCameraUnavailable}]);
         return;
     }
     
@@ -55,7 +59,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     if (target == camera) {
         [self checkCameraPermissions:^(BOOL granted) {
             if (!granted) {
-                self.callback(@[@{@"error": @"Camera permissions not granted"}]);
+                self.callback(@[@{@"errorCode": errPermission}]);
                 return;
             }
             [self showPickerViewController];
@@ -67,7 +71,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         } else {
             [self checkPhotosPermissions:^(BOOL granted) {
                 if (!granted) {
-                    self.callback(@[@{@"error": @"Photo library permissions not granted"}]);
+                    self.callback(@[@{@"errorCode": errPermission}]);
                     return;
                 }
                 [self showPickerViewController];
@@ -186,7 +190,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
           }
 
           if (error) {
-              self.callback(@[@{@"error": error.localizedFailureReason}]);
+              self.callback(@[@{@"errorCode": errOthers, @"errorMessage":  error.localizedFailureReason}]);
               return;
           }
         }

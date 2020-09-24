@@ -46,12 +46,22 @@ On android, this library does not ask for users permission. You have to make sur
 
 | key              | iOS  | Android | Description                                                                                                          |
 | ---------------- | -----| --------| -------------------------------------------------------------------------------------------------------------------- |
-| didCancel        | OK   | OK      | Informs you if the user cancelled the process                                                                        |
-| error            | OK   | OK      | Contains an error message, if there is one                                                                           |
+| didCancel        | OK   | OK      | `true` if the user cancelled the process                                                                             |
+| errorCode        | OK   | OK      | Check [ErrorCode](#ErrorCode) for all error codes                                                                    |
+| errorMessage     | OK   | OK      | Description of the error, use it for debug purpose only                                                              |
 | data             | OK   | OK      | The base64 encoded image data (photos only)                                                                          |
-| uri              | OK   | OK      | The uri to the local file asset on the device                                                                        |
+| uri              | OK   | OK      | The uri to the local file on the device                                                                              |
 | width            | OK   | OK      | Image dimensions (photos only)                                                                                       |
 | height           | OK   | OK      | Image dimensions (photos only)                                                                                       |
 | fileSize         | OK   | OK      | The file size (photos only)                                                                                          |
 | type             | OK   | OK      | The file type (photos only)                                                                                          |
 | fileName         | OK   | OK      | The file name                                                                                                        |
+
+
+## ErrorCode
+
+| Code               | Description                                                                                                      |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| camera_unavailable | camera not available on device                                                                                   |
+| permission         | Permission not satisfied                                                                                         |
+| others             | other errors (check errorMessage for description)                                                                |

@@ -32,6 +32,11 @@ import java.util.UUID;
 public class Utils {
     public static String fileNamePrefix = "rn_imager_picker_lib_temp_";
 
+    public static String errCameraUnavailable = "camera_unavailable";
+    public static String errPermission = "permission";
+    public static String errOthers = "others";
+
+
     public static Uri createUri(Context reactContext, String mimeType) {
         try {
             String filename = fileNamePrefix  + UUID.randomUUID() + "." + getFileTypeFromMime(mimeType);
@@ -240,9 +245,12 @@ public class Utils {
         return map;
     }
 
-    static ReadableMap getErrorMap(String error) {
+    static ReadableMap getErrorMap(String errCode, String errMsg) {
         WritableMap map = Arguments.createMap();
-        map.putString("error", error);
+        map.putString("errorCode", errCode);
+        if (errMsg != null) {
+            map.putString("errorMessage", errMsg);
+        }
         return map;
     }
 
