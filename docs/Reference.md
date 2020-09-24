@@ -50,12 +50,15 @@ On android, this library does not ask for users permission. You have to make sur
 | errorCode        | OK   | OK      | Check [ErrorCode](#ErrorCode) for all error codes                                                                    |
 | errorMessage     | OK   | OK      | Description of the error, use it for debug purpose only                                                              |
 | data             | OK   | OK      | The base64 encoded image data (photos only)                                                                          |
-| uri              | OK   | OK      | The uri to the local file on the device                                                                              |
+| uri              | OK   | OK      | The uri to the local file on the device (uri might change for same file for different session so don't save it)      |
 | width            | OK   | OK      | Image dimensions (photos only)                                                                                       |
 | height           | OK   | OK      | Image dimensions (photos only)                                                                                       |
 | fileSize         | OK   | OK      | The file size (photos only)                                                                                          |
 | type             | OK   | OK      | The file type (photos only)                                                                                          |
 | fileName         | OK   | OK      | The file name                                                                                                        |
+
+## Note on file storage
+Image captured will be stored in temporary folder so will be deleted any time, so don't expect it to persist.
 
 
 ## ErrorCode
