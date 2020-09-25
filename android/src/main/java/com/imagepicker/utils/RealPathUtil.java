@@ -177,8 +177,10 @@ public class RealPathUtil {
 			cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
 					null);
 			if (cursor != null && cursor.moveToFirst()) {
-				final int index = cursor.getColumnIndexOrThrow(column);
-				return cursor.getString(index);
+				final int index = cursor.getColumnIndex(column);
+				if (index >= 0) {
+					return cursor.getString(index);
+				}
 			}
 		} finally {
 			if (cursor != null)

@@ -26,6 +26,10 @@ public class PermissionUtils
         {
             return null;
         }
+        if (!options.hasKey("permissionDenied") || options.isNull("permissionDenied")) {
+            return null;
+        }
+
         final ReadableMap permissionDenied = options.getMap("permissionDenied");
         final String title = permissionDenied.getString("title");
         final String text = permissionDenied.getString("text");
