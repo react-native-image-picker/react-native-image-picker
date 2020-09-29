@@ -4,7 +4,6 @@ const DEFAULT_OPTIONS = {
   mediaType: 'photo',
   videoQuality: 'high',
   quality: 1,
-  chooseWhichLibraryTitle: '',
   maxWidth: 0,
   maxHeight: 0,
   noData: true

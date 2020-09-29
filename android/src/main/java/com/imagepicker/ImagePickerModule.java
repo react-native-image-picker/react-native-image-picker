@@ -117,7 +117,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             return;
         }
 
-        currentActivity.startActivityForResult(Intent.createChooser(libraryIntent, this.options.chooseWhichLibraryTitle), requestCode);
+        currentActivity.startActivityForResult(Intent.createChooser(libraryIntent, null), requestCode);
     }
 
     void onImageObtained(Uri uri) {

@@ -6,7 +6,6 @@ public class Options {
     Boolean pickVideo = false;
     Boolean noData;
     String videoQuality;
-    String chooseWhichLibraryTitle;
     int quality;
     int maxWidth;
     int maxHeight;
@@ -18,7 +17,6 @@ public class Options {
         }
         noData = options.getBoolean("noData");
         videoQuality = options.getString("videoQuality");
-        chooseWhichLibraryTitle = options.getString("chooseWhichLibraryTitle");
         quality = (int) (options.getDouble("quality") * 100);
         maxHeight = options.getInt("maxHeight");
         maxWidth = options.getInt("maxWidth");
