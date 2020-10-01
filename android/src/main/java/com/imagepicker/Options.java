@@ -4,7 +4,7 @@ import com.facebook.react.bridge.ReadableMap;
 
 public class Options {
     Boolean pickVideo = false;
-    Boolean noData;
+    Boolean includeBase64;
     String videoQuality;
     int quality;
     int maxWidth;
@@ -15,7 +15,7 @@ public class Options {
         if (options.getString("mediaType").equals("video")) {
             pickVideo = true;
         }
-        noData = options.getBoolean("noData");
+        includeBase64 = options.getBoolean("includeBase64");
         videoQuality = options.getString("videoQuality");
         quality = (int) (options.getDouble("quality") * 100);
         maxHeight = options.getInt("maxHeight");

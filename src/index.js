@@ -6,7 +6,7 @@ const DEFAULT_OPTIONS = {
   quality: 1,
   maxWidth: 0,
   maxHeight: 0,
-  noData: true
+  includeBase64: false
 };
 
 function launchCamera(options, callback) {

@@ -222,8 +222,8 @@ public class Utils {
         map.putInt("width", dimensions[0]);
         map.putInt("height", dimensions[1]);
 
-        if (options.noData == false) {
-            map.putString("data", getBase64String(uri, context));
+        if (options.includeBase64) {
+            map.putString("base64", getBase64String(uri, context));
         }
         returnCursor.close();
         return map;

@@ -76,7 +76,7 @@ On android, this library does not ask for users permission. You have to make sur
 | maxHeight          | OK    | OK      | To resize the image                                                                                              |
 | videoQuality       | OK    | OK      | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android                                                    |
 | quality            | OK    | OK      | 0 to 1, photos                                                                                                   |
-| noData             | OK    | OK      | If true, disables the base64 `data` field from being generated (greatly improves performance on large image)     |
+| includeBase64      | OK    | OK      | If true, creates base64 string of the image (Avoid using on large image files due to performance)                |
 
 
 ## The Response Object
@@ -86,7 +86,7 @@ On android, this library does not ask for users permission. You have to make sur
 | didCancel        | OK   | OK      | `true` if the user cancelled the process                                                                             |
 | errorCode        | OK   | OK      | Check [ErrorCode](#ErrorCode) for all error codes                                                                    |
 | errorMessage     | OK   | OK      | Description of the error, use it for debug purpose only                                                              |
-| data             | OK   | OK      | The base64 encoded image data (photos only)                                                                          |
+| base64           | OK   | OK      | The base64 string of the image (photos only)                                                                         |
 | uri              | OK   | OK      | The uri to the local file on the device (uri might change for same file for different session so don't save it)      |
 | width            | OK   | OK      | Image dimensions (photos only)                                                                                       |
 | height           | OK   | OK      | Image dimensions (photos only)                                                                                       |
