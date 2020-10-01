@@ -30,16 +30,16 @@ import java.util.UUID;
 
 
 public class Utils {
-    public static String fileNamePrefix = "rn_imager_picker_lib_temp_";
+    public static String fileNamePrefix = "rn_image_picker_lib_temp_";
 
     public static String errCameraUnavailable = "camera_unavailable";
     public static String errPermission = "permission";
     public static String errOthers = "others";
 
 
-    public static Uri createUri(Context reactContext, String mimeType) {
+    public static Uri createUri(Context reactContext, String fileType) {
         try {
-            String filename = fileNamePrefix  + UUID.randomUUID() + "." + getFileTypeFromMime(mimeType);
+            String filename = fileNamePrefix  + UUID.randomUUID() + "." + fileType;
 
             File fileDir = reactContext.getExternalFilesDir(null);
             deleteTempFiles(fileDir);
@@ -127,7 +127,7 @@ public class Utils {
             Bitmap b = BitmapFactory.decodeStream(imageStream);
             b = Bitmap.createScaledBitmap(b, newDimens[0], newDimens[1], true);
 
-            Uri newUri = createUri(context, mimeType);
+            Uri newUri = createUri(context, getFileTypeFromMime(mimeType));
             OutputStream os = context.getContentResolver().openOutputStream(newUri);
             b.compress(getBitmapCompressFormat(mimeType), options.quality, os);
             return newUri;

@@ -18,13 +18,13 @@ react-native link react-native-image-picker
 
 ### iOS
 
-For iOS 10+:
+Add the appropriate keys to your Info.plist,
 
-Add the `NSPhotoLibraryUsageDescription` and `NSPhotoLibraryAddUsageDescription` keys to your `Info.plist.
+If you are allowing user to select image/video from photos, add `NSPhotoLibraryUsageDescription`.
 
-If your are allowing user to capture image add `NSCameraUsageDescription` key also.
+If you are allowing user to capture image add `NSCameraUsageDescription` key also.
 
-If your are allowing user to capture video add `NSCameraUsageDescription` add `NSMicrophoneUsageDescription` key also.
+If you are allowing user to capture video add `NSCameraUsageDescription` add `NSMicrophoneUsageDescription` key also.
 
 ### Android
 
@@ -95,7 +95,7 @@ On android, this library does not ask for users permission. You have to make sur
 | fileName         | OK   | OK      | The file name                                                                                                        |
 
 ## Note on file storage
-Image captured will be stored in temporary folder so will be deleted any time, so don't expect it to persist.
+Image/video captured via camera will be stored in temporary folder so will be deleted any time, so don't expect it to persist.
 
 
 ## ErrorCode

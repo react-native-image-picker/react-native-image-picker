@@ -112,13 +112,13 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     });
 }
 
-// Handle orientation
 - (void)onImageObtained:(NSDictionary<NSString *,id> *)info {
-    NSURL *imageURL = [info objectForKey:UIImagePickerControllerReferenceURL];
-    self.response = [[NSMutableDictionary alloc] init];
-    UIImage *image = [info objectForKey:UIImagePickerControllerOriginalImage];
 
+    NSURL *imageURL = [ImagePickerManager getNSURLFromInfo:info];
+    self.response = [[NSMutableDictionary alloc] init];
+    UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
     NSData *data;
+
     NSString *fileType = [ImagePickerUtils getFileType:[NSData dataWithContentsOfURL:imageURL]];
     
     if (![fileType isEqualToString:@"gif"]) {
@@ -126,22 +126,21 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     }
     
     if ([fileType isEqualToString:(NSString *)@"jpg"]) {
-        data = UIImageJPEGRepresentation(image, [[self.options objectForKey:@"quality"] floatValue]);
+        data = UIImageJPEGRepresentation(image, [self.options[@"quality"] floatValue]);
     } else if ([fileType isEqualToString:(NSString *)@"png"]) {
         data = UIImagePNGRepresentation(image);
     } else {
         data = [NSData dataWithContentsOfURL:imageURL];
     }
 
-    [self.response setObject:[@"image/" stringByAppendingString:fileType] forKey:@"type"];
-    
+    self.response[@"type"] = [@"image/" stringByAppendingString:fileType];
+
     NSString *fileName = [self getImageFileName:fileType];
     NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
     [data writeToFile:path atomically:YES];
 
-    if (![[self.options objectForKey:@"noData"] boolValue]) {
-        NSString *dataString = [data base64EncodedStringWithOptions:0];
-        [self.response setObject:dataString forKey:@"data"];
+    if (![self.options[@"noData"] boolValue]) {
+        self.response[@"data"] = [data base64EncodedStringWithOptions:0];
     }
 
     NSURL *fileURL = [NSURL fileURLWithPath:path];
@@ -167,7 +166,6 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
     self.response = [[NSMutableDictionary alloc] init];
     
-    NSURL *videoRefURL = info[UIImagePickerControllerReferenceURL];
     NSURL *videoURL = info[UIImagePickerControllerMediaURL];
     NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
 
@@ -196,10 +194,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         }
     }
 
-    [self.response setObject:videoDestinationURL.absoluteString forKey:@"uri"];
-    if (videoRefURL.absoluteString) {
-        [self.response setObject:videoRefURL.absoluteString forKey:@"origURL"];
-    }
+    self.response[@"uri"] = videoDestinationURL.absoluteString;
     self.callback(@[self.response]);
 }
 
@@ -249,5 +244,22 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     fileName = [fileName stringByAppendingString:@"."];
     return [fileName stringByAppendingString:fileType];
 }
+
++ (UIImage*)getUIImageFromInfo:(NSDictionary*)info {
+    UIImage *image = info[UIImagePickerControllerEditedImage];
+    if (!image) {
+        image = info[UIImagePickerControllerOriginalImage];
+    }
+    return image;
+}
+
++ (NSURL*)getNSURLFromInfo:(NSDictionary*)info {
+    if (@available(iOS 11.0, *)) {
+        return info[UIImagePickerControllerImageURL];
+    } else {
+        return info[UIImagePickerControllerReferenceURL];
+    }
+}
+
 @end
 
