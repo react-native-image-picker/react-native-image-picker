@@ -9,6 +9,7 @@ public class Options {
     int quality;
     int maxWidth;
     int maxHeight;
+    Boolean saveToPhotos;
 
 
     Options(ReadableMap options) {
@@ -20,5 +21,6 @@ public class Options {
         quality = (int) (options.getDouble("quality") * 100);
         maxHeight = options.getInt("maxHeight");
         maxWidth = options.getInt("maxWidth");
+        saveToPhotos = options.getBoolean("saveToPhotos");
     }
 }

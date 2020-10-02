@@ -3,6 +3,7 @@ package com.imagepicker;
 import android.Manifest;
 import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -10,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
+import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.util.Base64;
 
@@ -60,6 +62,39 @@ public class Utils {
             if (f.getName().startsWith(fileNamePrefix)) {
                 f.delete();
             }
+        }
+    }
+
+    public static void saveToPublicDirectory(Uri uri, Context context, String mediaType) {
+        ContentResolver resolver = context.getContentResolver();
+        Uri mediaStoreUri;
+        ContentValues fileDetails = new ContentValues();
+
+        if (mediaType.equals("video")) {
+            fileDetails.put(MediaStore.Video.Media.DISPLAY_NAME, UUID.randomUUID().toString());
+            mediaStoreUri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, fileDetails);
+        } else {
+            fileDetails.put(MediaStore.Images.Media.DISPLAY_NAME, UUID.randomUUID().toString());
+            mediaStoreUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, fileDetails);
+        }
+
+        copyUri(uri, mediaStoreUri, resolver);
+    }
+
+    public static void copyUri(Uri fromUri, Uri toUri, ContentResolver resolver) {
+        try {
+            OutputStream os = resolver.openOutputStream(toUri);
+            InputStream is = resolver.openInputStream(fromUri);
+
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+
+            while ((bytesRead = is.read(buffer)) != -1) {
+                os.write(buffer, 0, bytesRead);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

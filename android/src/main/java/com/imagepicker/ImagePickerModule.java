@@ -146,6 +146,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
         switch (requestCode) {
             case REQUEST_LAUNCH_IMAGE_CAPTURE:
+                if (options.saveToPhotos) {
+                    saveToPublicDirectory(cameraCaptureURI, reactContext, "photo");
+                }
                 onImageObtained(cameraCaptureURI);
                 break;
 
@@ -158,6 +161,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
                 break;
 
             case REQUEST_LAUNCH_VIDEO_CAPTURE:
+                if (options.saveToPhotos) {
+                    saveToPublicDirectory(data.getData(), reactContext, "video");
+                }
                 onVideoObtained(data.getData());
                 break;
         }
