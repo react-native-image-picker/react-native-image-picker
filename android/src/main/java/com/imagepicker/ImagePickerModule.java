@@ -416,7 +416,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         String realPath = getRealPathFromURI(uri);
         final boolean isUrl = !TextUtils.isEmpty(realPath) &&
                 Patterns.WEB_URL.matcher(realPath).matches();
-        if (realPath == null || isUrl)
+        if (realPath == null || isUrl || Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
         {
           try
           {
