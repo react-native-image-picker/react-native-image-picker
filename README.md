@@ -77,6 +77,7 @@ On android, this library does not ask for users permission. You have to make sur
 | videoQuality       | OK    | OK      | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android                                                    |
 | quality            | OK    | OK      | 0 to 1, photos                                                                                                   |
 | includeBase64      | OK    | OK      | If true, creates base64 string of the image (Avoid using on large image files due to performance)                |
+| saveToPhotos       | OK    | OK      | (Boolean) Only for launchCamera, saves the image/video file captured to public photo                             |
 
 
 ## The Response Object
@@ -95,7 +96,7 @@ On android, this library does not ask for users permission. You have to make sur
 | fileName         | OK   | OK      | The file name                                                                                                        |
 
 ## Note on file storage
-Image/video captured via camera will be stored in temporary folder so will be deleted any time, so don't expect it to persist.
+Image/video captured via camera will be stored in temporary folder so will be deleted any time, so don't expect it to persist. Use `saveToPhotos: true` (default is false) to save the file in the public photos.
 
 
 ## ErrorCode
