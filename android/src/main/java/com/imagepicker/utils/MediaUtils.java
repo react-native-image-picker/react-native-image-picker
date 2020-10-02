@@ -11,6 +11,7 @@ import android.os.Environment;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import android.util.Log;
+import android.os.Build;
 
 import com.facebook.react.bridge.ReadableMap;
 import com.imagepicker.ImagePickerModule;
@@ -46,7 +47,13 @@ public class MediaUtils
                 .toString();
 
         // defaults to Public Pictures Directory
-        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+        File path;
+
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+        } else {
+            path = reactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        }
 
         if (ReadableMapUtils.hasAndNotNullReadableMap(options, "storageOptions")) 
         {
