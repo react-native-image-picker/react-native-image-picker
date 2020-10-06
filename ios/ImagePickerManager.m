@@ -12,37 +12,42 @@
 
 @property (nonatomic, strong) UIImagePickerController *picker;
 @property (nonatomic, strong) RCTResponseSenderBlock callback;
-@property (nonatomic, strong) NSDictionary *defaultOptions;
 @property (nonatomic, retain) NSDictionary *options;
 @property (nonatomic, retain) NSMutableDictionary *response;
-@property (nonatomic, strong) NSArray *customButtons;
 
 @end
 
 @implementation ImagePickerManager
 
+NSString *errCameraUnavailable = @"camera_unavailable";
+NSString *errPermission = @"permission";
+NSString *errOthers = @"others";
+RNImagePickerTarget target;
+
 RCT_EXPORT_MODULE();
 
 RCT_EXPORT_METHOD(launchCamera:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
 {
+    target = camera;
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self launchImagePicker:camera options:options callback:callback];
+        [self launchImagePicker:options callback:callback];
     });
 }
 
 RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
 {
+    target = library;
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self launchImagePicker:library options:options callback:callback];
+        [self launchImagePicker:options callback:callback];
     });
 }
 
-- (void)launchImagePicker:(RNImagePickerTarget)target options:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback
+- (void)launchImagePicker:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback
 {
     self.callback = callback;
     
     if (target == camera && [ImagePickerUtils isSimulator]) {
-        self.callback(@[@{@"error": @"Camera not available on simulator"}]);
+        self.callback(@[@{@"errorCode": errCameraUnavailable}]);
         return;
     }
     
@@ -51,29 +56,13 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     
     [ImagePickerUtils setupPickerFromOptions:self.picker options:self.options target:target];
     self.picker.delegate = self;
-    
-    if (target == camera) {
-        [self checkCameraPermissions:^(BOOL granted) {
-            if (!granted) {
-                self.callback(@[@{@"error": @"Camera permissions not granted"}]);
-                return;
-            }
-            [self showPickerViewController];
-        }];
-    }
-    else {
-        if (@available(iOS 11.0, *)) {
-            [self showPickerViewController];
-        } else {
-            [self checkPhotosPermissions:^(BOOL granted) {
-                if (!granted) {
-                    self.callback(@[@{@"error": @"Photo library permissions not granted"}]);
-                    return;
-                }
-                [self showPickerViewController];
-            }];
+    [self checkPermission:^(BOOL granted) {
+        if (!granted) {
+            self.callback(@[@{@"errorCode": errPermission}]);
+            return;
         }
-    }
+        [self showPickerViewController];
+    }];
 }
 
 - (void) showPickerViewController {
@@ -108,13 +97,17 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     });
 }
 
-// Handle orientation
 - (void)onImageObtained:(NSDictionary<NSString *,id> *)info {
-    NSURL *imageURL = [info objectForKey:UIImagePickerControllerReferenceURL];
-    self.response = [[NSMutableDictionary alloc] init];
-    UIImage *image = [info objectForKey:UIImagePickerControllerOriginalImage];
 
+    NSURL *imageURL = [ImagePickerManager getNSURLFromInfo:info];
+    self.response = [[NSMutableDictionary alloc] init];
+    UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
     NSData *data;
+
+    if ((target == camera) && [self.options[@"saveToPhotos"] boolValue]) {
+        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
+    }
+
     NSString *fileType = [ImagePickerUtils getFileType:[NSData dataWithContentsOfURL:imageURL]];
     
     if (![fileType isEqualToString:@"gif"]) {
@@ -122,22 +115,21 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     }
     
     if ([fileType isEqualToString:(NSString *)@"jpg"]) {
-        data = UIImageJPEGRepresentation(image, [[self.options objectForKey:@"quality"] floatValue]);
+        data = UIImageJPEGRepresentation(image, [self.options[@"quality"] floatValue]);
     } else if ([fileType isEqualToString:(NSString *)@"png"]) {
         data = UIImagePNGRepresentation(image);
     } else {
         data = [NSData dataWithContentsOfURL:imageURL];
     }
 
-    [self.response setObject:[@"image/" stringByAppendingString:fileType] forKey:@"type"];
-    
+    self.response[@"type"] = [@"image/" stringByAppendingString:fileType];
+
     NSString *fileName = [self getImageFileName:fileType];
     NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
     [data writeToFile:path atomically:YES];
 
-    if (![[self.options objectForKey:@"noData"] boolValue]) {
-        NSString *dataString = [data base64EncodedStringWithOptions:0];
-        [self.response setObject:dataString forKey:@"data"];
+    if ([self.options[@"includeBase64"] boolValue]) {
+        self.response[@"base64"] = [data base64EncodedStringWithOptions:0];
     }
 
     NSURL *fileURL = [NSURL fileURLWithPath:path];
@@ -163,9 +155,12 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
     self.response = [[NSMutableDictionary alloc] init];
     
-    NSURL *videoRefURL = info[UIImagePickerControllerReferenceURL];
     NSURL *videoURL = info[UIImagePickerControllerMediaURL];
     NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
+
+    if ((target == camera) && [self.options[@"saveToPhotos"] boolValue]) {
+        UISaveVideoAtPathToSavedPhotosAlbum(videoURL.path, nil, nil, nil);
+    }
 
     if ([videoURL.URLByResolvingSymlinksInPath.path isEqualToString:videoDestinationURL.URLByResolvingSymlinksInPath.path] == NO) {
         NSFileManager *fileManager = [NSFileManager defaultManager];
@@ -186,16 +181,13 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
           }
 
           if (error) {
-              self.callback(@[@{@"error": error.localizedFailureReason}]);
+              self.callback(@[@{@"errorCode": errOthers, @"errorMessage":  error.localizedFailureReason}]);
               return;
           }
         }
     }
 
-    [self.response setObject:videoDestinationURL.absoluteString forKey:@"uri"];
-    if (videoRefURL.absoluteString) {
-        [self.response setObject:videoRefURL.absoluteString forKey:@"origURL"];
-    }
+    self.response[@"uri"] = videoDestinationURL.absoluteString;
     self.callback(@[self.response]);
 }
 
@@ -240,10 +232,71 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     }
 }
 
+// Both camera and photo write permission is required to take picture/video and store it to public photos
+- (void)checkCameraAndPhotoPermission:(void(^)(BOOL granted))callback {
+
+    [self checkCameraPermissions:^(BOOL cameraGranted) {
+        if (!cameraGranted) {
+            callback(NO);
+            return;
+        }
+
+        [self checkPhotosPermissions:^(BOOL photoGranted) {
+            if (!photoGranted) {
+                callback(NO);
+                return;
+            }
+            callback(YES);
+        }];
+    }];
+}
+
+- (void)checkPermission:(void(^)(BOOL granted)) callback {
+
+    void (^permissionBlock)(BOOL) = ^(BOOL permissionGranted) {
+        if (!permissionGranted) {
+            callback(NO);
+            return;
+        }
+        callback(YES);
+    };
+
+    if (target == camera && [self.options[@"saveToPhotos"] boolValue]) {
+        [self checkCameraAndPhotoPermission:permissionBlock];
+    }
+    else if (target == camera) {
+        [self checkCameraPermissions:permissionBlock];
+    }
+    else {
+        if (@available(iOS 11.0, *)) {
+            callback(YES);
+        } else {
+            [self checkPhotosPermissions:permissionBlock];
+        }
+    }
+}
+
 - (NSString*) getImageFileName:(NSString*)fileType {
     NSString *fileName = [[NSUUID UUID] UUIDString];
     fileName = [fileName stringByAppendingString:@"."];
     return [fileName stringByAppendingString:fileType];
 }
+
++ (UIImage*)getUIImageFromInfo:(NSDictionary*)info {
+    UIImage *image = info[UIImagePickerControllerEditedImage];
+    if (!image) {
+        image = info[UIImagePickerControllerOriginalImage];
+    }
+    return image;
+}
+
++ (NSURL*)getNSURLFromInfo:(NSDictionary*)info {
+    if (@available(iOS 11.0, *)) {
+        return info[UIImagePickerControllerImageURL];
+    } else {
+        return info[UIImagePickerControllerReferenceURL];
+    }
+}
+
 @end
 

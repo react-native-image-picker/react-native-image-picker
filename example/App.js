@@ -3,7 +3,8 @@ import {
   StyleSheet,
   Text,
   View,
-  Button
+  Button,
+  Image
 } from 'react-native';
 import ImagePicker from '../src';
 
@@ -22,14 +23,14 @@ export default class App extends React.Component {
       <View style={styles.container}>
         <Button
           title='Take image'
-          onPress={() => ImagePicker.launchCamera({mediaType: 'photo', noData: true, maxHeight: 200, maxWidth: 200}, (response) => {
+          onPress={() => ImagePicker.launchCamera({mediaType: 'photo', includeBase64: false, maxHeight: 200, maxWidth: 200}, (response) => {
             this.setState({response})
           })}
         />
 
         <Button
           title='Select image'
-          onPress={() => ImagePicker.launchImageLibrary({mediaType: 'photo', noData: true, maxHeight: 200, maxWidth: 200}, (response) => {
+          onPress={() => ImagePicker.launchImageLibrary({mediaType: 'photo', includeBase64: false, maxHeight: 200, maxWidth: 200}, (response) => {
             this.setState({response})
           })}
         />
@@ -49,6 +50,13 @@ export default class App extends React.Component {
         />
 
         <Text>{JSON.stringify(this.state.response)}</Text>
+
+        {this.state.response && (
+          <Image
+            style={{width: 100, height: 100}}
+            source={{uri: this.state.response.uri}}
+          />
+        )}
       </View>
     );
   }

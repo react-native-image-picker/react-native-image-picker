@@ -3,6 +3,7 @@ package com.imagepicker;
 import android.Manifest;
 import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -10,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
+import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.util.Base64;
 
@@ -26,20 +28,25 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.UUID;
 
 
 public class Utils {
-    public static Uri createUri(Context reactContext, String mimeType, boolean forResize) {
+    public static String fileNamePrefix = "rn_image_picker_lib_temp_";
+
+    public static String errCameraUnavailable = "camera_unavailable";
+    public static String errPermission = "permission";
+    public static String errOthers = "others";
+
+
+    public static Uri createUri(Context reactContext, String fileType) {
         try {
-            String filename = "imager_picker" + (forResize ? "_resize" : "") + "." + getFileTypeFromMime(mimeType);
+            String filename = fileNamePrefix  + UUID.randomUUID() + "." + fileType;
 
             File fileDir = reactContext.getExternalFilesDir(null);
+            deleteTempFiles(fileDir);
+
             File file = new File(fileDir, filename);
-
-            if (file.exists()) {
-                file.delete();
-            }
-
             file.createNewFile();
             String authority = reactContext.getApplicationContext().getPackageName() + ".imagepickerprovider";
             return FileProvider.getUriForFile(reactContext, authority, file);
@@ -47,6 +54,47 @@ public class Utils {
         } catch (Exception e) {
             e.printStackTrace();
             return null;
+        }
+    }
+
+    public static void deleteTempFiles(File fileDir) {
+        for (File f : fileDir.listFiles()) {
+            if (f.getName().startsWith(fileNamePrefix)) {
+                f.delete();
+            }
+        }
+    }
+
+    public static void saveToPublicDirectory(Uri uri, Context context, String mediaType) {
+        ContentResolver resolver = context.getContentResolver();
+        Uri mediaStoreUri;
+        ContentValues fileDetails = new ContentValues();
+
+        if (mediaType.equals("video")) {
+            fileDetails.put(MediaStore.Video.Media.DISPLAY_NAME, UUID.randomUUID().toString());
+            mediaStoreUri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, fileDetails);
+        } else {
+            fileDetails.put(MediaStore.Images.Media.DISPLAY_NAME, UUID.randomUUID().toString());
+            mediaStoreUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, fileDetails);
+        }
+
+        copyUri(uri, mediaStoreUri, resolver);
+    }
+
+    public static void copyUri(Uri fromUri, Uri toUri, ContentResolver resolver) {
+        try {
+            OutputStream os = resolver.openOutputStream(toUri);
+            InputStream is = resolver.openInputStream(fromUri);
+
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+
+            while ((bytesRead = is.read(buffer)) != -1) {
+                os.write(buffer, 0, bytesRead);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -114,7 +162,7 @@ public class Utils {
             Bitmap b = BitmapFactory.decodeStream(imageStream);
             b = Bitmap.createScaledBitmap(b, newDimens[0], newDimens[1], true);
 
-            Uri newUri = createUri(context, mimeType, true);
+            Uri newUri = createUri(context, getFileTypeFromMime(mimeType));
             OutputStream os = context.getContentResolver().openOutputStream(newUri);
             b.compress(getBitmapCompressFormat(mimeType), options.quality, os);
             return newUri;
@@ -130,20 +178,19 @@ public class Utils {
         int height = origHeight;
 
         if (options.maxWidth == 0 || options.maxHeight == 0) {
-            return new int[]{origWidth, origHeight};
+            return new int[]{width, height};
         }
 
-        float aspectRatio =  ((float)origHeight / origWidth);
-
-        if (options.maxWidth < origWidth) {
+        if (options.maxWidth < width) {
+            height = (int) (((float) options.maxWidth / width) * height);
             width = options.maxWidth;
         }
 
-        while (width * aspectRatio > options.maxHeight) {
-            --width;
+        if (options.maxHeight < height) {
+            width = (int) (((float) options.maxHeight / height) * width);
+            height = options.maxHeight;
         }
 
-        height = (int) (width * aspectRatio);
         return new int[]{width, height};
     }
 
@@ -210,8 +257,8 @@ public class Utils {
         map.putInt("width", dimensions[0]);
         map.putInt("height", dimensions[1]);
 
-        if (options.noData == false) {
-            map.putString("data", getBase64String(uri, context));
+        if (options.includeBase64) {
+            map.putString("base64", getBase64String(uri, context));
         }
         returnCursor.close();
         return map;
@@ -233,9 +280,12 @@ public class Utils {
         return map;
     }
 
-    static ReadableMap getErrorMap(String error) {
+    static ReadableMap getErrorMap(String errCode, String errMsg) {
         WritableMap map = Arguments.createMap();
-        map.putString("error", error);
+        map.putString("errorCode", errCode);
+        if (errMsg != null) {
+            map.putString("errorMessage", errMsg);
+        }
         return map;
     }
 

@@ -1,22 +1,16 @@
 package com.imagepicker;
 
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.Intent;
-import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
 
-import android.provider.OpenableColumns;
-
 import com.facebook.react.bridge.ActivityEventListener;
-import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.module.annotations.ReactModule;
 
 import static com.imagepicker.Utils.*;
@@ -51,13 +45,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     @ReactMethod
     public void launchCamera(final ReadableMap options, final Callback callback) {
         if (!isCameraAvailable(reactContext)) {
-            callback.invoke(getErrorMap("Camera not available"));
+            callback.invoke(getErrorMap(errCameraUnavailable, null));
             return;
         }
 
         final Activity currentActivity = getCurrentActivity();
         if (currentActivity == null) {
-            callback.invoke(getErrorMap("can't find current Activity"));
+            callback.invoke(getErrorMap(errOthers, "Activity error"));
             return;
         }
 
@@ -65,7 +59,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         this.options = new Options(options);
 
         if (!hasPermission(currentActivity)) {
-            callback.invoke(getErrorMap("Permissions weren't granted"));
+            callback.invoke(getErrorMap(errPermission, null));
             return;
         }
 
@@ -76,15 +70,16 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             requestCode = REQUEST_LAUNCH_VIDEO_CAPTURE;
             cameraIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
             cameraIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, this.options.videoQuality);
+            cameraCaptureURI = createUri(reactContext, "mp4");
         } else {
             requestCode = REQUEST_LAUNCH_IMAGE_CAPTURE;
             cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            cameraCaptureURI = createUri(reactContext, null, false);
-            cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraCaptureURI);
+            cameraCaptureURI = createUri(reactContext, "jpg");
         }
+        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraCaptureURI);
 
         if (cameraIntent.resolveActivity(reactContext.getPackageManager()) == null) {
-            callback.invoke(getErrorMap("Cannot launch camera"));
+            callback.invoke(getErrorMap(errOthers, "Activity error"));
             return;
         }
 
@@ -95,7 +90,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     public void launchImageLibrary(final ReadableMap options, final Callback callback) {
         final Activity currentActivity = getCurrentActivity();
         if (currentActivity == null) {
-            callback.invoke(getErrorMap("can't find current Activity"));
+            callback.invoke(getErrorMap(errOthers, "Activity error"));
             return;
         }
 
@@ -103,7 +98,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         this.options = new Options(options);
 
         if (!hasPermission(currentActivity)) {
-            callback.invoke(getErrorMap("Permissions weren't granted"));
+            callback.invoke(getErrorMap(errPermission, null));
             return;
         }
 
@@ -119,24 +114,18 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         }
 
         if (libraryIntent.resolveActivity(reactContext.getPackageManager()) == null) {
-            callback.invoke(getErrorMap("Cannot launch photo library"));
+            callback.invoke(getErrorMap(errOthers, "Activity error"));
             return;
         }
 
-        currentActivity.startActivityForResult(Intent.createChooser(libraryIntent, this.options.chooseWhichLibraryTitle), requestCode);
+        currentActivity.startActivityForResult(Intent.createChooser(libraryIntent, null), requestCode);
     }
 
-    void onImageObtained(Uri uri, boolean shouldDeleteOriginalImage) {
+    void onImageObtained(Uri uri) {
         if (uri == null) {
-            callback.invoke(getErrorMap("Image uri error"));
+            callback.invoke(getErrorMap(errOthers, "Uri error"));
         }
-
         Uri newUri = resizeImage(uri, reactContext, options);
-
-        if (newUri != uri && shouldDeleteOriginalImage) {
-            deleteFile(uri, reactContext);
-        }
-
         callback.invoke(getResponseMap(newUri, options, reactContext));
     }
 
@@ -157,11 +146,14 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
         switch (requestCode) {
             case REQUEST_LAUNCH_IMAGE_CAPTURE:
-                onImageObtained(cameraCaptureURI, true);
+                if (options.saveToPhotos) {
+                    saveToPublicDirectory(cameraCaptureURI, reactContext, "photo");
+                }
+                onImageObtained(cameraCaptureURI);
                 break;
 
             case REQUEST_LAUNCH_IMAGE_LIBRARY:
-                onImageObtained(data.getData(), false);
+                onImageObtained(data.getData());
                 break;
 
             case REQUEST_LAUNCH_VIDEO_LIBRARY:
@@ -169,6 +161,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
                 break;
 
             case REQUEST_LAUNCH_VIDEO_CAPTURE:
+                if (options.saveToPhotos) {
+                    saveToPublicDirectory(data.getData(), reactContext, "video");
+                }
                 onVideoObtained(data.getData());
                 break;
         }
