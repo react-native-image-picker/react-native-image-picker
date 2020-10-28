@@ -10,26 +10,14 @@
     "/src",
     "/*.podspec"
   ],
-  "author": "Marc Shilling (marcshilling)",
+  "author": "Johan du Toit (Johan0dutoit)",
   "contributors": [
     {
-      "name": "Johan du Toit",
-      "email": "jdutoit.dev@gmail.com"
-    },
-    {
-      "name": "Matheus Santos",
-      "email": "vorj.dux@gmail.com"
-    },
-    {
-      "name": "Yoann Fuks",
-      "email": "yfuks@student.42.fr"
-    },
-    {
-      "name": "Alexander Ustinov",
-      "email": "rusfearuth@gmail.com"
+      "name": "Raviraj",
+      "email": "ivarjar22@yahoo.com"
     }
   ],
-  "homepage": "https://github.com/react-community/react-native-image-picker#readme",
+  "homepage": "https://github.com/react-native-image-picker/react-native-image-picker/tree/vnext#readme",
   "license": "MIT",
   "scripts": {
     "start": "react-native start",
