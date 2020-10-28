@@ -455,7 +455,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       
       // some devices allow video anyways in photo only mode e.g Huawei Mate 20 Lite
       if (imageConfig == null) {
-        responseHelper.invokeError(callback, "Video is not supported in image mode");
+        responseHelper.putString("error", "Video is not supported in image mode");
         return;
       }
       
@@ -476,7 +476,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       }
     }
 
-    if (imageConfig.saveToCameraRoll && requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE)
+    if (imageConfig != null && imageConfig.saveToCameraRoll && requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE)
     {
       final RolloutPhotoResult rolloutResult = rolloutPhotoFromCamera(imageConfig);
 
