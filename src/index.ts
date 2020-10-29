@@ -1,4 +1,5 @@
 import {NativeModules} from 'react-native';
+
 import {CameraOptions, ImageLibraryOptions, Callback} from './types';
 export * from './types';
 
@@ -23,7 +24,7 @@ export function launchImageLibrary(
   options: ImageLibraryOptions,
   callback: Callback,
 ) {
-  NativeModules.ImagePickerManager.launchCamera(
+  NativeModules.ImagePickerManager.launchImageLibrary(
     {...DEFAULT_OPTIONS, ...options},
     callback,
   );
