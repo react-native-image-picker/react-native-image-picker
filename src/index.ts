@@ -1,10 +1,5 @@
 import {NativeModules} from 'react-native';
-import {
-  CameraOptions,
-  ImagePickerResponse,
-  ImageLibraryOptions,
-  Callback,
-} from './types';
+import {CameraOptions, ImageLibraryOptions, Callback} from './types';
 export * from './types';
 
 const DEFAULT_OPTIONS: CameraOptions = {
@@ -16,28 +11,6 @@ const DEFAULT_OPTIONS: CameraOptions = {
   includeBase64: false,
   saveToPhotos: false,
 };
-
-export function launchCameraAsync(
-  options: CameraOptions,
-): Promise<ImagePickerResponse> {
-  return new Promise((resolve) => {
-    NativeModules.ImagePickerManager.launchCamera(
-      {...DEFAULT_OPTIONS, ...options},
-      resolve,
-    );
-  });
-}
-
-export function launchImageLibraryAsync(
-  options: ImageLibraryOptions,
-): Promise<Response> {
-  return new Promise((resolve) => {
-    NativeModules.ImagePickerManager.launchImageLibrary(
-      {...DEFAULT_OPTIONS, ...options},
-      resolve,
-    );
-  });
-}
 
 export function launchCamera(options: CameraOptions, callback: Callback) {
   NativeModules.ImagePickerManager.launchCamera(

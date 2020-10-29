@@ -38,28 +38,24 @@ Add permissions in `AndroidManifest.xml`:
 
 ## Methods
 
-### `launchCamera()/launchCameraAsync()`
+### `launchCamera()`
 
 Launch camera to take photo or video.
 
 ```js
 launchCamera(options?, callback);
-
-const response = await launchCameraAsync(options?);
 ```
 
 See [Options](#options) for further information on `options`.
 
 The `callback` will be called with a response object, refer to [The Response Object](#the-response-object).
 
-### `launchImageLibrary/launchImageLibraryAsync()`
+### `launchImageLibrary`
 
 Launch gallery to pick image or video.
 
 ```js
 launchImageLibrary(options?, callback)
-
-const response = await launchImageLibraryAsync(options?)
 ```
 
 See [Options](#options) for further information on `options`.
