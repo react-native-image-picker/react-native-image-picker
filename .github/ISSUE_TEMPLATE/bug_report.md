@@ -1,8 +1,8 @@
 ---
 name: Bug report
-about: Bug reports 
+about: Legacy Bug reports 
 title: ''
-labels: :bug: Bug
+labels: Bug
 assignees: ''
 ---
 
