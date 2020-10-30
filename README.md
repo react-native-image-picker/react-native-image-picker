@@ -8,9 +8,11 @@
 
 A React Native module that allows you to use native UI to select a photo/video from the device library or directly from the camera, like so:
 
-# IMPORTANT
-### If you are using version 3.x.x, see this [documentation](https://github.com/react-native-image-picker/react-native-image-picker/tree/vnext) for installation and API reference. If you face any issues raise it under label vnext. Going forward version 3.x.x will be actively maintained with quick bug fix, so I encourage users to start using it.
+# ‼️ IMPORTANT ‼️
+### If you are using version 3.x.x, see this [documentation](https://github.com/react-native-image-picker/react-native-image-picker/tree/vnext) for installation and API reference. If you face any issues raise it under label vnext. Going forward version 3.x.x will be actively maintained with quick bug fixes, so I encourage users to start using it.
 
+# Version 2.x.x will no longer be maintained.
+### We're working on simplifying the codebase and API.  Feel free to partake in the discussions on [GH-1358](https://github.com/react-native-image-picker/react-native-image-picker/issues/1358).  
 
 | iOS                                                                                                                   | Android                                                                                                                       |
 | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
