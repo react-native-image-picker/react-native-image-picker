@@ -57,9 +57,7 @@ See [Options](#options) for further information on `options`.
 
 The `callback` will be called with a response object, refer to [The Response Object](#the-response-object).
 
-### Permission Handling on Android
 
-On android, this library does not ask for users permission. You have to make sure WRITE_EXTERNAL_STORAGE permission is obtained before calling the above methods.
 
 ## Options
 
@@ -90,7 +88,7 @@ On android, this library does not ask for users permission. You have to make sur
 
 ## Note on file storage
 
-Image/video captured via camera will be stored in temporary folder so will be deleted any time, so don't expect it to persist. Use `saveToPhotos: true` (default is false) to save the file in the public photos. `saveToPhotos` requires WRITE_EXTERNAL_STORAGE permission on Android 28 and below.
+Image/video captured via camera will be stored in temporary folder so will be deleted any time, so don't expect it to persist. Use `saveToPhotos: true` (default is false) to save the file in the public photos. `saveToPhotos` requires WRITE_EXTERNAL_STORAGE permission on Android 28 and below (You have to obtain the permission, the library does not).
 
 ## ErrorCode
 
