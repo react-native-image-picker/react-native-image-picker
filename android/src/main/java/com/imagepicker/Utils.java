@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
 
+import static com.imagepicker.ImagePickerModule.*;
 
 public class Utils {
     public static String fileNamePrefix = "rn_image_picker_lib_temp_";
@@ -237,6 +238,17 @@ public class Utils {
 
     static void deleteFile(Uri uri, Context context) {
         context.getContentResolver().delete(uri, null, null);
+    }
+
+    // Since library users can have many modules in their project, we should respond to onActivityResult only for our request.
+    static boolean isValidRequestCode(int requestCode) {
+        switch (requestCode) {
+            case REQUEST_LAUNCH_IMAGE_CAPTURE:
+            case REQUEST_LAUNCH_IMAGE_LIBRARY:
+            case REQUEST_LAUNCH_VIDEO_CAPTURE:
+            case REQUEST_LAUNCH_VIDEO_LIBRARY: return true;
+            default: return false;
+        }
     }
 
     static ReadableMap getResponseMap(Uri uri, Options options, Context context) {
