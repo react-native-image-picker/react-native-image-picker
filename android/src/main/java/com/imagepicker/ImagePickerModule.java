@@ -3,6 +3,7 @@ package com.imagepicker;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.MediaStore;
 
 import com.facebook.react.bridge.ActivityEventListener;
@@ -58,7 +59,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         this.callback = callback;
         this.options = new Options(options);
 
-        if (!hasPermission(currentActivity)) {
+        if (this.options.saveToPhotos && Build.VERSION.SDK_INT <= Build.VERSION_CODES.P && !hasPermission(currentActivity)) {
             callback.invoke(getErrorMap(errPermission, null));
             return;
         }
@@ -96,11 +97,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
         this.callback = callback;
         this.options = new Options(options);
-
-        if (!hasPermission(currentActivity)) {
-            callback.invoke(getErrorMap(errPermission, null));
-            return;
-        }
 
         int requestCode;
         Intent libraryIntent;
