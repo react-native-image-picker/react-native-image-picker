@@ -32,6 +32,7 @@ Add permissions in `AndroidManifest.xml`:
 
 ```xml
 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+<uses-permission android:name="android.permission.CAMERA"/>
 ```
 
 # API Reference
