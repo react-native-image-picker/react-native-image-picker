@@ -8,35 +8,12 @@ import {
   Platform,
   SafeAreaView,
 } from 'react-native';
-import {
-  request,
-  requestMultiple,
-  Permission,
-  PermissionStatus,
-  PERMISSIONS,
-  checkMultiple,
-} from 'react-native-permissions';
 import {Button} from './Button';
 
 import * as ImagePicker from '../../src';
 
-const PERMISSIONS_TO_REQUEST = Platform.select({
-  ios: [PERMISSIONS.IOS.CAMERA],
-  default: [
-    PERMISSIONS.ANDROID.CAMERA,
-    PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE,
-  ],
-});
-
 export default function App() {
   const [response, setResponse] = React.useState(null);
-  const [permission, setPermission] = React.useState('unavailable');
-
-  React.useEffect(() => {
-    checkMultiple(PERMISSIONS_TO_REQUEST).then((status) => {
-      setPermission(JSON.stringify(status, null, 2));
-    });
-  }, []);
 
   return (
     <SafeAreaView>
@@ -93,18 +70,9 @@ export default function App() {
           }
         />
 
-        <Button
-          title="Request Permission"
-          color="red"
-          onPress={() => {
-            requestMultiple(PERMISSIONS_TO_REQUEST).then((status) => {
-              setPermission(JSON.stringify(status, null, 2));
-            });
-          }}
-        />
-
-        <Text style={{}}>Permission: {permission}</Text>
-        <Text>Res: {JSON.stringify(response)}</Text>
+        <View style={styles.response}>
+          <Text>Res: {JSON.stringify(response)}</Text>
+        </View>
 
         {response && (
           <View style={styles.image}>
@@ -132,5 +100,9 @@ const styles = StyleSheet.create({
   image: {
     marginVertical: 24,
     alignItems: 'center',
+  },
+  response: {
+    marginVertical: 16,
+    marginHorizontal: 8,
   },
 });

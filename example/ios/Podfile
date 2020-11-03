@@ -9,12 +9,6 @@ target 'example' do
   use_react_native!(:path => config["reactNativePath"])
   pod 'react-native-image-picker', :path => '../../'
 
-  permissions_path = '../node_modules/react-native-permissions/ios'
-  pod 'Permission-Camera', :path => "#{permissions_path}/Camera.podspec"
-  pod 'Permission-MediaLibrary', :path => "#{permissions_path}/MediaLibrary.podspec"
-  pod 'Permission-Microphone', :path => "#{permissions_path}/Microphone.podspec"
-  pod 'Permission-PhotoLibrary', :path => "#{permissions_path}/PhotoLibrary.podspec"
-
   target 'exampleTests' do
     inherit! :complete
     # Pods for testing
