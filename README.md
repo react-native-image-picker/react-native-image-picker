@@ -1,18 +1,19 @@
 # React Native Image Picker
 
-[![npm version](https://badge.fury.io/js/react-native-image-picker.svg)](https://badge.fury.io/js/react-native-image-picker)
+[![npm version](https://img.shields.io/npm/v/react-native-image-picker)](https://badge.fury.io/js/react-native-image-picker)
+[![vnext](https://img.shields.io/npm/v/react-native-image-picker/next)](https://badge.fury.io/js/react-native-image-picker)
 [![npm](https://img.shields.io/npm/dt/react-native-image-picker.svg)](https://npmcharts.com/compare/react-native-image-picker?minimal=true)
 ![MIT](https://img.shields.io/dub/l/vibe-d.svg)
 ![Platform - Android and iOS](https://img.shields.io/badge/platform-Android%20%7C%20iOS-yellow.svg)
-[![Gitter chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/react-native-image-picker/Lobby)
 
 A React Native module that allows you to use native UI to select a photo/video from the device library or directly from the camera, like so:
 
 # ‼️ IMPORTANT ‼️
-### If you are using version 3.x.x, see this [documentation](https://github.com/react-native-image-picker/react-native-image-picker/tree/vnext) for installation and API reference. If you face any issues raise it under label vnext. Going forward version 3.x.x will be actively maintained with quick bug fixes, so I encourage users to start using it.
+ If you are using version 3.x.x, see this [documentation](https://github.com/react-native-image-picker/react-native-image-picker/tree/vnext) for installation and API reference. If you face any issues raise it under label vnext. Going forward version 3.x.x will be actively maintained with quick bug fixes, so I encourage users to start using it.
 
 # Version 2.x.x will no longer be maintained.
-### We're working on simplifying the codebase and API.  Feel free to partake in the discussions on [GH-1358](https://github.com/react-native-image-picker/react-native-image-picker/issues/1358).  
+
+We're working on simplifying the codebase and API.  Feel free read through the discussions here: [GH-1358](https://github.com/react-native-image-picker/react-native-image-picker/issues/1358).  
 
 | iOS                                                                                                                   | Android                                                                                                                       |
 | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
