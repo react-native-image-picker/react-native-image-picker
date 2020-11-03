@@ -17,6 +17,7 @@ import android.util.Base64;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
+import androidx.exifinterface.media.ExifInterface;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableMap;
@@ -39,8 +40,7 @@ public class Utils {
     public static String errPermission = "permission";
     public static String errOthers = "others";
 
-
-    public static Uri createUri(Context reactContext, String fileType) {
+    public static File createFile(Context reactContext, String fileType) {
         try {
             String filename = fileNamePrefix  + UUID.randomUUID() + "." + fileType;
 
@@ -49,13 +49,17 @@ public class Utils {
 
             File file = new File(fileDir, filename);
             file.createNewFile();
-            String authority = reactContext.getApplicationContext().getPackageName() + ".imagepickerprovider";
-            return FileProvider.getUriForFile(reactContext, authority, file);
+            return file;
 
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public static Uri createUri(File file, Context reactContext) {
+        String authority = reactContext.getApplicationContext().getPackageName() + ".imagepickerprovider";
+        return FileProvider.getUriForFile(reactContext, authority, file);
     }
 
     public static void deleteTempFiles(File fileDir) {
@@ -148,6 +152,8 @@ public class Utils {
         return Base64.encodeToString(bytes, Base64.NO_WRAP);
     }
 
+    // Resize image
+    // When decoding a jpg to bitmap all exif meta data will be lost, so make sure to copy orientation exif to new file else image might have wrong orientations
     public static Uri resizeImage(Uri uri, Context context, Options options) {
         try {
             int[] origDimens = getImageDimensions(uri, context);
@@ -162,16 +168,33 @@ public class Utils {
             String mimeType =  context.getContentResolver().getType(uri);
             Bitmap b = BitmapFactory.decodeStream(imageStream);
             b = Bitmap.createScaledBitmap(b, newDimens[0], newDimens[1], true);
+            String originalOrientation = getOrientation(uri, context);
 
-            Uri newUri = createUri(context, getFileTypeFromMime(mimeType));
-            OutputStream os = context.getContentResolver().openOutputStream(newUri);
+            File file = createFile(context, getFileTypeFromMime(mimeType));
+            OutputStream os = context.getContentResolver().openOutputStream(Uri.fromFile(file));
             b.compress(getBitmapCompressFormat(mimeType), options.quality, os);
-            return newUri;
+            setOrientation(file, originalOrientation, context);
+            return createUri(file, context);
 
         } catch (Exception e) {
             e.printStackTrace();
             return  null;
         }
+    }
+
+    static String getOrientation(Uri uri, Context context) throws IOException {
+        ExifInterface exifInterface = new ExifInterface(context.getContentResolver().openInputStream(uri));
+        return exifInterface.getAttribute(ExifInterface.TAG_ORIENTATION);
+    }
+
+    // ExifInterface.saveAttributes is costly operation so don't set exif for unnecessary orientations
+    static void setOrientation(File file, String orientation, Context context) throws IOException {
+        if (orientation.equals(String.valueOf(ExifInterface.ORIENTATION_NORMAL)) || orientation.equals(String.valueOf(ExifInterface.ORIENTATION_UNDEFINED))) {
+            return;
+        }
+        ExifInterface exifInterface = new ExifInterface(file);
+        exifInterface.setAttribute(ExifInterface.TAG_ORIENTATION, orientation);
+        exifInterface.saveAttributes();
     }
 
     static int[] getImageDimensBasedOnConstraints(int origWidth, int origHeight, Options options) {
