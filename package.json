@@ -23,6 +23,7 @@
   "license": "MIT",
   "scripts": {
     "start": "react-native start",
+    "example": "yarn --cwd example",
     "prepare": "bob build",
     "ci:publish": "yarn semantic-release",
     "semantic-release": "semantic-release"

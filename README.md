@@ -27,6 +27,7 @@ If you are allowing user to capture image add `NSCameraUsageDescription` key als
 If you are allowing user to capture video add `NSCameraUsageDescription` add `NSMicrophoneUsageDescription` key also.
 
 ### Android
+
 No permissions required (`saveToPhotos` requires permission [check](#note-on-file-storage)).
 
 # API Reference
@@ -56,8 +57,6 @@ launchImageLibrary(options?, callback)
 See [Options](#options) for further information on `options`.
 
 The `callback` will be called with a response object, refer to [The Response Object](#the-response-object).
-
-
 
 ## Options
 

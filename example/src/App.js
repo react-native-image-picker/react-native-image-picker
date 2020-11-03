@@ -1,19 +1,23 @@
 import React from 'react';
-import {StyleSheet, Text, View, Button, Image} from 'react-native';
-import * as ImagePicker from '../src';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  ScrollView,
+  Platform,
+  SafeAreaView,
+} from 'react-native';
+import {Button} from './Button';
 
-export default class App extends React.Component {
-  constructor(props) {
-    super(props);
+import * as ImagePicker from '../../src';
 
-    this.state = {
-      response: null,
-    };
-  }
+export default function App() {
+  const [response, setResponse] = React.useState(null);
 
-  render() {
-    return (
-      <View style={styles.container}>
+  return (
+    <SafeAreaView>
+      <ScrollView>
         <Button
           title="Take image"
           onPress={() =>
@@ -25,7 +29,7 @@ export default class App extends React.Component {
                 maxWidth: 200,
               },
               (response) => {
-                this.setState({response});
+                setResponse(response);
               },
             )
           }
@@ -42,7 +46,7 @@ export default class App extends React.Component {
                 maxWidth: 200,
               },
               (response) => {
-                this.setState({response});
+                setResponse(response);
               },
             )
           }
@@ -52,7 +56,7 @@ export default class App extends React.Component {
           title="Take video"
           onPress={() =>
             ImagePicker.launchCamera({mediaType: 'video'}, (response) => {
-              this.setState({response});
+              setResponse(response);
             })
           }
         />
@@ -61,29 +65,44 @@ export default class App extends React.Component {
           title="Select video"
           onPress={() =>
             ImagePicker.launchImageLibrary({mediaType: 'video'}, (response) => {
-              this.setState({response});
+              setResponse(response);
             })
           }
         />
 
-        <Text>{JSON.stringify(this.state.response)}</Text>
+        <View style={styles.response}>
+          <Text>Res: {JSON.stringify(response)}</Text>
+        </View>
 
-        {this.state.response && (
-          <Image
-            style={{width: 100, height: 100}}
-            source={{uri: this.state.response.uri}}
-          />
+        {response && (
+          <View style={styles.image}>
+            <Image
+              style={{width: 200, height: 200}}
+              source={{uri: response.uri}}
+            />
+          </View>
         )}
-      </View>
-    );
-  }
+      </ScrollView>
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'space-around',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
+  },
+  button: {
+    marginVertical: 24,
+    marginHorizontal: 24,
+  },
+  image: {
+    marginVertical: 24,
+    alignItems: 'center',
+  },
+  response: {
+    marginVertical: 16,
+    marginHorizontal: 8,
   },
 });
