@@ -136,6 +136,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     @Override
     public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
 
+        if (!isValidRequestCode(requestCode)) {
+            return;
+        }
+
         if (resultCode != Activity.RESULT_OK) {
             if (requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE) {
                 deleteFile(cameraCaptureURI, reactContext);
