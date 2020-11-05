@@ -25,6 +25,7 @@ What needs to be done to address this issue? Ideally, provide a pull request wit
 
 ### Additional Information
 
+* Image Picker version: [FILL THIS OUT: Be specific, filling out "latest" here is not enough.]
 * React Native version: [FILL THIS OUT: Be specific, filling out "latest" here is not enough.]
 * Platform: [FILL THIS OUT: iOS, Android, or both?]
 * Development Operating System: [FILL THIS OUT: Are you developing on MacOS, Linux, or Windows?]
