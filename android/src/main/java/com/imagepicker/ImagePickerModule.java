@@ -71,11 +71,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             requestCode = REQUEST_LAUNCH_VIDEO_CAPTURE;
             cameraIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
             cameraIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, this.options.videoQuality);
-            cameraCaptureURI = createUri(reactContext, "mp4");
+            cameraCaptureURI = createUri(createFile(reactContext, "mp4"), reactContext);
         } else {
             requestCode = REQUEST_LAUNCH_IMAGE_CAPTURE;
             cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            cameraCaptureURI = createUri(reactContext, "jpg");
+            cameraCaptureURI = createUri(createFile(reactContext, "jpg"), reactContext);
         }
         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraCaptureURI);
 
