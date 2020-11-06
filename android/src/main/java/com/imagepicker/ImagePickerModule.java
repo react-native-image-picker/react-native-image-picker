@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
+import android.util.Log;
 
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Callback;
@@ -53,6 +54,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         final Activity currentActivity = getCurrentActivity();
         if (currentActivity == null) {
             callback.invoke(getErrorMap(errOthers, "Activity error"));
+            return;
+        }
+
+        if (!isCameraPermissionFulfilled(reactContext, currentActivity)) {
+            callback.invoke(getErrorMap(errOthers, cameraPermissionDescription));
             return;
         }
 
