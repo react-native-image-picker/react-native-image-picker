@@ -30,6 +30,8 @@ If you are allowing user to capture video add `NSCameraUsageDescription` add `NS
 
 No permissions required (`saveToPhotos` requires permission [check](#note-on-file-storage)).
 
+Note: This library does not require Manifest.permission.CAMERA, if your app declares as using this permission in manifest then you have to obtain the permission before using `launchCamera`.
+
 # API Reference
 
 ## Methods

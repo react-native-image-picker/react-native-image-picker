@@ -29,6 +29,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.UUID;
 
 import static com.imagepicker.ImagePickerModule.*;
@@ -39,6 +40,8 @@ public class Utils {
     public static String errCameraUnavailable = "camera_unavailable";
     public static String errPermission = "permission";
     public static String errOthers = "others";
+
+    public static String cameraPermissionDescription = "This library does not require Manifest.permission.CAMERA, if you add this permission in manifest then you have to obtain the same.";
 
     public static File createFile(Context reactContext, String fileType) {
         try {
@@ -271,6 +274,31 @@ public class Utils {
             case REQUEST_LAUNCH_VIDEO_CAPTURE:
             case REQUEST_LAUNCH_VIDEO_LIBRARY: return true;
             default: return false;
+        }
+    }
+
+    // This library does not require Manifest.permission.CAMERA permission, but if user app declares as using this permission which is not granted, then attempting to use ACTION_IMAGE_CAPTURE|ACTION_VIDEO_CAPTURE will result in a SecurityException.
+    // https://issuetracker.google.com/issues/37063818
+    public static boolean isCameraPermissionFulfilled(Context context, Activity activity) {
+        try {
+             String[] declaredPermissions = context.getPackageManager()
+                     .getPackageInfo(context.getPackageName(), PackageManager.GET_PERMISSIONS)
+                     .requestedPermissions;
+
+             if (declaredPermissions == null) {
+                 return true;
+             }
+
+            if (Arrays.asList(declaredPermissions).contains(Manifest.permission.CAMERA)
+                    && ActivityCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+
+            return true;
+
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            return true;
         }
     }
 

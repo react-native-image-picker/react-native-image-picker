@@ -56,6 +56,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             return;
         }
 
+        if (!isCameraPermissionFulfilled(reactContext, currentActivity)) {
+            callback.invoke(getErrorMap(errOthers, cameraPermissionDescription));
+            return;
+        }
+
         this.callback = callback;
         this.options = new Options(options);
 
