@@ -2,6 +2,14 @@
 
 A React Native module that allows you to select a photo/video from the device library or camera.
 
+**Note:** If you are still using deprecated version 2.x.x [check](https://github.com/react-native-image-picker/react-native-image-picker/tree/2.3.4) this for documentation.
+
+## Migration from 2.x.x to 3.x.x
+- `showImagePicker` API is removed.
+- No permission required for default `options` on Android.
+- Removed and updated some values in `options`, so please check them carefully.
+
+
 # Install
 
 ```
