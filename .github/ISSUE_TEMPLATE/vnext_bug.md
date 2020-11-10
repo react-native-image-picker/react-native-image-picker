@@ -1,22 +1,26 @@
-* Please read the following carefully before opening a new issue.
-Your issue may be closed if it does not provide the information required by this template.
-
---- Delete everything above this line ---
+---
+name: VNext bug report
+about: Bug reports related to vnext
+title: ''
+labels: vnext
+assignees: ''
+---
 
 ### Description
-
-Explain what you did, what you expected to happen, and what actually happens.
+Explain the bug in as much detail as possible
 
 ### How to repeat issue and example
-
-Your explanation here and source code or link
+* step to reproduce the issue
+* ...
 
 ### Solution
 
-What needs to be done to address this issue? Ideally, provide a pull request with a fix.
+What needs to be done to address this issue? 
+
 
 ### Additional Information
 
+* Image Picker version: [FILL THIS OUT: Be specific, filling out "latest" here is not enough.]
 * React Native version: [FILL THIS OUT: Be specific, filling out "latest" here is not enough.]
 * Platform: [FILL THIS OUT: iOS, Android, or both?]
 * Development Operating System: [FILL THIS OUT: Are you developing on MacOS, Linux, or Windows?]
