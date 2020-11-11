@@ -7,6 +7,10 @@
   "files": [
     "/android",
     "!/android/build",
+    "!/android/gradlew",
+    "!/android/gradlew.bat",
+    "!/android/gradle",
+    "!/android/src/test"
     "/ios",
     "/*.podspec",
     "/src",
