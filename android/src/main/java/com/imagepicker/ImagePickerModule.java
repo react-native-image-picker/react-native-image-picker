@@ -24,6 +24,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     static final int REQUEST_LAUNCH_IMAGE_LIBRARY = 13002;
     static final int REQUEST_LAUNCH_VIDEO_LIBRARY = 13003;
     static final int REQUEST_LAUNCH_VIDEO_CAPTURE = 13004;
+    static final int REQUEST_PERMISSIONS_FOR_LIBRARY = 14002;
 
     final ReactApplicationContext reactContext;
 
@@ -105,13 +106,27 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
         int requestCode;
         Intent libraryIntent;
-        if (this.options.pickVideo) {
+        /*if (this.options.pickVideo) {
             requestCode = REQUEST_LAUNCH_VIDEO_LIBRARY;
             libraryIntent = new Intent(Intent.ACTION_PICK);
             libraryIntent.setType("video/*");
         } else {
             requestCode = REQUEST_LAUNCH_IMAGE_LIBRARY;
             libraryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        }*/
+
+        if(this.options.type.equals("photo")) {
+            requestCode = REQUEST_LAUNCH_IMAGE_LIBRARY;
+            libraryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        } else if(this.options.type.equals("video")) {
+            requestCode = REQUEST_LAUNCH_VIDEO_LIBRARY;
+            libraryIntent = new Intent(Intent.ACTION_PICK);
+            libraryIntent.setType("video/*");
+        } else {
+            requestCode = REQUEST_PERMISSIONS_FOR_LIBRARY;
+            libraryIntent.setType("*/*");
+            String[] mimetypes = {"image/*", "video/*"};
+            libraryIntent.putExtra(Intent.EXTRA_MIME_TYPES, mimetypes);
         }
 
         if (libraryIntent.resolveActivity(reactContext.getPackageManager()) == null) {
@@ -170,6 +185,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
                     saveToPublicDirectory(data.getData(), reactContext, "video");
                 }
                 onVideoObtained(data.getData());
+                break;
+            case REQUEST_PERMISSIONS_FOR_LIBRARY:
+                callback.invoke(data.getData());
                 break;
         }
     }
