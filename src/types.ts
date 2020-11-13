@@ -4,12 +4,12 @@ export interface ImageLibraryOptions {
   mediaType: MediaType;
   maxWidth?: number;
   maxHeight?: number;
+  quality?: PhotoQuality;
   videoQuality?: AndroidVideoOptions | iOSVideoOptions;
   includeBase64?: boolean;
 }
 
 export interface CameraOptions extends ImageLibraryOptions {
-  quality?: PhotoQuality;
   saveToPhotos?: boolean;
 }
 
