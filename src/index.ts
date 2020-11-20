@@ -12,10 +12,10 @@ import {ImagePickerOptions, ImagePickerResponse} from './internal/types';
 import {processColor} from 'react-native';
 
 const DEFAULT_OPTIONS: ImagePickerOptions = {
-  title: 'Select a Photo',
-  cancelButtonTitle: 'Cancel',
-  takePhotoButtonTitle: 'Take Photo…',
-  chooseFromLibraryButtonTitle: 'Choose from Library…',
+  title: '写真を選択',
+  cancelButtonTitle: 'キャンセル',
+  takePhotoButtonTitle: '写真を撮る…',
+  chooseFromLibraryButtonTitle: 'フォルダから画像を選択…',
   quality: 1.0,
   allowsEditing: false,
   permissionDenied: {
