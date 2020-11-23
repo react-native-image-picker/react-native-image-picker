@@ -168,9 +168,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
             case REQUEST_LAUNCH_VIDEO_CAPTURE:
                 if (options.saveToPhotos) {
-                    saveToPublicDirectory(data.getData(), reactContext, "video");
+                    saveToPublicDirectory(cameraCaptureURI, reactContext, "video");
                 }
-                onVideoObtained(data.getData());
+                onVideoObtained(cameraCaptureURI);
                 break;
         }
     }
