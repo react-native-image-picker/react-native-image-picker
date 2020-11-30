@@ -385,6 +385,18 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     }
   }
 
+  private String getFileName(Uri fileUri, ContentResolver contentResolver) {
+    String name = "";
+    Cursor returnCursor = contentResolver.query(fileUri, null, null, null, null);
+    if (returnCursor != null) {
+      int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+      returnCursor.moveToFirst();
+      name = returnCursor.getString(nameIndex);
+      returnCursor.close();
+    }
+    return name;
+  }
+
   @Override
   public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
     //robustness code
@@ -434,7 +446,30 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
             return;
           }
         }
-        imageConfig = imageConfig.withOriginalFile(new File(realPath));
+
+        try {
+          final ParcelFileDescriptor parcelFileDescriptor = this.getContext().getContentResolver().openFileDescriptor(uri, "r", null);
+          final FileInputStream inputStream = new FileInputStream(parcelFileDescriptor.getFileDescriptor());
+          final File file = new File(this.getContext().getCacheDir(), this.getFileName(uri, this.getContext().getContentResolver()));
+          final FileOutputStream outputStream = new FileOutputStream(file);
+          IOUtils.copy(inputStream, outputStream);
+          imageConfig = imageConfig.withOriginalFile(file);
+        } catch (FileNotFoundException e) {
+          // image not in cache
+          responseHelper.putString("error", "File not found");
+          responseHelper.putString("uri", uri.toString());
+          responseHelper.invokeResponse(callback);
+          callback = null;
+          return;
+        } catch (IOException e) {
+          // error
+          responseHelper.putString("error", "Could not read photo");
+          responseHelper.putString("uri", uri.toString());
+          responseHelper.invokeResponse(callback);
+          callback = null;
+          return;
+        }
+
         break;
 
       case REQUEST_LAUNCH_VIDEO_LIBRARY:
