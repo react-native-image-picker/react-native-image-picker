@@ -52,7 +52,7 @@ repositories {
 
 dependencies {
     api "com.facebook.react:react-native:+"  // From node_modules
-
+    implementation files('commons-io-2.8.0.jar')  // From node_modules
     testImplementation('org.robolectric:robolectric:4.3.1') {
         // https://github.com/robolectric/robolectric/issues/5245
         exclude group: 'com.google.auto.service', module: 'auto-service'
