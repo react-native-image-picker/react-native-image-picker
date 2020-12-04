@@ -6,6 +6,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
 
+import androidx.core.util.Pair;
+
+
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -26,9 +29,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     static final int REQUEST_LAUNCH_VIDEO_CAPTURE = 13004;
 
     final ReactApplicationContext reactContext;
-
-    Callback callback;
-
+    
     Options options;
     Uri cameraCaptureURI;
 
@@ -45,27 +46,28 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
     @ReactMethod
     public void launchCamera(final ReadableMap options, final Callback callback) {
+        Integer cbId = CallbacksCollection.set(callback);
+
         if (!isCameraAvailable(reactContext)) {
-            callback.invoke(getErrorMap(errCameraUnavailable, null));
+            CallbacksCollection.invoke(cbId, getErrorMap(errCameraUnavailable, null));
             return;
         }
 
         final Activity currentActivity = getCurrentActivity();
         if (currentActivity == null) {
-            callback.invoke(getErrorMap(errOthers, "Activity error"));
+            CallbacksCollection.invoke(cbId, getErrorMap(errOthers, "Activity error"));
             return;
         }
 
         if (!isCameraPermissionFulfilled(reactContext, currentActivity)) {
-            callback.invoke(getErrorMap(errOthers, cameraPermissionDescription));
+            CallbacksCollection.invoke(cbId,getErrorMap(errOthers, cameraPermissionDescription));
             return;
         }
 
-        this.callback = callback;
         this.options = new Options(options);
 
         if (this.options.saveToPhotos && Build.VERSION.SDK_INT <= Build.VERSION_CODES.P && !hasPermission(currentActivity)) {
-            callback.invoke(getErrorMap(errPermission, null));
+            CallbacksCollection.invoke(cbId, getErrorMap(errPermission, null));
             return;
         }
 
@@ -82,25 +84,27 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             cameraCaptureURI = createUri(createFile(reactContext, "jpg"), reactContext);
         }
+        CallbacksCollection.setCode(cbId, requestCode);
         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraCaptureURI);
 
         if (cameraIntent.resolveActivity(reactContext.getPackageManager()) == null) {
-            callback.invoke(getErrorMap(errOthers, "Activity error"));
+            CallbacksCollection.invoke(cbId, getErrorMap(errOthers, "Activity error"));
             return;
         }
 
-        currentActivity.startActivityForResult(cameraIntent, requestCode);
+        currentActivity.startActivityForResult(cameraIntent, cbId);
     }
 
     @ReactMethod
     public void launchImageLibrary(final ReadableMap options, final Callback callback) {
         final Activity currentActivity = getCurrentActivity();
+        Integer cbId = CallbacksCollection.set(callback);
+
         if (currentActivity == null) {
-            callback.invoke(getErrorMap(errOthers, "Activity error"));
+            CallbacksCollection.invoke(cbId, getErrorMap(errOthers, "Activity error"));
             return;
         }
 
-        this.callback = callback;
         this.options = new Options(options);
 
         int requestCode;
@@ -114,30 +118,38 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             libraryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         }
 
+        CallbacksCollection.setCode(cbId, requestCode);
         if (libraryIntent.resolveActivity(reactContext.getPackageManager()) == null) {
-            callback.invoke(getErrorMap(errOthers, "Activity error"));
+            CallbacksCollection.invoke(cbId, getErrorMap(errOthers, "Activity error"));
             return;
         }
-
-        currentActivity.startActivityForResult(Intent.createChooser(libraryIntent, null), requestCode);
+        currentActivity.startActivityForResult(Intent.createChooser(libraryIntent, null), cbId);
     }
 
-    void onImageObtained(Uri uri) {
+    void onImageObtained(Uri uri, Callback callback) {
         if (uri == null) {
             callback.invoke(getErrorMap(errOthers, "Uri error"));
-            return;
         }
         Uri newUri = resizeImage(uri, reactContext, options);
         callback.invoke(getResponseMap(newUri, options, reactContext));
     }
 
-    void onVideoObtained(Uri uri) {
+    void onVideoObtained(Uri uri, Callback callback) {
         callback.invoke(getVideoResponseMap(uri, options, reactContext));
     }
 
     @Override
-    public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(Activity activity, int cbRequestCode, int resultCode, Intent data) {
 
+
+        Pair<Callback, Integer> cbData = CallbacksCollection.pop(cbRequestCode);
+        if (cbData == null) {
+            return;
+        }
+
+
+        Callback callback = cbData.first;
+        int requestCode = cbData.second;
         if (!isValidRequestCode(requestCode)) {
             return;
         }
@@ -155,22 +167,22 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
                 if (options.saveToPhotos) {
                     saveToPublicDirectory(cameraCaptureURI, reactContext, "photo");
                 }
-                onImageObtained(cameraCaptureURI);
+                onImageObtained(cameraCaptureURI, callback);
                 break;
 
             case REQUEST_LAUNCH_IMAGE_LIBRARY:
-                onImageObtained(data.getData());
+                onImageObtained(data.getData(), callback);
                 break;
 
             case REQUEST_LAUNCH_VIDEO_LIBRARY:
-                onVideoObtained(data.getData());
+                onVideoObtained(data.getData(), callback);
                 break;
 
             case REQUEST_LAUNCH_VIDEO_CAPTURE:
                 if (options.saveToPhotos) {
-                    saveToPublicDirectory(cameraCaptureURI, reactContext, "video");
+                    saveToPublicDirectory(data.getData(), reactContext, "video");
                 }
-                onVideoObtained(cameraCaptureURI);
+                onVideoObtained(data.getData(), callback);
                 break;
         }
     }
