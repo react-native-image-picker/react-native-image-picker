@@ -1,0 +1,6 @@
+
+blank_issues_enabled: false
+contact_links:
+  - name: Discussion
+    url: https://github.com/react-native-image-picker/react-native-image-picker/discussions/new
+    about: Anything that isn't an issue but needs a discussion.
