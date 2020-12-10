@@ -1,27 +1,66 @@
-aliases:
-  - &save-cache-yarn
-    key: yarn-packages-{{ checksum "yarn.lock" }}
-    paths:
-      - ~/.cache/yarn
-  - &restore-cache-yarn
-    name: Restore Yarn Package Cache
-    keys:
-      - yarn-packages-{{ checksum "yarn.lock" }}
-
 defaults: &defaults
-  working_directory: ~/react-native-image-picker
+  working_directory: ~/code
   docker:
-    - image: circleci/node:10
+    - image: circleci/node:12.9.1-browsers
 
 version: 2
 jobs:
-  build:
+  setup:
     <<: *defaults
     steps:
       - checkout
-      - restore_cache: *restore-cache-yarn
+      - restore_cache:
+          name: Restore node modules
+          keys:
+            - node_modules-{{ arch }}-{{ checksum "yarn.lock" }}
+
       - run:
-          name: Yarn Install
-          command: |
-            yarn install --frozen-lockfile --no-progress --non-interactive --cache-folder ~/.cache/yarn
-      - save_cache: *save-cache-yarn
+          name: Install dependencies
+          command: yarn --pure-lockfile
+
+      - save_cache:
+          name: Save node modules
+          key: node_modules-{{ arch }}-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
+
+  tests:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore node modules
+          keys:
+            - node_modules-{{ arch }}-{{ checksum "yarn.lock" }}
+
+      - run:
+          name: Lint checks
+          command: yarn prepare
+
+  publish:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore node modules
+          keys:
+            - node_modules-{{ arch }}-{{ checksum "yarn.lock" }}
+
+      - run:
+          name: Publish to NPM
+          command: yarn ci:publish
+
+workflows:
+  version: 2
+  ci:
+    jobs:
+      - setup
+      - tests:
+          requires:
+            - setup
+      - publish:
+          requires:
+            - tests
+          filters:
+            branches:
+              only: master
