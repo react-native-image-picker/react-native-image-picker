@@ -10,6 +10,7 @@ export interface ImageLibraryOptions {
 }
 
 export interface CameraOptions extends ImageLibraryOptions {
+  durationLimit?: number;
   saveToPhotos?: boolean;
 }
 

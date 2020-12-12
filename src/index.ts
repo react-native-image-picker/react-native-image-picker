@@ -11,6 +11,7 @@ const DEFAULT_OPTIONS: CameraOptions = {
   maxHeight: 0,
   includeBase64: false,
   saveToPhotos: false,
+  durationLimit: 0
 };
 
 export function launchCamera(options: CameraOptions, callback: Callback) {
