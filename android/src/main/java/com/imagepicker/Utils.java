@@ -47,8 +47,8 @@ public class Utils {
         try {
             String filename = fileNamePrefix  + UUID.randomUUID() + "." + fileType;
 
-            File fileDir = reactContext.getExternalFilesDir(null);
-            deleteTempFiles(fileDir);
+            // getCacheDir will auto-clean according to android docs
+            File fileDir = reactContext.getCacheDir();
 
             File file = new File(fileDir, filename);
             file.createNewFile();
@@ -63,14 +63,6 @@ public class Utils {
     public static Uri createUri(File file, Context reactContext) {
         String authority = reactContext.getApplicationContext().getPackageName() + ".imagepickerprovider";
         return FileProvider.getUriForFile(reactContext, authority, file);
-    }
-
-    public static void deleteTempFiles(File fileDir) {
-        for (File f : fileDir.listFiles()) {
-            if (f.getName().startsWith(fileNamePrefix)) {
-                f.delete();
-            }
-        }
     }
 
     public static void saveToPublicDirectory(Uri uri, Context context, String mediaType) {
@@ -104,6 +96,19 @@ public class Utils {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    // Make a copy of shared storage image files inside app specific storage so that users can access it later since shared storage files lose permission
+    // when the current activity closes. Don't use it for videos because it could be very large and making copy of it is bad
+    public static Uri getAppSpecificStorageUri(Uri sharedStorageUri, Context context) {
+        if (sharedStorageUri == null) {
+            return null;
+        }
+        ContentResolver contentResolver = context.getContentResolver();
+        String fileType = getFileTypeFromMime(contentResolver.getType(sharedStorageUri));
+        Uri toUri =  createUri(createFile(context, fileType), context);
+        copyUri(sharedStorageUri, toUri, contentResolver);
+        return toUri;
     }
 
     public static boolean isCameraAvailable(Context reactContext) {

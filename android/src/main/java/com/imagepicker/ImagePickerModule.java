@@ -159,7 +159,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
                 break;
 
             case REQUEST_LAUNCH_IMAGE_LIBRARY:
-                onImageObtained(data.getData());
+                onImageObtained(getAppSpecificStorageUri(data.getData(), reactContext));
                 break;
 
             case REQUEST_LAUNCH_VIDEO_LIBRARY:
