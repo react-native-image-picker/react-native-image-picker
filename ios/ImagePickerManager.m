@@ -1,7 +1,9 @@
 #import "ImagePickerManager.h"
 #import "ImagePickerUtils.h"
 #import <React/RCTConvert.h>
+#if !TARGET_OS_MACCATALYST
 #import <AssetsLibrary/AssetsLibrary.h>
+#endif
 #import <AVFoundation/AVFoundation.h>
 #import <Photos/Photos.h>
 #import <React/RCTUtils.h>
