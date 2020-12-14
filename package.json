@@ -3,6 +3,7 @@
   "version": "3.0.1",
   "description": "A React Native module that allows you to use native UI to select media from the device library or directly from the camera",
   "react-native": "src/index.ts",
+  "main": "src/index.ts",
   "types": "lib/typescript/src/index.d.ts",
   "files": [
     "/android",
