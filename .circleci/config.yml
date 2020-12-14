@@ -48,7 +48,7 @@ jobs:
 
       - run:
           name: Publish to NPM
-          command: yarn ci:publish
+          command: yarn ci:publish --dry-run
 
 workflows:
   version: 2
