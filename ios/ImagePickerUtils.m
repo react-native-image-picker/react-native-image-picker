@@ -24,6 +24,10 @@
             picker.videoQuality = UIImagePickerControllerQualityTypeMedium;
         }
         
+        if (options[@"durationLimit"] > 0) {
+            picker.videoMaximumDuration = [options[@"durationLimit"] doubleValue];
+        }
+
         picker.mediaTypes = @[(NSString *)kUTTypeMovie];
     } else {
         picker.mediaTypes = @[(NSString *)kUTTypeImage];

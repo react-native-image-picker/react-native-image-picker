@@ -10,6 +10,7 @@ public class Options {
     int maxWidth;
     int maxHeight;
     Boolean saveToPhotos;
+    int durationLimit;
 
 
     Options(ReadableMap options) {
@@ -22,5 +23,6 @@ public class Options {
         maxHeight = options.getInt("maxHeight");
         maxWidth = options.getInt("maxWidth");
         saveToPhotos = options.getBoolean("saveToPhotos");
+        durationLimit = options.getInt("durationLimit");
     }
 }
