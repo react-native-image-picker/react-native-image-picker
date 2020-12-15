@@ -49,6 +49,10 @@ Note: This library does not require Manifest.permission.CAMERA, if your app decl
 
 ## Methods
 
+```js
+import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
+```
+
 ### `launchCamera()`
 
 Launch camera to take photo or video.
