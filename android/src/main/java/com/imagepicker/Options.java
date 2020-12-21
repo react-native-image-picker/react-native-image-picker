@@ -21,7 +21,7 @@ public class Options {
         includeBase64 = options.getBoolean("includeBase64");
         
         String videoQualityString = options.getString("videoQuality");
-        if(!TextUtils.isEmpty(videoQualityString) && videoQualityString.toLowerCase() != "high") {
+        if(!TextUtils.isEmpty(videoQualityString) && !videoQualityString.toLowerCase().equals("high")) {
             videoQuality = 0;
         }
 
