@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		014A3B6A1C6CF34500B6D375 /* ImagePickerManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 014A3B691C6CF34500B6D375 /* ImagePickerManager.m */; };
+		3CAFA04725A83F4500C5B8F3 /* ImagePickerUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = C1D0CF212509FD5E00304E19 /* ImagePickerUtils.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -117,6 +118,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3CAFA04725A83F4500C5B8F3 /* ImagePickerUtils.m in Sources */,
 				014A3B6A1C6CF34500B6D375 /* ImagePickerManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
