@@ -15,6 +15,11 @@ const DEFAULT_OPTIONS: CameraOptions = {
 };
 
 export function launchCamera(options: CameraOptions, callback: Callback) {
+  if (typeof callback !== 'function') {
+    console.error("Send proper callback function, check API");
+    return;
+  }
+
   NativeModules.ImagePickerManager.launchCamera(
     {...DEFAULT_OPTIONS, ...options},
     callback,
@@ -25,6 +30,10 @@ export function launchImageLibrary(
   options: ImageLibraryOptions,
   callback: Callback,
 ) {
+  if (typeof callback !== 'function') {
+    console.error("Send proper callback function, check API");
+    return;
+  }
   NativeModules.ImagePickerManager.launchImageLibrary(
     {...DEFAULT_OPTIONS, ...options},
     callback,
