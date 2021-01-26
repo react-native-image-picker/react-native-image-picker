@@ -25,6 +25,9 @@ export interface ImagePickerResponse {
   fileSize?: number;
   type?: string; //TODO
   fileName?: string;
+  //IOS ONLY original image is the image reduced to 2038x2048
+  originalFileName?: string;
+  originalImagePath?: string;
 }
 
 export type PhotoQuality =

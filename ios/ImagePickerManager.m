@@ -98,10 +98,17 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
 - (void)onImageObtained:(NSDictionary<NSString *,id> *)info {
 
+
+    NSURL *imagePath = [info objectForKey:UIImagePickerControllerReferenceURL];
+    NSString *originalImagePath = imagePath.absoluteString;
+    PHFetchResult *result = [PHAsset fetchAssetsWithALAssetURLs:@[originalImagePath] options:nil];
+    NSString *originalFileName = [[result firstObject] filename];
+
     NSURL *imageURL = [ImagePickerManager getNSURLFromInfo:info];
     self.response = [[NSMutableDictionary alloc] init];
     UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
     NSData *data;
+
 
     if ((target == camera) && [self.options[@"saveToPhotos"] boolValue]) {
         UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
@@ -142,6 +149,8 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     }
 
     self.response[@"fileName"] = fileName;
+    self.response[@"originalFileName"] = originalFileName;
+    self.response[@"originalImagePath"] = originalImagePath;
     self.response[@"width"] = @(image.size.width);
     self.response[@"height"] = @(image.size.height);
     self.callback(@[self.response]);
