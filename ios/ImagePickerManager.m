@@ -101,7 +101,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
     NSURL *imagePath = [info objectForKey:UIImagePickerControllerReferenceURL];
     NSString *originalImagePath = imagePath.absoluteString;
-    PHFetchResult *result = [PHAsset fetchAssetsWithALAssetURLs:@[originalImagePath] options:nil];
+    PHFetchResult *result = [PHAsset fetchAssetsWithALAssetURLs:@[imagePath] options:nil];
     NSString *originalFileName = [[result firstObject] filename];
 
     NSURL *imageURL = [ImagePickerManager getNSURLFromInfo:info];
