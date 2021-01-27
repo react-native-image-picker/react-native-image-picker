@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  package="com.imagepicker"
-  >
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.imagepicker">
+
     <application>
-      <provider
-            android:name="com.imagepicker.FileProvider"
+        <activity android:name=".CameraActivity"></activity>
+
+        <provider
+            android:name=".FileProvider"
             android:authorities="${applicationId}.provider"
             android:exported="false"
             android:grantUriPermissions="true">
@@ -14,4 +15,5 @@
                 android:resource="@xml/provider_paths" />
         </provider>
     </application>
+
 </manifest>

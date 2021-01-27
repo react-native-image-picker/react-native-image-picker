@@ -265,7 +265,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     else
     {
       requestCode = REQUEST_LAUNCH_IMAGE_CAPTURE;
-      cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+      cameraIntent = new Intent(currentActivity, CameraActivity.class);
 
       final File original = createNewFile(reactContext, this.options, true);
       imageConfig = imageConfig.withOriginalFile(original);
@@ -281,7 +281,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         responseHelper.invokeError(callback, "Couldn't get file path for photo");
         return;
       }
-      cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraCaptureURI);
+      cameraIntent.putExtra("location", original.toString());
     }
 
     if (cameraIntent.resolveActivity(reactContext.getPackageManager()) == null)
@@ -350,7 +350,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
       libraryIntent = new Intent(Intent.ACTION_PICK,
       MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 
-      if (pickBoth) 
+      if (pickBoth)
       {
         libraryIntent.setType("image/* video/*");
       }
