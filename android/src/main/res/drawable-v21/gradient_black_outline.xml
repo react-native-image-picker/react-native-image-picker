@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle"
+    >
+    <!-- workaround android BUG: https://code.google.com/p/android/issues/detail?id=77862 -->
+    <gradient
+        android:startColor="@color/translucent_black"
+        android:endColor="@android:color/black"
+        android:type="radial"
+        android:gradientRadius="50%p"
+        />
+</shape>

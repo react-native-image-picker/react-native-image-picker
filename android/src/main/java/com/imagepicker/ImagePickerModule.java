@@ -265,7 +265,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
     else
     {
       requestCode = REQUEST_LAUNCH_IMAGE_CAPTURE;
-      cameraIntent = new Intent(currentActivity, CameraActivity.class);
+      cameraIntent = new Intent(currentActivity, CameraActivityLib.class);
 
       final File original = createNewFile(reactContext, this.options, true);
       imageConfig = imageConfig.withOriginalFile(original);
@@ -281,7 +281,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule
         responseHelper.invokeError(callback, "Couldn't get file path for photo");
         return;
       }
-      cameraIntent.putExtra("location", original.toString());
+      cameraIntent.putExtra(StaticStringKeys.FILE_LOCATION, original.toString());
     }
 
     if (cameraIntent.resolveActivity(reactContext.getPackageManager()) == null)
