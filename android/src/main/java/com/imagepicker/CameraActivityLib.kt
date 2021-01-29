@@ -6,7 +6,6 @@ import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.Button
-import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import com.otaliastudios.cameraview.CameraListener
 import com.otaliastudios.cameraview.CameraView
@@ -48,9 +47,10 @@ class CameraActivityLib : AppCompatActivity() {
 
       override fun onAnimationRepeat(animation: Animation) {}
     })
-    findViewById<View>(R.id.shutterAnimationView).setVisibility(View.VISIBLE)
-    findViewById<View>(R.id.shutterAnimationView).startAnimation(shutterAnimation)
+    val shutterAnimationView: View = findViewById(R.id.shutterAnimationView)
     findViewById<Button>(R.id.takePictureView).setOnClickListener {
+      shutterAnimationView.visibility = View.VISIBLE
+      shutterAnimationView.startAnimation(shutterAnimation)
       camera.takePicture()
     }
   }

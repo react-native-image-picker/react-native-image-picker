@@ -6,11 +6,6 @@
     <activity android:name=".CameraActivityLib"
       android:theme="@style/Camera.FullScreen"
       android:windowSoftInputMode="stateAlwaysHidden" />
-    <activity
-      android:name=".CameraActivity"
-      android:screenOrientation="sensorPortrait"
-      android:theme="@style/Camera.FullScreen"
-      android:windowSoftInputMode="stateAlwaysHidden" />
 
     <provider
       android:name=".FileProvider"
