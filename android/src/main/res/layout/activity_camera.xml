@@ -7,16 +7,54 @@
   tools:context=".CameraActivity">
   <com.otaliastudios.cameraview.CameraView
     android:id="@+id/camera"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:keepScreenOn="true"
     app:cameraAudio="off"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content" />
-  <ImageButton
-    android:id="@+id/capturePicture"
-    android:layout_width="56dp"
-    android:layout_height="56dp"
+    app:cameraFacing="back"
+    app:cameraGestureTap="autoFocus"
+    app:cameraMode="picture"
+    app:cameraPictureFormat="jpeg"
+    app:cameraPlaySounds="true"
+    app:cameraRequestPermissions="true"
+    app:cameraUseDeviceOrientation="true" />
+
+  <View
+    android:id="@+id/shutterAnimationView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/gradient_black_outline"
+    android:visibility="gone" />
+
+  <Button
+    android:id="@+id/takePictureView"
+    android:layout_width="72dp"
+    android:layout_height="72dp"
+    android:layout_alignStart="@+id/buttonsHolder"
+    android:layout_alignLeft="@+id/buttonsHolder"
+    android:layout_centerVertical="true"
     android:layout_gravity="center_horizontal|bottom"
-    android:layout_marginBottom="56dp"
-    android:background="?attr/selectableItemBackgroundBorderless"
-    android:src="@drawable/ic_photo" />
-</FrameLayout>
+    android:layout_marginStart="12dp"
+    android:layout_marginLeft="12dp"
+    android:layout_marginBottom="12dp"
+    android:background="@drawable/btn_shutter"
+    android:textColor="@color/light_grey"
+    android:textSize="20sp"
+    android:visibility="visible" />
+
+
+  <View
+    android:id="@+id/buttonsHolder"
+    android:layout_width="match_parent"
+    android:layout_height="96dp"
+    android:layout_alignParentRight="true"
+    android:layout_centerInParent="true"
+    android:layout_gravity="center_horizontal|bottom"
+    android:background="@color/translucent_black" />
+
+
+</FrameLayout><!--<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
+  <!--  android:id="@+id/fragment_container"-->
+  <!--  android:layout_width="match_parent"-->
+  <!--  android:layout_height="match_parent"-->
+  <!--  android:orientation="vertical" />-->

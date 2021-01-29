@@ -1,19 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.imagepicker">
+  package="com.imagepicker">
 
-    <application>
-        <activity android:name=".CameraActivity"></activity>
+  <application>
+    <activity android:name=".CameraActivityLib"
+      android:theme="@style/Camera.FullScreen"
+      android:windowSoftInputMode="stateAlwaysHidden" />
 
-        <provider
-            android:name=".FileProvider"
-            android:authorities="${applicationId}.provider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/provider_paths" />
-        </provider>
-    </application>
+    <provider
+      android:name=".FileProvider"
+      android:authorities="${applicationId}.provider"
+      android:exported="false"
+      android:grantUriPermissions="true">
+      <meta-data
+        android:name="android.support.FILE_PROVIDER_PATHS"
+        android:resource="@xml/provider_paths" />
+    </provider>
+  </application>
 
 </manifest>
