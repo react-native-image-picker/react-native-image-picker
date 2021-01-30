@@ -52,6 +52,7 @@ export interface ImagePickerOptions {
   storageOptions?: ImagePickerStorageOptions;
   permissionDenied?: ImagePickerPermissionDeniedOptions;
   tintColor?: number | string;
+  ipadPopoverPosition?: 'top' | 'middle' | 'bottom';
 }
 
 export interface ImagePickerStorageOptions {

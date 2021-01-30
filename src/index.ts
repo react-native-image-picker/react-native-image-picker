@@ -26,6 +26,7 @@ const DEFAULT_OPTIONS: ImagePickerOptions = {
     okTitle: "I'm sure",
   },
   tintColor: '',
+  ipadPopoverPosition: 'bottom',
 };
 
 type Callback = (response: ImagePickerResponse) => void;

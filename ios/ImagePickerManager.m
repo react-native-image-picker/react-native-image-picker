@@ -89,10 +89,16 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
         UIViewController *root = RCTPresentedViewController();
 
         /* On iPad, UIAlertController presents a popover view rather than an action sheet like on iPhone. We must provide the location
-        of the location to show the popover in this case. For simplicity, we'll just display it on the bottom center of the screen
-        to mimic an action sheet */
+        of the location to show the popover in this case. We'll just display it on the top/middle/bottom center of the screen based on user preference
+        to mimic an action sheet. Default position will be bottom (as before adding option to change Y asix position) */
+        CGFloat ipadPopoverHeight = root.view.bounds.size.height;
+        if ([[self.options objectForKey:@"ipadPopoverPosition"] isEqualToString:@"top"]) {
+            ipadPopoverHeight = 0;
+        } else if ([[self.options objectForKey:@"ipadPopoverPosition"] isEqualToString:@"middle"]) {
+            ipadPopoverHeight = root.view.bounds.size.height / 2.0;
+        } 
         alertController.popoverPresentationController.sourceView = root.view;
-        alertController.popoverPresentationController.sourceRect = CGRectMake(root.view.bounds.size.width / 2.0, root.view.bounds.size.height, 1.0, 1.0);
+        alertController.popoverPresentationController.sourceRect = CGRectMake(root.view.bounds.size.width / 2.0, ipadPopoverHeight, 1.0, 1.0);
 
         if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
             alertController.popoverPresentationController.permittedArrowDirections = 0;
