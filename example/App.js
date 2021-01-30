@@ -86,7 +86,11 @@ export default class App extends React.Component {
       <View style={styles.container}>
         <TouchableOpacity onPress={this.selectPhotoTapped.bind(this)}>
           <View
-            style={[styles.avatar, styles.avatarContainer, {marginBottom: 20}]}>
+            style={[
+              styles.avatar,
+              styles.avatarContainer,
+              styles.avatarContainerMargin,
+            ]}>
             {this.state.avatarSource === null ? (
               <Text>Select a Photo</Text>
             ) : (
@@ -102,9 +106,7 @@ export default class App extends React.Component {
         </TouchableOpacity>
 
         {this.state.videoSource && (
-          <Text style={{margin: 8, textAlign: 'center'}}>
-            {this.state.videoSource}
-          </Text>
+          <Text style={styles.videoSource}>{this.state.videoSource}</Text>
         )}
       </View>
     );
@@ -118,15 +120,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
   },
+  avatar: {
+    borderRadius: 75,
+    width: 150,
+    height: 150,
+  },
   avatarContainer: {
     borderColor: '#9B9B9B',
     borderWidth: 1 / PixelRatio.get(),
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatar: {
-    borderRadius: 75,
-    width: 150,
-    height: 150,
+  avatarContainerMargin: {
+    marginBottom: 20,
+  },
+  videoSource: {
+    margin: 8,
+    textAlign: 'center',
   },
 });
