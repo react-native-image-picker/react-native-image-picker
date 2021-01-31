@@ -71,6 +71,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | permissionDenied.text           | -   | OK      | Message of explaining permissions dialog. By default `To be able to take pictures with your camera and choose images from your library.`.                                                                                                                            |
 | permissionDenied.reTryTitle     | -   | OK      | Title of re-try button. By default `re-try`                                                                                                                                                                                                                          |
 | permissionDenied.okTitle        | -   | OK      | Title of ok button. By default `I'm sure`                                                                                                                                                                                                                            |
+| ipadPopoverPosition             | OK  | -       | Position popover for iPad when using `showImagePicker` function in 'top' (top-center of screen), 'middle' (middle-center of screen), or 'bottom' (bottom-center of screen) position. By default, it is `bottom`. (for backwards compatibility)                                                                                                                                                                                                                            |
 
 ## The Response Object
 
