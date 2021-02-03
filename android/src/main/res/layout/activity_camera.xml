@@ -34,8 +34,6 @@
     android:layout_alignLeft="@+id/buttonsHolder"
     android:layout_centerVertical="true"
     android:layout_gravity="center_horizontal|bottom"
-    android:layout_marginStart="12dp"
-    android:layout_marginLeft="12dp"
     android:layout_marginBottom="12dp"
     android:background="@drawable/btn_shutter"
     android:textColor="@color/light_grey"
