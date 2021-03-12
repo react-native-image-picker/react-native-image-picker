@@ -85,6 +85,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             cameraCaptureURI = createUri(createFile(reactContext, "jpg"), reactContext);
         }
+
+        if (this.options.useFrontCamera) {
+            setFrontCamera(cameraIntent);
+        }
+
         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraCaptureURI);
 
         if (cameraIntent.resolveActivity(reactContext.getPackageManager()) == null) {

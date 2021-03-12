@@ -12,6 +12,7 @@ public class Options {
     int maxHeight;
     Boolean saveToPhotos;
     int durationLimit;
+    Boolean useFrontCamera = false;
 
 
     Options(ReadableMap options) {
@@ -23,6 +24,10 @@ public class Options {
         String videoQualityString = options.getString("videoQuality");
         if(!TextUtils.isEmpty(videoQualityString) && !videoQualityString.toLowerCase().equals("high")) {
             videoQuality = 0;
+        }
+
+        if (options.getString("cameraType").equals("front")) {
+            useFrontCamera = true;
         }
 
         quality = (int) (options.getDouble("quality") * 100);

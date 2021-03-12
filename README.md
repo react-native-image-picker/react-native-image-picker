@@ -87,6 +87,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | videoQuality  | OK  | OK      | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android                                     |
 | durationLimit | OK  | OK      | Video max duration in seconds                                                                     |
 | quality       | OK  | OK      | 0 to 1, photos                                                                                    |
+| cameraType    | OK  | OK      | 'back' or 'front'. May not be supported in few android devices                                    |
 | includeBase64 | OK  | OK      | If true, creates base64 string of the image (Avoid using on large image files due to performance) |
 | saveToPhotos  | OK  | OK      | (Boolean) Only for launchCamera, saves the image/video file captured to public photo              |
 
