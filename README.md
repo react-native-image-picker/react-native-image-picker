@@ -99,7 +99,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | errorCode    | OK  | OK      | Check [ErrorCode](#ErrorCode) for all error codes                                                               |
 | errorMessage | OK  | OK      | Description of the error, use it for debug purpose only                                                         |
 | base64       | OK  | OK      | The base64 string of the image (photos only)                                                                    |
-| uri          | OK  | OK      | The uri to the local file on the device (uri might change for same file for different session so don't save it) |
+| uri          | OK  | OK      | The file uri in app specific cache storage. Except when picking **video from Android gallery** where you will get read only content uri, to get file uri in this case copy the file to app specific storage using any react-native library|
 | width        | OK  | OK      | Image dimensions (photos only)                                                                                  |
 | height       | OK  | OK      | Image dimensions (photos only)                                                                                  |
 | fileSize     | OK  | OK      | The file size (photos only)                                                                                     |

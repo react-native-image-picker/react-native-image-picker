@@ -14,6 +14,8 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.module.annotations.ReactModule;
 
+import java.io.File;
+
 import static com.imagepicker.Utils.*;
 
 @ReactModule(name = ImagePickerModule.NAME)
@@ -24,6 +26,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     static final int REQUEST_LAUNCH_IMAGE_LIBRARY = 13002;
     static final int REQUEST_LAUNCH_VIDEO_LIBRARY = 13003;
     static final int REQUEST_LAUNCH_VIDEO_CAPTURE = 13004;
+
+    private Uri fileUri;
 
     final ReactApplicationContext reactContext;
 
@@ -70,6 +74,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         }
 
         int requestCode;
+        File file;
         Intent cameraIntent;
 
         if (this.options.pickVideo) {
@@ -79,17 +84,20 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             if (this.options.durationLimit > 0) {
                 cameraIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, this.options.durationLimit);
             }
-            cameraCaptureURI = createUri(createFile(reactContext, "mp4"), reactContext);
+            file = createFile(reactContext, "mp4");
+            cameraCaptureURI = createUri(file, reactContext);
         } else {
             requestCode = REQUEST_LAUNCH_IMAGE_CAPTURE;
             cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            cameraCaptureURI = createUri(createFile(reactContext, "jpg"), reactContext);
+            file = createFile(reactContext, "jpg");
+            cameraCaptureURI = createUri(file, reactContext);
         }
 
         if (this.options.useFrontCamera) {
             setFrontCamera(cameraIntent);
         }
 
+        fileUri = Uri.fromFile(file);
         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraCaptureURI);
         cameraIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
@@ -133,16 +141,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     }
 
     void onImageObtained(Uri uri) {
-        if (uri == null) {
-            callback.invoke(getErrorMap(errOthers, "Uri error"));
-            return;
-        }
         Uri newUri = resizeImage(uri, reactContext, options);
         callback.invoke(getResponseMap(newUri, options, reactContext));
     }
 
     void onVideoObtained(Uri uri) {
-        callback.invoke(getVideoResponseMap(uri, options, reactContext));
+        callback.invoke(getVideoResponseMap(uri, reactContext));
     }
 
     @Override
@@ -154,7 +158,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
         if (resultCode != Activity.RESULT_OK) {
             if (requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE) {
-                deleteFile(cameraCaptureURI, reactContext);
+                deleteFile(fileUri);
             }
             callback.invoke(getCancelMap());
             return;
@@ -165,7 +169,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
                 if (options.saveToPhotos) {
                     saveToPublicDirectory(cameraCaptureURI, reactContext, "photo");
                 }
-                onImageObtained(cameraCaptureURI);
+                onImageObtained(fileUri);
                 break;
 
             case REQUEST_LAUNCH_IMAGE_LIBRARY:
@@ -180,7 +184,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
                 if (options.saveToPhotos) {
                     saveToPublicDirectory(cameraCaptureURI, reactContext, "video");
                 }
-                onVideoObtained(cameraCaptureURI);
+                onVideoObtained(fileUri);
                 break;
         }
     }

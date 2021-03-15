@@ -17,6 +17,7 @@ import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.util.Base64;
+import android.webkit.MimeTypeMap;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
@@ -101,15 +102,14 @@ public class Utils {
         }
     }
 
-    // Make a copy of shared storage image files inside app specific storage so that users can access it later since shared storage files lose permission
-    // when the current activity closes. Don't use it for videos because it could be very large and making copy of it is bad
+    // Make a copy of shared storage files inside app specific storage so that users can access it later.
     public static Uri getAppSpecificStorageUri(Uri sharedStorageUri, Context context) {
         if (sharedStorageUri == null) {
             return null;
         }
         ContentResolver contentResolver = context.getContentResolver();
         String fileType = getFileTypeFromMime(contentResolver.getType(sharedStorageUri));
-        Uri toUri =  createUri(createFile(context, fileType), context);
+        Uri toUri =  Uri.fromFile(createFile(context, fileType));
         copyUri(sharedStorageUri, toUri, contentResolver);
         return toUri;
     }
@@ -188,7 +188,7 @@ public class Utils {
             int[] newDimens = getImageDimensBasedOnConstraints(origDimens[0], origDimens[1], options);
 
             InputStream imageStream = context.getContentResolver().openInputStream(uri);
-            String mimeType =  context.getContentResolver().getType(uri);
+            String mimeType =  getMimeTypeFromFileUri(uri);
             Bitmap b = BitmapFactory.decodeStream(imageStream);
             b = Bitmap.createScaledBitmap(b, newDimens[0], newDimens[1], true);
             String originalOrientation = getOrientation(uri, context);
@@ -197,7 +197,7 @@ public class Utils {
             OutputStream os = context.getContentResolver().openOutputStream(Uri.fromFile(file));
             b.compress(getBitmapCompressFormat(mimeType), options.quality, os);
             setOrientation(file, originalOrientation, context);
-            return createUri(file, context);
+            return Uri.fromFile(file);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -282,8 +282,12 @@ public class Utils {
         return "jpg";
     }
 
-    static void deleteFile(Uri uri, Context context) {
-        context.getContentResolver().delete(uri, null, null);
+    static void deleteFile(Uri uri) {
+        new File(uri.getPath()).delete();
+    }
+
+    static String getMimeTypeFromFileUri(Uri uri) {
+        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(uri.toString()));
     }
 
     // Since library users can have many modules in their project, we should respond to onActivityResult only for our request.
@@ -323,38 +327,25 @@ public class Utils {
     }
 
     static ReadableMap getResponseMap(Uri uri, Options options, Context context) {
-        ContentResolver resolver = context.getContentResolver();
-
-        Cursor returnCursor = resolver.query(uri, null, null, null, null);
-        int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-        returnCursor.moveToFirst();
-
-        String fileName = returnCursor.getString(nameIndex);
+        String fileName = uri.getLastPathSegment();
         int[] dimensions = getImageDimensions(uri, context);
 
         WritableMap map = Arguments.createMap();
         map.putString("uri", uri.toString());
         map.putDouble("fileSize", getFileSize(uri, context));
         map.putString("fileName", fileName);
-        map.putString("type", resolver.getType(uri));
+        map.putString("type", getMimeTypeFromFileUri(uri));
         map.putInt("width", dimensions[0]);
         map.putInt("height", dimensions[1]);
 
         if (options.includeBase64) {
             map.putString("base64", getBase64String(uri, context));
         }
-        returnCursor.close();
         return map;
     }
 
-    static ReadableMap getVideoResponseMap(Uri uri, Options options, Context context) {
-        ContentResolver resolver = context.getContentResolver();
-
-        Cursor returnCursor = resolver.query(uri, null, null, null, null);
-        int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-        returnCursor.moveToFirst();
-
-        String fileName = returnCursor.getString(nameIndex);
+    static ReadableMap getVideoResponseMap(Uri uri, Context context) {
+        String fileName = uri.getLastPathSegment();
 
         WritableMap map = Arguments.createMap();
         map.putString("uri", uri.toString());
