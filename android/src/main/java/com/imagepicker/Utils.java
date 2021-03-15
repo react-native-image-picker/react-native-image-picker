@@ -5,11 +5,14 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.hardware.camera2.CameraCharacteristics;
 import android.net.Uri;
+import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
@@ -114,6 +117,18 @@ public class Utils {
     public static boolean isCameraAvailable(Context reactContext) {
         return reactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)
                 || reactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
+    }
+
+    // Opening front camera is not officially supported in android, the below hack is obtained from various online sources
+    public static void setFrontCamera(Intent intent) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            intent.putExtra("android.intent.extras.CAMERA_FACING", CameraCharacteristics.LENS_FACING_FRONT);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                intent.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
+            }
+        } else {
+            intent.putExtra("android.intent.extras.CAMERA_FACING", 1);
+        }
     }
 
     public static int[] getImageDimensions(Uri uri, Context reactContext) {

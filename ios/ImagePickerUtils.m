@@ -6,7 +6,12 @@
 + (void) setupPickerFromOptions:(UIImagePickerController *)picker options:(NSDictionary *)options target:(RNImagePickerTarget)target {
     if (target == camera) {
         picker.sourceType = UIImagePickerControllerSourceTypeCamera;
-        picker.cameraDevice = UIImagePickerControllerCameraDeviceRear;
+
+        if ([options[@"cameraType"] isEqualToString:@"front"]) {
+            picker.cameraDevice = UIImagePickerControllerCameraDeviceFront;
+        } else {
+            picker.cameraDevice = UIImagePickerControllerCameraDeviceRear;
+        }
     }
     else {
         picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
