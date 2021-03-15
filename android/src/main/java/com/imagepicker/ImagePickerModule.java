@@ -91,6 +91,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         }
 
         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraCaptureURI);
+        cameraIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
         if (cameraIntent.resolveActivity(reactContext.getPackageManager()) == null) {
             callback.invoke(getErrorMap(errOthers, "Activity error"));
