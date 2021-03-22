@@ -11,7 +11,6 @@
 @property (nonatomic, strong) UIImagePickerController *picker;
 @property (nonatomic, strong) RCTResponseSenderBlock callback;
 @property (nonatomic, retain) NSDictionary *options;
-@property (nonatomic, retain) NSMutableDictionary *response;
 
 @end
 
@@ -98,7 +97,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 - (void)onImageObtained:(NSDictionary<NSString *,id> *)info {
 
     NSURL *imageURL = [ImagePickerManager getNSURLFromInfo:info];
-    self.response = [[NSMutableDictionary alloc] init];
+    NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
     UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
     NSData *data;
 
@@ -120,30 +119,30 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         data = [NSData dataWithContentsOfURL:imageURL];
     }
 
-    self.response[@"type"] = [@"image/" stringByAppendingString:fileType];
+    response[@"type"] = [@"image/" stringByAppendingString:fileType];
 
     NSString *fileName = [self getImageFileName:fileType];
     NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
     [data writeToFile:path atomically:YES];
 
     if ([self.options[@"includeBase64"] boolValue]) {
-        self.response[@"base64"] = [data base64EncodedStringWithOptions:0];
+        response[@"base64"] = [data base64EncodedStringWithOptions:0];
     }
 
     NSURL *fileURL = [NSURL fileURLWithPath:path];
-    self.response[@"uri"] = [fileURL absoluteString];
+    response[@"uri"] = [fileURL absoluteString];
 
     NSNumber *fileSizeValue = nil;
     NSError *fileSizeError = nil;
     [fileURL getResourceValue:&fileSizeValue forKey:NSURLFileSizeKey error:&fileSizeError];
     if (fileSizeValue){
-        self.response[@"fileSize"] = fileSizeValue;
+        response[@"fileSize"] = fileSizeValue;
     }
 
-    self.response[@"fileName"] = fileName;
-    self.response[@"width"] = @(image.size.width);
-    self.response[@"height"] = @(image.size.height);
-    self.callback(@[self.response]);
+    response[@"fileName"] = fileName;
+    response[@"width"] = @(image.size.width);
+    response[@"height"] = @(image.size.height);
+    self.callback(@[response]);
     
 }
 
@@ -151,7 +150,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     NSString *fileName = [info[UIImagePickerControllerMediaURL] lastPathComponent];
     NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
 
-    self.response = [[NSMutableDictionary alloc] init];
+    NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
     
     NSURL *videoURL = info[UIImagePickerControllerMediaURL];
     NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
@@ -185,8 +184,8 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         }
     }
 
-    self.response[@"uri"] = videoDestinationURL.absoluteString;
-    self.callback(@[self.response]);
+    response[@"uri"] = videoDestinationURL.absoluteString;
+    self.callback(@[response]);
 }
 
 #pragma mark - Helpers
