@@ -3,7 +3,6 @@
 #import <React/RCTConvert.h>
 #import <AVFoundation/AVFoundation.h>
 #import <Photos/Photos.h>
-#import <React/RCTUtils.h>
 
 @import MobileCoreServices;
 
@@ -75,7 +74,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 {
     dispatch_block_t dismissCompletionBlock = ^{
         
-        if ([[info objectForKey:UIImagePickerControllerMediaType] isEqualToString: (NSString *)kUTTypeImage]) {
+        if ([info[UIImagePickerControllerMediaType] isEqualToString:(NSString *) kUTTypeImage]) {
             [self onImageObtained:info];
         } else {
             [self onVideoObtained:info];

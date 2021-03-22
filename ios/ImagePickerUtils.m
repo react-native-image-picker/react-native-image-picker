@@ -17,12 +17,12 @@
         picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
     }
 
-    if ([[options objectForKey:@"mediaType"] isEqualToString:@"video"]) {
+    if ([options[@"mediaType"] isEqualToString:@"video"]) {
 
-        if ([[options objectForKey:@"videoQuality"] isEqualToString:@"high"]) {
+        if ([options[@"videoQuality"] isEqualToString:@"high"]) {
             picker.videoQuality = UIImagePickerControllerQualityTypeHigh;
         }
-        else if ([[options objectForKey:@"videoQuality"] isEqualToString:@"low"]) {
+        else if ([options[@"videoQuality"] isEqualToString:@"low"]) {
             picker.videoQuality = UIImagePickerControllerQualityTypeLow;
         }
         else {
