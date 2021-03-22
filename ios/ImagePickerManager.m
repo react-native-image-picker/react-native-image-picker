@@ -54,25 +54,28 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     self.options = options;
 
     if (@available(iOS 14, *)) {
-        PHPickerConfiguration *configuration = [ImagePickerUtils makeConfigurationFromOptions:options];
-        PHPickerViewController *picker = [[PHPickerViewController alloc] initWithConfiguration:configuration];
-        picker.delegate = self;
+        if (target == library) {
+            PHPickerConfiguration *configuration = [ImagePickerUtils makeConfigurationFromOptions:options];
+            PHPickerViewController *picker = [[PHPickerViewController alloc] initWithConfiguration:configuration];
+            picker.delegate = self;
 
-        [self showPickerViewController:picker];
-    }
-    else {
-        UIImagePickerController *picker = [[UIImagePickerController alloc] init];
-        [ImagePickerUtils setupPickerFromOptions:picker options:self.options target:target];
-        picker.delegate = self;
-
-        [self checkPermission:^(BOOL granted) {
-            if (!granted) {
-                self.callback(@[@{@"errorCode": errPermission}]);
-                return;
-            }
             [self showPickerViewController:picker];
-        }];
+
+            return;
+        }
     }
+
+    UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+    [ImagePickerUtils setupPickerFromOptions:picker options:self.options target:target];
+    picker.delegate = self;
+
+    [self checkPermission:^(BOOL granted) {
+        if (!granted) {
+            self.callback(@[@{@"errorCode": errPermission}]);
+            return;
+        }
+        [self showPickerViewController:picker];
+    }];
 }
 
 - (void) showPickerViewController:(UIViewController *)picker
@@ -86,10 +89,10 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info
 {
     dispatch_block_t dismissCompletionBlock = ^{
-        
         if ([info[UIImagePickerControllerMediaType] isEqualToString:(NSString *) kUTTypeImage]) {
             [self onImageObtained:info];
-        } else {
+        }
+        else {
             [self onVideoObtained:info];
         }
     };
@@ -317,24 +320,74 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     }
 }
 
-- (BOOL)isModernPicker {
-    if (@available(iOS 14, *)) {
-        return YES;
-    }
-    return NO;
-}
-
 @end
 
 @implementation ImagePickerManager(PHPickerViewControllerDelegate)
 
 - (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14))
 {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [picker dismissViewControllerAnimated:YES completion:^{
-            self.callback(@[]);
-        }];
-    });
+    if (results.count == 0) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [picker dismissViewControllerAnimated:YES completion:^{
+                self.callback(@[@{@"didCancel": @YES}]);
+            }];
+        });
+        return;
+    }
+
+    for (PHPickerResult *result in results) {
+        NSItemProvider *provider = result.itemProvider;
+
+        if ([provider canLoadObjectOfClass:[UIImage class]]) {
+            [provider loadObjectOfClass:[UIImage class] completionHandler:^(__kindof id<NSItemProviderReading> _Nullable object, NSError * _Nullable error) {
+                UIImage *image = object;
+                NSDictionary *response = [self makeResponseFromImage:image];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [picker dismissViewControllerAnimated:YES completion:^{
+                        self.callback(@[response]);
+                    }];
+                });
+            }];
+        }
+    }
+}
+
+- (NSDictionary *)makeResponseFromImage:(UIImage *)image {
+    NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
+
+    NSData *data = UIImagePNGRepresentation(image);
+    NSString *fileType = [ImagePickerUtils getFileType:data];
+    if (![fileType isEqualToString:@"gif"]) {
+        image = [ImagePickerUtils resizeImage:image
+                                     maxWidth:[self.options[@"maxWidth"] floatValue]
+                                    maxHeight:[self.options[@"maxHeight"] floatValue]];
+    }
+
+    response[@"type"] = [@"image/" stringByAppendingString:fileType];
+
+    NSString *fileName = [self getImageFileName:fileType];
+    NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
+    [data writeToFile:path atomically:YES];
+
+    if ([self.options[@"includeBase64"] boolValue]) {
+        response[@"base64"] = [data base64EncodedStringWithOptions:0];
+    }
+
+    NSURL *fileURL = [NSURL fileURLWithPath:path];
+    response[@"uri"] = [fileURL absoluteString];
+
+    NSNumber *fileSizeValue = nil;
+    NSError *fileSizeError = nil;
+    [fileURL getResourceValue:&fileSizeValue forKey:NSURLFileSizeKey error:&fileSizeError];
+    if (fileSizeValue){
+        response[@"fileSize"] = fileSizeValue;
+    }
+
+    response[@"fileName"] = fileName;
+    response[@"width"] = @(image.size.width);
+    response[@"height"] = @(image.size.height);
+
+    return [response copy];
 }
 
 @end
