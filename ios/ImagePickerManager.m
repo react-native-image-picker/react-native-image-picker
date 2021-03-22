@@ -339,9 +339,23 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         NSItemProvider *provider = result.itemProvider;
 
         if ([provider canLoadObjectOfClass:[UIImage class]]) {
-            [provider loadObjectOfClass:[UIImage class] completionHandler:^(__kindof id<NSItemProviderReading> _Nullable object, NSError * _Nullable error) {
+            [provider loadObjectOfClass:[UIImage class]
+                      completionHandler:^(__kindof id<NSItemProviderReading> _Nullable object, NSError * _Nullable error) {
                 UIImage *image = object;
                 NSDictionary *response = [self makeResponseFromImage:image];
+
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [picker dismissViewControllerAnimated:YES completion:^{
+                        self.callback(@[response]);
+                    }];
+                });
+            }];
+        }
+        else if ([provider hasItemConformingToTypeIdentifier:@"public.movie"]) {
+            [provider loadFileRepresentationForTypeIdentifier:@"public.movie"
+                                            completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
+                NSDictionary *response = [self makeResponseFromURL:url];
+
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [picker dismissViewControllerAnimated:YES completion:^{
                         self.callback(@[response]);
@@ -386,6 +400,26 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     response[@"fileName"] = fileName;
     response[@"width"] = @(image.size.width);
     response[@"height"] = @(image.size.height);
+
+    return [response copy];
+}
+
+- (NSDictionary *)makeResponseFromURL:(NSURL *)url {
+    NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
+
+    NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:url.lastPathComponent];
+    NSURL *targetURL = [NSURL fileURLWithPath:path];
+
+    NSURL *videoURL = url;
+
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if ([fileManager fileExistsAtPath:targetURL.path]) {
+        [fileManager removeItemAtURL:targetURL error:nil];
+    }
+
+    [fileManager copyItemAtURL:videoURL toURL:targetURL error:nil];
+
+    response[@"uri"] = targetURL.absoluteString;
 
     return [response copy];
 }
