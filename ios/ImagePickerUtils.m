@@ -3,7 +3,8 @@
 
 @implementation ImagePickerUtils
 
-+ (void) setupPickerFromOptions:(UIImagePickerController *)picker options:(NSDictionary *)options target:(RNImagePickerTarget)target {
++ (void) setupPickerFromOptions:(UIImagePickerController *)picker options:(NSDictionary *)options target:(RNImagePickerTarget)target
+{
     if (target == camera) {
         picker.sourceType = UIImagePickerControllerSourceTypeCamera;
 
@@ -48,7 +49,8 @@
     return NO;
 }
 
-+ (NSString*) getFileType:(NSData *)imageData {
++ (NSString*) getFileType:(NSData *)imageData
+{
     const uint8_t firstByteJpg = 0xFF;
     const uint8_t firstBytePng = 0x89;
     const uint8_t firstByteGif = 0x47;

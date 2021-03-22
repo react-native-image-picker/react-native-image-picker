@@ -9,7 +9,7 @@
 @interface ImagePickerManager ()
 
 @property (nonatomic, strong) RCTResponseSenderBlock callback;
-@property (nonatomic, retain) NSDictionary *options;
+@property (nonatomic, copy) NSDictionary *options;
 
 @end
 
@@ -61,7 +61,8 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     }];
 }
 
-- (void) showPickerViewController:(UIViewController *)picker {
+- (void) showPickerViewController:(UIViewController *)picker
+{
     dispatch_async(dispatch_get_main_queue(), ^{
         UIViewController *root = RCTPresentedViewController();
         [root presentViewController:picker animated:YES completion:nil];
@@ -93,8 +94,8 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     });
 }
 
-- (void)onImageObtained:(NSDictionary<NSString *,id> *)info {
-
+- (void)onImageObtained:(NSDictionary<NSString *,id> *)info
+{
     NSURL *imageURL = [ImagePickerManager getNSURLFromInfo:info];
     NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
     UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
@@ -107,12 +108,14 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     NSString *fileType = [ImagePickerUtils getFileType:[NSData dataWithContentsOfURL:imageURL]];
     
     if (![fileType isEqualToString:@"gif"]) {
-        image = [ImagePickerUtils resizeImage:image maxWidth:[self.options[@"maxWidth"] floatValue] maxHeight:[self.options[@"maxHeight"] floatValue]];
+        image = [ImagePickerUtils resizeImage:image
+                                     maxWidth:[self.options[@"maxWidth"] floatValue]
+                                    maxHeight:[self.options[@"maxHeight"] floatValue]];
     }
     
-    if ([fileType isEqualToString:(NSString *)@"jpg"]) {
+    if ([fileType isEqualToString:@"jpg"]) {
         data = UIImageJPEGRepresentation(image, [self.options[@"quality"] floatValue]);
-    } else if ([fileType isEqualToString:(NSString *)@"png"]) {
+    } else if ([fileType isEqualToString:@"png"]) {
         data = UIImagePNGRepresentation(image);
     } else {
         data = [NSData dataWithContentsOfURL:imageURL];
@@ -142,10 +145,10 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     response[@"width"] = @(image.size.width);
     response[@"height"] = @(image.size.height);
     self.callback(@[response]);
-    
 }
 
-- (void)onVideoObtained:(NSDictionary<NSString *,id> *)info {
+- (void)onVideoObtained:(NSDictionary<NSString *,id> *)info
+{
     NSString *fileName = [info[UIImagePickerControllerMediaURL] lastPathComponent];
     NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
 
@@ -158,7 +161,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         UISaveVideoAtPathToSavedPhotosAlbum(videoURL.path, nil, nil, nil);
     }
 
-    if ([videoURL.URLByResolvingSymlinksInPath.path isEqualToString:videoDestinationURL.URLByResolvingSymlinksInPath.path] == NO) {
+    if (![videoURL.URLByResolvingSymlinksInPath.path isEqualToString:videoDestinationURL.URLByResolvingSymlinksInPath.path]) {
         NSFileManager *fileManager = [NSFileManager defaultManager];
 
         // Delete file if it already exists
@@ -195,12 +198,14 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     if (status == AVAuthorizationStatusAuthorized) {
         callback(YES);
         return;
-    } else if (status == AVAuthorizationStatusNotDetermined){
+    }
+    else if (status == AVAuthorizationStatusNotDetermined){
         [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
             callback(granted);
             return;
         }];
-    } else {
+    }
+    else {
         callback(NO);
     }
 }
@@ -229,8 +234,8 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 }
 
 // Both camera and photo write permission is required to take picture/video and store it to public photos
-- (void)checkCameraAndPhotoPermission:(void(^)(BOOL granted))callback {
-
+- (void)checkCameraAndPhotoPermission:(void(^)(BOOL granted))callback
+{
     [self checkCameraPermissions:^(BOOL cameraGranted) {
         if (!cameraGranted) {
             callback(NO);
@@ -247,8 +252,8 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     }];
 }
 
-- (void)checkPermission:(void(^)(BOOL granted)) callback {
-
+- (void)checkPermission:(void(^)(BOOL granted)) callback
+{
     void (^permissionBlock)(BOOL) = ^(BOOL permissionGranted) {
         if (!permissionGranted) {
             callback(NO);
@@ -266,19 +271,22 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     else {
         if (@available(iOS 11.0, *)) {
             callback(YES);
-        } else {
+        }
+        else {
             [self checkPhotosPermissions:permissionBlock];
         }
     }
 }
 
-- (NSString*) getImageFileName:(NSString*)fileType {
+- (NSString*) getImageFileName:(NSString*)fileType
+{
     NSString *fileName = [[NSUUID UUID] UUIDString];
     fileName = [fileName stringByAppendingString:@"."];
     return [fileName stringByAppendingString:fileType];
 }
 
-+ (UIImage*)getUIImageFromInfo:(NSDictionary*)info {
++ (UIImage*)getUIImageFromInfo:(NSDictionary*)info
+{
     UIImage *image = info[UIImagePickerControllerEditedImage];
     if (!image) {
         image = info[UIImagePickerControllerOriginalImage];
@@ -289,7 +297,8 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 + (NSURL*)getNSURLFromInfo:(NSDictionary*)info {
     if (@available(iOS 11.0, *)) {
         return info[UIImagePickerControllerImageURL];
-    } else {
+    }
+    else {
         return info[UIImagePickerControllerReferenceURL];
     }
 }
