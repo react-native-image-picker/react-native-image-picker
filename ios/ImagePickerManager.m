@@ -3,6 +3,7 @@
 #import <React/RCTConvert.h>
 #import <AVFoundation/AVFoundation.h>
 #import <Photos/Photos.h>
+#import <PhotosUI/PhotosUI.h>
 
 @import MobileCoreServices;
 
@@ -11,6 +12,9 @@
 @property (nonatomic, strong) RCTResponseSenderBlock callback;
 @property (nonatomic, copy) NSDictionary *options;
 
+@end
+
+@interface ImagePickerManager(PHPickerViewControllerDelegate) <PHPickerViewControllerDelegate>
 @end
 
 @implementation ImagePickerManager
@@ -48,17 +52,27 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     }
     
     self.options = options;
-    UIImagePickerController *picker = [[UIImagePickerController alloc] init];
-    
-    [ImagePickerUtils setupPickerFromOptions:picker options:self.options target:target];
-    picker.delegate = self;
-    [self checkPermission:^(BOOL granted) {
-        if (!granted) {
-            self.callback(@[@{@"errorCode": errPermission}]);
-            return;
-        }
+
+    if (@available(iOS 14, *)) {
+        PHPickerConfiguration *configuration = [ImagePickerUtils makeConfigurationFromOptions:options];
+        PHPickerViewController *picker = [[PHPickerViewController alloc] initWithConfiguration:configuration];
+        picker.delegate = self;
+
         [self showPickerViewController:picker];
-    }];
+    }
+    else {
+        UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+        [ImagePickerUtils setupPickerFromOptions:picker options:self.options target:target];
+        picker.delegate = self;
+
+        [self checkPermission:^(BOOL granted) {
+            if (!granted) {
+                self.callback(@[@{@"errorCode": errPermission}]);
+                return;
+            }
+            [self showPickerViewController:picker];
+        }];
+    }
 }
 
 - (void) showPickerViewController:(UIViewController *)picker
@@ -303,5 +317,24 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     }
 }
 
+- (BOOL)isModernPicker {
+    if (@available(iOS 14, *)) {
+        return YES;
+    }
+    return NO;
+}
+
 @end
 
+@implementation ImagePickerManager(PHPickerViewControllerDelegate)
+
+- (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14))
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [picker dismissViewControllerAnimated:YES completion:^{
+            self.callback(@[]);
+        }];
+    });
+}
+
+@end

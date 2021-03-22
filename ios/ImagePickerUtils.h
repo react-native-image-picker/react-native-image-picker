@@ -1,10 +1,14 @@
 #import "ImagePickerManager.h"
 
+@class PHPickerConfiguration;
+
 @interface ImagePickerUtils : NSObject
 
 + (BOOL)isSimulator;
 
 + (void)setupPickerFromOptions:(UIImagePickerController *)picker options:(NSDictionary *)options target:(RNImagePickerTarget)target;
+
++ (PHPickerConfiguration *)makeConfigurationFromOptions:(NSDictionary *)options API_AVAILABLE(ios(14));
 
 + (NSString*)getFileType:(NSData*)imageData;
 

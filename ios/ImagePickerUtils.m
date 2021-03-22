@@ -1,5 +1,6 @@
 #import "ImagePickerUtils.h"
 #import <CoreServices/CoreServices.h>
+#import <PhotosUI/PhotosUI.h>
 
 @implementation ImagePickerUtils
 
@@ -35,14 +36,29 @@
         }
 
         picker.mediaTypes = @[(NSString *)kUTTypeMovie];
-    } else {
+    }
+    else {
         picker.mediaTypes = @[(NSString *)kUTTypeImage];
     }
     
     picker.modalPresentationStyle = UIModalPresentationCurrentContext;
 }
 
-+ (BOOL) isSimulator {
++ (PHPickerConfiguration *)makeConfigurationFromOptions:(NSDictionary *)options API_AVAILABLE(ios(14))
+{
+    PHPickerConfiguration *configuration = [[PHPickerConfiguration alloc] init];
+    if ([options[@"mediaType"] isEqualToString:@"video"]) {
+        configuration.filter = [PHPickerFilter videosFilter];
+    }
+    else {
+        configuration.filter = [PHPickerFilter imagesFilter];
+    }
+
+    return configuration;
+}
+
++ (BOOL) isSimulator
+{
     #if TARGET_OS_SIMULATOR
         return YES;
     #endif
