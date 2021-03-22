@@ -8,7 +8,6 @@
 
 @interface ImagePickerManager ()
 
-@property (nonatomic, strong) UIImagePickerController *picker;
 @property (nonatomic, strong) RCTResponseSenderBlock callback;
 @property (nonatomic, retain) NSDictionary *options;
 
@@ -49,23 +48,23 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     }
     
     self.options = options;
-    self.picker = [[UIImagePickerController alloc] init];
+    UIImagePickerController *picker = [[UIImagePickerController alloc] init];
     
-    [ImagePickerUtils setupPickerFromOptions:self.picker options:self.options target:target];
-    self.picker.delegate = self;
+    [ImagePickerUtils setupPickerFromOptions:picker options:self.options target:target];
+    picker.delegate = self;
     [self checkPermission:^(BOOL granted) {
         if (!granted) {
             self.callback(@[@{@"errorCode": errPermission}]);
             return;
         }
-        [self showPickerViewController];
+        [self showPickerViewController:picker];
     }];
 }
 
-- (void) showPickerViewController {
+- (void) showPickerViewController:(UIViewController *)picker {
     dispatch_async(dispatch_get_main_queue(), ^{
         UIViewController *root = RCTPresentedViewController();
-        [root presentViewController:self.picker animated:YES completion:nil];
+        [root presentViewController:picker animated:YES completion:nil];
     });
 }
 
