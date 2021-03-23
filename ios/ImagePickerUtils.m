@@ -80,8 +80,9 @@
         return @"png";
       case firstByteGif:
         return @"gif";
+      default:
+        return @"jpg";
     }
-    return @"jpg";
 }
 
 + (UIImage*)resizeImage:(UIImage*)image maxWidth:(float)maxWidth maxHeight:(float)maxHeight

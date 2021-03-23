@@ -131,12 +131,20 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     NSData *data;
     if ([fileType isEqualToString:@"jpg"]) {
         data = UIImageJPEGRepresentation(image, [self.options[@"quality"] floatValue]);
-    } else if ([fileType isEqualToString:@"png"]) {
+    }
+    else if ([fileType isEqualToString:@"png"]) {
         data = UIImagePNGRepresentation(image);
-    } else {
+    }
+    else {
         data = [NSData dataWithContentsOfURL:imageURL];
     }
 
+    NSDictionary *response = [self makeResponseFromImage:image fileType:fileType data:data];
+    self.callback(@[response]);
+}
+
+- (NSDictionary *)makeResponseFromImage:(UIImage *)image fileType:(NSString *)fileType data:(NSData *)data
+{
     NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
     response[@"type"] = [@"image/" stringByAppendingString:fileType];
 
@@ -161,7 +169,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     response[@"fileName"] = fileName;
     response[@"width"] = @(image.size.width);
     response[@"height"] = @(image.size.height);
-    self.callback(@[response]);
+    return [response copy];
 }
 
 - (void)onVideoObtained:(NSDictionary<NSString *,id> *)info
@@ -295,14 +303,14 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     }
 }
 
-- (NSString*)getImageFileName:(NSString*)fileType
+- (NSString *)getImageFileName:(NSString *)fileType
 {
     NSString *fileName = [[NSUUID UUID] UUIDString];
     fileName = [fileName stringByAppendingString:@"."];
     return [fileName stringByAppendingString:fileType];
 }
 
-+ (UIImage*)getUIImageFromInfo:(NSDictionary*)info
++ (UIImage *)getUIImageFromInfo:(NSDictionary *)info
 {
     UIImage *image = info[UIImagePickerControllerEditedImage];
     if (!image) {
@@ -311,7 +319,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     return image;
 }
 
-+ (NSURL*)getNSURLFromInfo:(NSDictionary*)info {
++ (NSURL *)getNSURLFromInfo:(NSDictionary *)info {
     if (@available(iOS 11.0, *)) {
         return info[UIImagePickerControllerImageURL];
     }
@@ -339,12 +347,11 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         NSItemProvider *provider = result.itemProvider;
 
         if ([provider canLoadObjectOfClass:[UIImage class]]) {
-//            NSString *typeIdentifier = [provider.registeredTypeIdentifiers firstObject];
-
+            NSString *typeIdentifier = [provider.registeredTypeIdentifiers firstObject];
             [provider loadObjectOfClass:[UIImage class]
                       completionHandler:^(__kindof id<NSItemProviderReading> _Nullable object, NSError * _Nullable error) {
                 UIImage *image = object;
-                NSDictionary *response = [self makeResponseFromImage:image];
+                NSDictionary *response = [self makeResponseFromImage:image typeIdentifier:typeIdentifier];
 
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [picker dismissViewControllerAnimated:YES completion:^{
@@ -368,42 +375,35 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     }
 }
 
-- (NSDictionary *)makeResponseFromImage:(UIImage *)image {
-    NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
+- (NSDictionary *)makeResponseFromImage:(UIImage *)image typeIdentifier:(NSString *)typeIdentifier {
+    NSString *fileType = [self fileTypeFromTypeIdentifier:typeIdentifier];
 
-    NSData *data = UIImagePNGRepresentation(image);
-    NSString *fileType = [ImagePickerUtils getFileType:data];
+    NSData *data;
+    if ([fileType isEqualToString:@"jpg"]) {
+        data = UIImageJPEGRepresentation(image, [self.options[@"quality"] floatValue]);
+    }
+    else {
+        data = UIImagePNGRepresentation(image);
+    }
+
     if (![fileType isEqualToString:@"gif"]) {
         image = [ImagePickerUtils resizeImage:image
                                      maxWidth:[self.options[@"maxWidth"] floatValue]
                                     maxHeight:[self.options[@"maxHeight"] floatValue]];
     }
 
-    response[@"type"] = [@"image/" stringByAppendingString:fileType];
+    return [self makeResponseFromImage:image fileType:fileType data:data];
+}
 
-    NSString *fileName = [self getImageFileName:fileType];
-    NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
-    [data writeToFile:path atomically:YES];
-
-    if ([self.options[@"includeBase64"] boolValue]) {
-        response[@"base64"] = [data base64EncodedStringWithOptions:0];
+- (NSString *)fileTypeFromTypeIdentifier:(NSString *)typeIdentifier
+{
+    if ([typeIdentifier containsString:@"jpg"] || [typeIdentifier containsString:@"jpeg"]) {
+        return @"jpg";
     }
-
-    NSURL *fileURL = [NSURL fileURLWithPath:path];
-    response[@"uri"] = [fileURL absoluteString];
-
-    NSNumber *fileSizeValue = nil;
-    NSError *fileSizeError = nil;
-    [fileURL getResourceValue:&fileSizeValue forKey:NSURLFileSizeKey error:&fileSizeError];
-    if (fileSizeValue){
-        response[@"fileSize"] = fileSizeValue;
+    else if ([typeIdentifier containsString:@"gif"]) {
+        return @"gif";
     }
-
-    response[@"fileName"] = fileName;
-    response[@"width"] = @(image.size.width);
-    response[@"height"] = @(image.size.height);
-
-    return [response copy];
+    return @"png";
 }
 
 - (NSDictionary *)makeResponseFromURL:(NSURL *)url {
