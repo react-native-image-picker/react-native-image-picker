@@ -177,8 +177,6 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     NSString *fileName = [info[UIImagePickerControllerMediaURL] lastPathComponent];
     NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
 
-    NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
-    
     NSURL *videoURL = info[UIImagePickerControllerMediaURL];
     NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
 
@@ -186,22 +184,30 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         UISaveVideoAtPathToSavedPhotosAlbum(videoURL.path, nil, nil, nil);
     }
 
-    if (![videoURL.URLByResolvingSymlinksInPath.path isEqualToString:videoDestinationURL.URLByResolvingSymlinksInPath.path]) {
+    [self moveVideoFromInputURL:videoURL toTargetURL:videoDestinationURL];
+    NSDictionary *response = @{@"uri": videoDestinationURL.absoluteString};
+
+    self.callback(@[response]);
+}
+
+- (void)moveVideoFromInputURL:(NSURL *)url toTargetURL:(NSURL *)targetURL
+{
+    if (![url.URLByResolvingSymlinksInPath.path isEqualToString:targetURL.URLByResolvingSymlinksInPath.path]) {
         NSFileManager *fileManager = [NSFileManager defaultManager];
 
         // Delete file if it already exists
-        if ([fileManager fileExistsAtPath:videoDestinationURL.path]) {
-            [fileManager removeItemAtURL:videoDestinationURL error:nil];
+        if ([fileManager fileExistsAtPath:targetURL.path]) {
+            [fileManager removeItemAtURL:targetURL error:nil];
         }
 
-        if (videoURL) { // Protect against reported crash
+        if (url) { // Protect against reported crash
           NSError *error = nil;
 
           // If we have write access to the source file, move it. Otherwise use copy.
-          if ([fileManager isWritableFileAtPath:[videoURL path]]) {
-            [fileManager moveItemAtURL:videoURL toURL:videoDestinationURL error:&error];
+          if ([fileManager isWritableFileAtPath:[url path]]) {
+            [fileManager moveItemAtURL:url toURL:targetURL error:&error];
           } else {
-            [fileManager copyItemAtURL:videoURL toURL:videoDestinationURL error:&error];
+            [fileManager copyItemAtURL:url toURL:targetURL error:&error];
           }
 
           if (error) {
@@ -210,9 +216,6 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
           }
         }
     }
-
-    response[@"uri"] = videoDestinationURL.absoluteString;
-    self.callback(@[response]);
 }
 
 #pragma mark - Helpers
@@ -412,14 +415,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:url.lastPathComponent];
     NSURL *targetURL = [NSURL fileURLWithPath:path];
 
-    NSURL *videoURL = url;
-
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    if ([fileManager fileExistsAtPath:targetURL.path]) {
-        [fileManager removeItemAtURL:targetURL error:nil];
-    }
-
-    [fileManager copyItemAtURL:videoURL toURL:targetURL error:nil];
+    [self moveVideoFromInputURL:url toTargetURL:targetURL];
 
     response[@"uri"] = targetURL.absoluteString;
 
