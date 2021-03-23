@@ -114,22 +114,21 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 - (void)onImageObtained:(NSDictionary<NSString *,id> *)info
 {
     NSURL *imageURL = [ImagePickerManager getNSURLFromInfo:info];
-    NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
     UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
-    NSData *data;
 
     if ((target == camera) && [self.options[@"saveToPhotos"] boolValue]) {
         UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
     }
 
     NSString *fileType = [ImagePickerUtils getFileType:[NSData dataWithContentsOfURL:imageURL]];
-    
+
     if (![fileType isEqualToString:@"gif"]) {
         image = [ImagePickerUtils resizeImage:image
                                      maxWidth:[self.options[@"maxWidth"] floatValue]
                                     maxHeight:[self.options[@"maxHeight"] floatValue]];
     }
-    
+
+    NSData *data;
     if ([fileType isEqualToString:@"jpg"]) {
         data = UIImageJPEGRepresentation(image, [self.options[@"quality"] floatValue]);
     } else if ([fileType isEqualToString:@"png"]) {
@@ -138,6 +137,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         data = [NSData dataWithContentsOfURL:imageURL];
     }
 
+    NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
     response[@"type"] = [@"image/" stringByAppendingString:fileType];
 
     NSString *fileName = [self getImageFileName:fileType];
@@ -295,7 +295,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     }
 }
 
-- (NSString*) getImageFileName:(NSString*)fileType
+- (NSString*)getImageFileName:(NSString*)fileType
 {
     NSString *fileName = [[NSUUID UUID] UUIDString];
     fileName = [fileName stringByAppendingString:@"."];
@@ -339,6 +339,8 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         NSItemProvider *provider = result.itemProvider;
 
         if ([provider canLoadObjectOfClass:[UIImage class]]) {
+//            NSString *typeIdentifier = [provider.registeredTypeIdentifiers firstObject];
+
             [provider loadObjectOfClass:[UIImage class]
                       completionHandler:^(__kindof id<NSItemProviderReading> _Nullable object, NSError * _Nullable error) {
                 UIImage *image = object;
