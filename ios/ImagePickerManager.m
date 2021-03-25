@@ -346,6 +346,9 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         return;
     }
 
+    // Immediately dismiss the controller to prevent calling the completion handler twice
+    [picker dismissViewControllerAnimated:YES completion:nil];
+
     for (PHPickerResult *result in results) {
         NSItemProvider *provider = result.itemProvider;
 
@@ -357,9 +360,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
                 NSDictionary *response = [self makeResponseFromImage:image typeIdentifier:typeIdentifier];
 
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [picker dismissViewControllerAnimated:YES completion:^{
-                        self.callback(@[response]);
-                    }];
+                    self.callback(@[response]);
                 });
             }];
         }
@@ -369,9 +370,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
                 NSDictionary *response = [self makeResponseFromURL:url];
 
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [picker dismissViewControllerAnimated:YES completion:^{
-                        self.callback(@[response]);
-                    }];
+                    self.callback(@[response]);
                 });
             }];
         }
