@@ -110,6 +110,23 @@ The `callback` will be called with a response object, refer to [The Response Obj
 
 Image/video captured via camera will be stored in temporary folder so will be deleted any time, so don't expect it to persist. Use `saveToPhotos: true` (default is false) to save the file in the public photos. `saveToPhotos` requires WRITE_EXTERNAL_STORAGE permission on Android 28 and below (You have to obtain the permission, the library does not).
 
+## Android 11 compatibility
+Due to the new restrictions on package visibility introduced in Android 11, when you're targeting the API level 30 or higher, you will get an error.
+
+Adding the following snippet in your `AndroidManifest.xml` fixes that problem.
+```xml
+<queries>
+    <intent>
+        <action android:name="android.media.action.VIDEO_CAPTURE" />
+    </intent>
+    <intent>
+        <action android:name="android.media.action.IMAGE_CAPTURE" />
+    </intent>
+</queries>
+```
+More information here:   
+https://medium.com/androiddevelopers/package-visibility-in-android-11-cc857f221cd9
+
 ## ErrorCode
 
 | Code               | Description                                       |
