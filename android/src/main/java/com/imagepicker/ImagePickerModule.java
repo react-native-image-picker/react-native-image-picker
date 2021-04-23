@@ -1,6 +1,7 @@
 package com.imagepicker;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -101,12 +102,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraCaptureURI);
         cameraIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
-        if (cameraIntent.resolveActivity(reactContext.getPackageManager()) == null) {
-            callback.invoke(getErrorMap(errOthers, "Activity error"));
-            return;
+        try {
+            currentActivity.startActivityForResult(cameraIntent, requestCode);
+        } catch (ActivityNotFoundException e) {
+            callback.invoke(getErrorMap(errOthers, e.getMessage()));
+            this.callback = null;
         }
-
-        currentActivity.startActivityForResult(cameraIntent, requestCode);
     }
 
     @ReactMethod
@@ -131,13 +132,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             libraryIntent = new Intent(Intent.ACTION_PICK);
             libraryIntent.setType("image/*");
         }
-
-        if (libraryIntent.resolveActivity(reactContext.getPackageManager()) == null) {
-            callback.invoke(getErrorMap(errOthers, "Activity error"));
-            return;
+        try {
+            currentActivity.startActivityForResult(Intent.createChooser(libraryIntent, null), requestCode);
+        } catch (ActivityNotFoundException e) {
+            callback.invoke(getErrorMap(errOthers, e.getMessage()));
+            this.callback = null;
         }
-
-        currentActivity.startActivityForResult(Intent.createChooser(libraryIntent, null), requestCode);
     }
 
     void onImageObtained(Uri uri) {
@@ -152,7 +152,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     @Override
     public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
 
-        if (!isValidRequestCode(requestCode)) {
+        // onActivityResult is called even when ActivityNotFoundException occurs
+        if (!isValidRequestCode(requestCode) || (this.callback == null)) {
             return;
         }
 
