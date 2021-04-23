@@ -105,6 +105,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | fileSize     | OK  | OK      | The file size (photos only)                                                                                     |
 | type         | OK  | OK      | The file type (photos only)                                                                                     |
 | fileName     | OK  | OK      | The file name                                                                                                   |
+| duration     | OK  | OK      | The selected video duration in seconds                                                                          |
 
 ## Note on file storage
 
