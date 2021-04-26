@@ -47,6 +47,8 @@
 + (PHPickerConfiguration *)makeConfigurationFromOptions:(NSDictionary *)options API_AVAILABLE(ios(14))
 {
     PHPickerConfiguration *configuration = [[PHPickerConfiguration alloc] init];
+    configuration.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCurrent;
+
     if ([options[@"mediaType"] isEqualToString:@"video"]) {
         configuration.filter = [PHPickerFilter videosFilter];
     }
