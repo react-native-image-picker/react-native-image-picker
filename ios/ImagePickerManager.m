@@ -337,17 +337,15 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
 - (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14))
 {
+    // Immediately dismiss the controller to prevent calling the completion handler twice
+    [picker dismissViewControllerAnimated:YES completion:nil];
+
     if (results.count == 0) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [picker dismissViewControllerAnimated:YES completion:^{
-                self.callback(@[@{@"didCancel": @YES}]);
-            }];
+            self.callback(@[@{@"didCancel": @YES}]);
         });
         return;
     }
-
-    // Immediately dismiss the controller to prevent calling the completion handler twice
-    [picker dismissViewControllerAnimated:YES completion:nil];
 
     for (PHPickerResult *result in results) {
         NSItemProvider *provider = result.itemProvider;
