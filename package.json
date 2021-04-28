@@ -20,7 +20,7 @@
       "email": "ivarjar22@yahoo.com"
     }
   ],
-  "homepage": "https://github.com/react-native-image-picker/react-native-image-picker/tree/vnext#readme",
+  "homepage": "https://github.com/react-native-image-picker/react-native-image-picker",
   "license": "MIT",
   "scripts": {
     "start": "react-native start",
