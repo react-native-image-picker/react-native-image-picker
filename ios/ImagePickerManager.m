@@ -224,6 +224,9 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     }
     NSDictionary *response = @{@"uri": videoDestinationURL.absoluteString};
 
+    AVAsset *asset = [AVAsset assetWithURL:videoDestinationURL];
+    self.response[@"duration"] = @(roundf(CMTimeGetSeconds(asset.duration)));
+    self.response[@"uri"] = videoDestinationURL.absoluteString;
     self.callback(@[response]);
 }
 

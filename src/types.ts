@@ -12,7 +12,7 @@ export interface ImageLibraryOptions {
 export interface CameraOptions extends ImageLibraryOptions {
   durationLimit?: number;
   saveToPhotos?: boolean;
-  cameraType?: string;
+  cameraType?: CameraType;
 }
 
 export interface ImagePickerResponse {
@@ -26,6 +26,7 @@ export interface ImagePickerResponse {
   fileSize?: number;
   type?: string; //TODO
   fileName?: string;
+  duration?: number;
 }
 
 export type PhotoQuality =
@@ -40,7 +41,8 @@ export type PhotoQuality =
   | 0.8
   | 0.9
   | 1;
+export type CameraType = 'back' | 'front';
 export type MediaType = 'photo' | 'video';
 export type AndroidVideoOptions = 'low' | 'high';
 export type iOSVideoOptions = 'low' | 'medium' | 'high';
-export type ErrorCode = 'camera_unavailable' | 'permission' | 'other';
+export type ErrorCode = 'camera_unavailable' | 'permission' | 'others';
