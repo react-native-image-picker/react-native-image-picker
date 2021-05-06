@@ -13,6 +13,7 @@ public class Options {
     Boolean saveToPhotos;
     int durationLimit;
     Boolean useFrontCamera = false;
+    String copyTo;
 
 
     Options(ReadableMap options) {
@@ -35,5 +36,6 @@ public class Options {
         maxWidth = options.getInt("maxWidth");
         saveToPhotos = options.getBoolean("saveToPhotos");
         durationLimit = options.getInt("durationLimit");
+        copyTo = options.getString("copyTo");
     }
 }

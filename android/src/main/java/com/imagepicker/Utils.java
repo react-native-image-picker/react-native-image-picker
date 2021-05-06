@@ -341,6 +341,7 @@ public class Utils {
 
         WritableMap map = Arguments.createMap();
         map.putString("uri", uri.toString());
+        map.putString("fileCopyUri", uri.toString());
         map.putDouble("fileSize", getFileSize(uri, context));
         map.putString("fileName", fileName);
         map.putString("type", getMimeTypeFromFileUri(uri));
@@ -357,6 +358,7 @@ public class Utils {
         String fileName = uri.getLastPathSegment();
         WritableMap map = Arguments.createMap();
         map.putString("uri", uri.toString());
+        map.putString("fileCopyUri", uri.toString());
         map.putDouble("fileSize", getFileSize(uri, context));
         map.putInt("duration", getDuration(uri, context));
         map.putString("fileName", fileName);
