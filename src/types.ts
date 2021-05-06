@@ -42,7 +42,7 @@ export type PhotoQuality =
   | 0.9
   | 1;
 export type CameraType = 'back' | 'front';
-export type MediaType = 'photo' | 'video';
+export type MediaType = 'photo' | 'video' | 'mixed';
 export type AndroidVideoOptions = 'low' | 'high';
 export type iOSVideoOptions = 'low' | 'medium' | 'high';
 export type ErrorCode = 'camera_unavailable' | 'permission' | 'others';

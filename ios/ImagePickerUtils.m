@@ -14,46 +14,49 @@
         } else {
             picker.cameraDevice = UIImagePickerControllerCameraDeviceRear;
         }
-    }
-    else {
+
+        if ([[options objectForKey:@"mediaType"] isEqualToString:@"video"]) {
+
+            if ([[options objectForKey:@"videoQuality"] isEqualToString:@"high"]) {
+                picker.videoQuality = UIImagePickerControllerQualityTypeHigh;
+            }
+            else if ([[options objectForKey:@"videoQuality"] isEqualToString:@"low"]) {
+                picker.videoQuality = UIImagePickerControllerQualityTypeLow;
+            }
+            else {
+                picker.videoQuality = UIImagePickerControllerQualityTypeMedium;
+            }
+
+            if (options[@"durationLimit"] > 0) {
+                picker.videoMaximumDuration = [options[@"durationLimit"] doubleValue];
+            }
+        }
+    } else {
         picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
     }
 
     if ([options[@"mediaType"] isEqualToString:@"video"]) {
-
-        if ([options[@"videoQuality"] isEqualToString:@"high"]) {
-            picker.videoQuality = UIImagePickerControllerQualityTypeHigh;
-        }
-        else if ([options[@"videoQuality"] isEqualToString:@"low"]) {
-            picker.videoQuality = UIImagePickerControllerQualityTypeLow;
-        }
-        else {
-            picker.videoQuality = UIImagePickerControllerQualityTypeMedium;
-        }
-        
-        if (options[@"durationLimit"] > 0) {
-            picker.videoMaximumDuration = [options[@"durationLimit"] doubleValue];
-        }
-
         picker.mediaTypes = @[(NSString *)kUTTypeMovie];
-    }
-    else {
+    } else if ([options[@"mediaType"] isEqualToString:@"photo"]) {
         picker.mediaTypes = @[(NSString *)kUTTypeImage];
+    } else if ((target == library) && ([options[@"mediaType"] isEqualToString:@"mixed"])) {
+        picker.mediaTypes = @[(NSString *)kUTTypeImage, (NSString *)kUTTypeMovie];
     }
-    
+
     picker.modalPresentationStyle = UIModalPresentationCurrentContext;
 }
 
-+ (PHPickerConfiguration *)makeConfigurationFromOptions:(NSDictionary *)options API_AVAILABLE(ios(14))
++ (PHPickerConfiguration *)makeConfigurationFromOptions:(NSDictionary *)options target:(RNImagePickerTarget)target API_AVAILABLE(ios(14))
 {
     PHPickerConfiguration *configuration = [[PHPickerConfiguration alloc] init];
     configuration.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCurrent;
 
     if ([options[@"mediaType"] isEqualToString:@"video"]) {
         configuration.filter = [PHPickerFilter videosFilter];
-    }
-    else {
+    } else if ([options[@"mediaType"] isEqualToString:@"photo"]) {
         configuration.filter = [PHPickerFilter imagesFilter];
+    } else if ((target == library) && ([options[@"mediaType"] isEqualToString:@"mixed"])) {
+        configuration.filter = [PHPickerFilter anyFilterMatchingSubfilters: @[PHPickerFilter.imagesFilter, PHPickerFilter.videosFilter]];
     }
 
     return configuration;

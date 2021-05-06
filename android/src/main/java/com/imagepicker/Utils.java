@@ -46,6 +46,9 @@ public class Utils {
     public static String errPermission = "permission";
     public static String errOthers = "others";
 
+    public static String mediaTypePhoto = "photo";
+    public static String mediaTypeVideo = "video";
+
     public static String cameraPermissionDescription = "This library does not require Manifest.permission.CAMERA, if you add this permission in manifest then you have to obtain the same.";
 
     public static File createFile(Context reactContext, String fileType) {
@@ -303,9 +306,8 @@ public class Utils {
     static boolean isValidRequestCode(int requestCode) {
         switch (requestCode) {
             case REQUEST_LAUNCH_IMAGE_CAPTURE:
-            case REQUEST_LAUNCH_IMAGE_LIBRARY:
             case REQUEST_LAUNCH_VIDEO_CAPTURE:
-            case REQUEST_LAUNCH_VIDEO_LIBRARY: return true;
+            case REQUEST_LAUNCH_LIBRARY: return true;
             default: return false;
         }
     }
@@ -333,6 +335,16 @@ public class Utils {
             e.printStackTrace();
             return true;
         }
+    }
+
+    static boolean isImageType(Uri uri, Context context) {
+        ContentResolver contentResolver = context.getContentResolver();
+        return contentResolver.getType(uri).contains("image/");
+    }
+
+    static boolean isVideoType(Uri uri, Context context) {
+        ContentResolver contentResolver = context.getContentResolver();
+        return contentResolver.getType(uri).contains("video/");
     }
 
     static ReadableMap getResponseMap(Uri uri, Options options, Context context) {

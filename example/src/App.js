@@ -70,6 +70,22 @@ export default function App() {
           }
         />
 
+        <Button
+          title="Select image or video (mixed)"
+          onPress={() =>
+            ImagePicker.launchImageLibrary(
+              {
+                mediaType: 'mixed',
+                maxHeight: 200,
+                maxWidth: 200,
+              },
+              (response) => {
+                setResponse(response);
+              },
+            )
+          }
+        />
+
         <View style={styles.response}>
           <Text>Res: {JSON.stringify(response)}</Text>
         </View>
