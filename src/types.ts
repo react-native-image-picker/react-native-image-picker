@@ -7,6 +7,7 @@ export interface ImageLibraryOptions {
   quality?: PhotoQuality;
   videoQuality?: AndroidVideoOptions | iOSVideoOptions;
   includeBase64?: boolean;
+  copyTo?: 'cachesDirectory' | 'documentDirectory';
 }
 
 export interface CameraOptions extends ImageLibraryOptions {
@@ -21,6 +22,8 @@ export interface ImagePickerResponse {
   errorMessage?: string;
   base64?: string;
   uri?: string;
+  fileCopyUri?: string;
+  copyError?: string;
   width?: number;
   height?: number;
   fileSize?: number;
