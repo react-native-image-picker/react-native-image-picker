@@ -198,6 +198,16 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     AVAsset *asset = [AVAsset assetWithURL:videoDestinationURL];
     self.response[@"duration"] = @(roundf(CMTimeGetSeconds(asset.duration)));
     self.response[@"uri"] = videoDestinationURL.absoluteString;
+    
+    NSError *copyError;
+    NSString *copyDestination = self.options[@"copyTo"] ? self.options[@"copyTo"] : nil;
+    NSURL* maybeFileCopyPath = copyDestination ? [ImagePickerManager copyToUniqueDestinationFrom:videoDestinationURL usingDestinationPreset:copyDestination error:copyError] : videoDestinationURL;
+    self.response[@"fileCopyUri"] =  maybeFileCopyPath.absoluteString;
+            
+    if (copyError) {
+        self.response[@"copyError"] = copyError.description;
+    }
+    
     self.callback(@[self.response]);
 }
 
