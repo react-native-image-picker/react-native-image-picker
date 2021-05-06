@@ -36,6 +36,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.UUID;
+import java.io.FileOutputStream;
 
 import static com.imagepicker.ImagePickerModule.*;
 
@@ -314,13 +315,13 @@ public class Utils {
     // https://issuetracker.google.com/issues/37063818
     public static boolean isCameraPermissionFulfilled(Context context, Activity activity) {
         try {
-             String[] declaredPermissions = context.getPackageManager()
-                     .getPackageInfo(context.getPackageName(), PackageManager.GET_PERMISSIONS)
-                     .requestedPermissions;
+            String[] declaredPermissions = context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), PackageManager.GET_PERMISSIONS)
+                    .requestedPermissions;
 
-             if (declaredPermissions == null) {
-                 return true;
-             }
+            if (declaredPermissions == null) {
+                return true;
+            }
 
             if (Arrays.asList(declaredPermissions).contains(Manifest.permission.CAMERA)
                     && ActivityCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
@@ -335,13 +336,43 @@ public class Utils {
         }
     }
 
+    public static String copyFile(Context context, Uri uri, File destFile) throws IOException {
+        InputStream in = null;
+        FileOutputStream out = null;
+        try {
+            in = context.getContentResolver().openInputStream(uri);
+            if (in != null) {
+                out = new FileOutputStream(destFile);
+                byte[] buffer = new byte[1024];
+                int len;
+                while ((len = in.read(buffer)) > 0) {
+                    out.write(buffer, 0, len);
+                }
+                out.close();
+                in.close();
+                return destFile.getAbsolutePath();
+            } else {
+                throw new NullPointerException("Invalid input stream");
+            }
+        } catch (Exception e) {
+            try {
+                if (in != null) {
+                    in.close();
+                }
+                if (out != null) {
+                    out.close();
+                }
+            } catch (IOException ignored) {}
+            throw e;
+        }
+    }
+
     static ReadableMap getResponseMap(Uri uri, Options options, Context context) {
         String fileName = uri.getLastPathSegment();
         int[] dimensions = getImageDimensions(uri, context);
 
         WritableMap map = Arguments.createMap();
         map.putString("uri", uri.toString());
-        map.putString("fileCopyUri", uri.toString());
         map.putDouble("fileSize", getFileSize(uri, context));
         map.putString("fileName", fileName);
         map.putString("type", getMimeTypeFromFileUri(uri));
@@ -351,17 +382,56 @@ public class Utils {
         if (options.includeBase64) {
             map.putString("base64", getBase64String(uri, context));
         }
+
+        if (options.copyTo != null && options.copyTo.equals("documentDirectory")) {
+            File dir = context.getFilesDir();
+            dir = new File(dir, UUID.randomUUID().toString());
+            dir.mkdir();
+            if (fileName == null) {
+                fileName = String.valueOf(System.currentTimeMillis());
+            }
+            try {
+                File destFile = new File(dir, fileName);
+                String path = copyFile(context, uri, destFile);
+                map.putString("fileCopyUri", path);
+            } catch (IOException e) {
+                e.printStackTrace();
+                map.putString("fileCopyUri", uri.toString());
+                map.putString("copyError", e.getMessage());
+            }
+        } else {
+            map.putString("fileCopyUri", uri.toString());
+        }
         return map;
     }
 
-    static ReadableMap getVideoResponseMap(Uri uri, Context context) {
+    static ReadableMap getVideoResponseMap(Uri uri, Options options, Context context) {
         String fileName = uri.getLastPathSegment();
         WritableMap map = Arguments.createMap();
         map.putString("uri", uri.toString());
-        map.putString("fileCopyUri", uri.toString());
         map.putDouble("fileSize", getFileSize(uri, context));
         map.putInt("duration", getDuration(uri, context));
         map.putString("fileName", fileName);
+
+        if (options.copyTo != null && options.copyTo.equals("documentDirectory")) {
+            File dir = context.getFilesDir();
+            dir = new File(dir, UUID.randomUUID().toString());
+            dir.mkdir();
+            if (fileName == null) {
+                fileName = String.valueOf(System.currentTimeMillis());
+            }
+            try {
+                File destFile = new File(dir, fileName);
+                String path = copyFile(context, uri, destFile);
+                map.putString("fileCopyUri", path);
+            } catch (IOException e) {
+                e.printStackTrace();
+                map.putString("fileCopyUri", uri.toString());
+                map.putString("copyError", e.getMessage());
+            }
+        } else {
+            map.putString("fileCopyUri", uri.toString());
+        }
         return map;
     }
 

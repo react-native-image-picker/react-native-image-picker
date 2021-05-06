@@ -146,7 +146,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     }
 
     void onVideoObtained(Uri uri) {
-        callback.invoke(getVideoResponseMap(uri, reactContext));
+        callback.invoke(getVideoResponseMap(uri, options, reactContext));
     }
 
     @Override
