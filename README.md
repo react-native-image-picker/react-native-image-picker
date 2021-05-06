@@ -90,6 +90,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | cameraType    | OK  | OK      | 'back' or 'front'. May not be supported in few android devices                                    |
 | includeBase64 | OK  | OK      | If true, creates base64 string of the image (Avoid using on large image files due to performance) |
 | saveToPhotos  | OK  | OK      | (Boolean) Only for launchCamera, saves the image/video file captured to public photo              |
+| copyTo  | OK  | OK      | 'cachesDirectory' or 'documentDirectory'. Also saves the image/video file captured to cache/document directory              |
 
 ## The Response Object
 
@@ -106,6 +107,8 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | type         | OK  | OK      | The file type (photos only)                                                                                     |
 | fileName     | OK  | OK      | The file name                                                                                                   |
 | duration     | OK  | OK      | The selected video duration in seconds                                                                          |
+| fileCopyUri     | OK  | OK      | The uri of the copied file. If 'copyTo' is not specified, it's the same as 'uri'                                                                           |
+| copyError     | OK  | OK      | Error description if file copy failed                                                                          |
 
 ## Note on file storage
 
