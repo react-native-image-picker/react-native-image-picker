@@ -1,9 +1,11 @@
 #import "ImagePickerUtils.h"
 #import <CoreServices/CoreServices.h>
+#import <PhotosUI/PhotosUI.h>
 
 @implementation ImagePickerUtils
 
-+ (void) setupPickerFromOptions:(UIImagePickerController *)picker options:(NSDictionary *)options target:(RNImagePickerTarget)target {
++ (void) setupPickerFromOptions:(UIImagePickerController *)picker options:(NSDictionary *)options target:(RNImagePickerTarget)target
+{
     if (target == camera) {
         picker.sourceType = UIImagePickerControllerSourceTypeCamera;
 
@@ -17,12 +19,12 @@
         picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
     }
 
-    if ([[options objectForKey:@"mediaType"] isEqualToString:@"video"]) {
+    if ([options[@"mediaType"] isEqualToString:@"video"]) {
 
-        if ([[options objectForKey:@"videoQuality"] isEqualToString:@"high"]) {
+        if ([options[@"videoQuality"] isEqualToString:@"high"]) {
             picker.videoQuality = UIImagePickerControllerQualityTypeHigh;
         }
-        else if ([[options objectForKey:@"videoQuality"] isEqualToString:@"low"]) {
+        else if ([options[@"videoQuality"] isEqualToString:@"low"]) {
             picker.videoQuality = UIImagePickerControllerQualityTypeLow;
         }
         else {
@@ -34,21 +36,39 @@
         }
 
         picker.mediaTypes = @[(NSString *)kUTTypeMovie];
-    } else {
+    }
+    else {
         picker.mediaTypes = @[(NSString *)kUTTypeImage];
     }
     
     picker.modalPresentationStyle = UIModalPresentationCurrentContext;
 }
 
-+ (BOOL) isSimulator {
++ (PHPickerConfiguration *)makeConfigurationFromOptions:(NSDictionary *)options API_AVAILABLE(ios(14))
+{
+    PHPickerConfiguration *configuration = [[PHPickerConfiguration alloc] init];
+    configuration.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCurrent;
+
+    if ([options[@"mediaType"] isEqualToString:@"video"]) {
+        configuration.filter = [PHPickerFilter videosFilter];
+    }
+    else {
+        configuration.filter = [PHPickerFilter imagesFilter];
+    }
+
+    return configuration;
+}
+
++ (BOOL) isSimulator
+{
     #if TARGET_OS_SIMULATOR
         return YES;
     #endif
     return NO;
 }
 
-+ (NSString*) getFileType:(NSData *)imageData {
++ (NSString*) getFileType:(NSData *)imageData
+{
     const uint8_t firstByteJpg = 0xFF;
     const uint8_t firstBytePng = 0x89;
     const uint8_t firstByteGif = 0x47;
@@ -62,8 +82,9 @@
         return @"png";
       case firstByteGif:
         return @"gif";
+      default:
+        return @"jpg";
     }
-    return @"jpg";
 }
 
 + (UIImage*)resizeImage:(UIImage*)image maxWidth:(float)maxWidth maxHeight:(float)maxHeight
