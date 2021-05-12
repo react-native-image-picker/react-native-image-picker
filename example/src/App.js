@@ -40,6 +40,7 @@ export default function App() {
           onPress={() =>
             ImagePicker.launchImageLibrary(
               {
+                allowMultiple: true,
                 mediaType: 'photo',
                 includeBase64: false,
                 maxHeight: 200,
@@ -64,7 +65,7 @@ export default function App() {
         <Button
           title="Select video"
           onPress={() =>
-            ImagePicker.launchImageLibrary({mediaType: 'video'}, (response) => {
+            ImagePicker.launchImageLibrary({allowMultiple: true, mediaType: 'video'}, (response) => {
               setResponse(response);
             })
           }
@@ -89,15 +90,14 @@ export default function App() {
         <View style={styles.response}>
           <Text>Res: {JSON.stringify(response)}</Text>
         </View>
-
-        {response && (
-          <View style={styles.image}>
+        {response && Array.isArray(response.assets) && response.assets.map(asset => (
+          <View key={asset.uri} style={styles.image}>
             <Image
               style={{width: 200, height: 200}}
-              source={{uri: response.uri}}
+              source={{uri: asset.uri}}
             />
           </View>
-        )}
+        ))}
       </ScrollView>
     </SafeAreaView>
   );
