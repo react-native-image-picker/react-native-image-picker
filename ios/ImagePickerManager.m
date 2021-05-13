@@ -14,6 +14,9 @@
 
 @end
 
+@interface ImagePickerManager (UIImagePickerControllerDelegate) <UINavigationControllerDelegate, UIImagePickerControllerDelegate>
+@end
+
 @implementation ImagePickerManager
 
 NSString *errCameraUnavailable = @"camera_unavailable";
@@ -79,32 +82,6 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     dispatch_async(dispatch_get_main_queue(), ^{
         UIViewController *root = RCTPresentedViewController();
         [root presentViewController:picker animated:YES completion:nil];
-    });
-}
-
-- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info
-{
-    dispatch_block_t dismissCompletionBlock = ^{
-        if ([info[UIImagePickerControllerMediaType] isEqualToString:(NSString *) kUTTypeImage]) {
-            [self onImageObtained:[ImagePickerManager getUIImageFromInfo:info]
-                             data:[NSData dataWithContentsOfURL:[ImagePickerManager getNSURLFromInfo:info]]];
-        }
-        else {
-            [self onVideoObtained:info[UIImagePickerControllerMediaURL]];
-        }
-    };
-
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [picker dismissViewControllerAnimated:YES completion:dismissCompletionBlock];
-    });
-}
-
-- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
-{
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [picker dismissViewControllerAnimated:YES completion:^{
-            self.callback(@[@{@"didCancel": @YES}]);
-        }];
     });
 }
 
@@ -342,6 +319,36 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     else {
         return info[UIImagePickerControllerReferenceURL];
     }
+}
+
+@end
+
+@implementation ImagePickerManager (UIImagePickerControllerDelegate)
+
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info
+{
+    dispatch_block_t dismissCompletionBlock = ^{
+        if ([info[UIImagePickerControllerMediaType] isEqualToString:(NSString *) kUTTypeImage]) {
+            [self onImageObtained:[ImagePickerManager getUIImageFromInfo:info]
+                             data:[NSData dataWithContentsOfURL:[ImagePickerManager getNSURLFromInfo:info]]];
+        }
+        else {
+            [self onVideoObtained:info[UIImagePickerControllerMediaURL]];
+        }
+    };
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [picker dismissViewControllerAnimated:YES completion:dismissCompletionBlock];
+    });
+}
+
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [picker dismissViewControllerAnimated:YES completion:^{
+            self.callback(@[@{@"didCancel": @YES}]);
+        }];
+    });
 }
 
 @end
