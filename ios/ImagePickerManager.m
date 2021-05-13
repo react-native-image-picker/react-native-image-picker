@@ -108,9 +108,6 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     else if ([fileType isEqualToString:@"png"]) {
         data = UIImagePNGRepresentation(image);
     }
-    else {
-        data = data;
-    }
 
     NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
     response[@"type"] = [@"image/" stringByAppendingString:fileType];
