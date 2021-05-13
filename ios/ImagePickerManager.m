@@ -17,6 +17,9 @@
 @interface ImagePickerManager (UIImagePickerControllerDelegate) <UINavigationControllerDelegate, UIImagePickerControllerDelegate>
 @end
 
+@interface ImagePickerManager (PHPickerViewControllerDelegate) <PHPickerViewControllerDelegate>
+@end
+
 @implementation ImagePickerManager
 
 NSString *errCameraUnavailable = @"camera_unavailable";
@@ -83,34 +86,6 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         UIViewController *root = RCTPresentedViewController();
         [root presentViewController:picker animated:YES completion:nil];
     });
-}
-
-- (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14)){
-    [picker dismissViewControllerAnimated:YES completion:nil];
-
-    if (results.count == 0) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            self.callback(@[@{@"didCancel": @YES}]);
-        });
-        return;
-    }
-
-    for (PHPickerResult *result in results) {
-        NSItemProvider *provider = result.itemProvider;
-
-        if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeImage]) {
-            [provider loadDataRepresentationForTypeIdentifier:(NSString *)kUTTypeImage
-                      completionHandler:^(NSData *data, NSError * _Nullable error) {
-                [self onImageObtained:[UIImage imageWithData:data] data:data];
-            }];
-        }
-        else if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeMovie]) {
-            [provider loadFileRepresentationForTypeIdentifier:(NSString *)kUTTypeMovie
-                                            completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
-                [self onVideoObtained:url];
-            }];
-        }
-    }
 }
 
 - (void)onImageObtained:(UIImage*)image data:(NSData*)data
@@ -349,6 +324,38 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             self.callback(@[@{@"didCancel": @YES}]);
         }];
     });
+}
+
+@end
+
+@implementation ImagePickerManager (PHPickerViewControllerDelegate)
+
+- (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14)){
+    [picker dismissViewControllerAnimated:YES completion:nil];
+
+    if (results.count == 0) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.callback(@[@{@"didCancel": @YES}]);
+        });
+        return;
+    }
+
+    for (PHPickerResult *result in results) {
+        NSItemProvider *provider = result.itemProvider;
+
+        if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeImage]) {
+            [provider loadDataRepresentationForTypeIdentifier:(NSString *)kUTTypeImage
+                      completionHandler:^(NSData *data, NSError * _Nullable error) {
+                [self onImageObtained:[UIImage imageWithData:data] data:data];
+            }];
+        }
+        else if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeMovie]) {
+            [provider loadFileRepresentationForTypeIdentifier:(NSString *)kUTTypeMovie
+                                            completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
+                [self onVideoObtained:url];
+            }];
+        }
+    }
 }
 
 @end
