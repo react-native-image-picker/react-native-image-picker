@@ -60,7 +60,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             return;
         }
     }
-
+    
     UIImagePickerController *picker = [[UIImagePickerController alloc] init];
     [ImagePickerUtils setupPickerFromOptions:picker options:self.options target:target];
     picker.delegate = self;
@@ -85,13 +85,22 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info
 {
     dispatch_block_t dismissCompletionBlock = ^{
+        NSMutableArray<NSDictionary *> *assets = [[NSMutableArray alloc] initWithCapacity:1];
+
         if ([info[UIImagePickerControllerMediaType] isEqualToString:(NSString *) kUTTypeImage]) {
-            [self onImageObtained:[ImagePickerManager getUIImageFromInfo:info]
-                             data:[NSData dataWithContentsOfURL:[ImagePickerManager getNSURLFromInfo:info]]];
+            UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
+            [assets addObject:[self mapImageToAsset:image data:nil]];
+        } else {
+            NSDictionary *asset = [self mapVideoToAsset:info[UIImagePickerControllerMediaURL]];
+            if (asset == nil) return;
+            
+            [assets addObject:asset];
         }
-        else {
-            [self onVideoObtained:info[UIImagePickerControllerMediaURL]];
-        }
+
+        NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
+        [response setObject:assets forKey:@"assets"];
+        
+        self.callback(@[response]);
     };
 
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -117,33 +126,54 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         });
         return;
     }
-
+    
+    dispatch_group_t completionGroup = dispatch_group_create();
+    NSMutableArray<NSDictionary *> *assets = [[NSMutableArray alloc] initWithCapacity:results.count];
+    
     for (PHPickerResult *result in results) {
         NSItemProvider *provider = result.itemProvider;
-
+        dispatch_group_enter(completionGroup);
+        
         if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeImage]) {
-            [provider loadDataRepresentationForTypeIdentifier:(NSString *)kUTTypeImage
-                      completionHandler:^(NSData *data, NSError * _Nullable error) {
-                [self onImageObtained:[UIImage imageWithData:data] data:data];
+            [provider loadDataRepresentationForTypeIdentifier:(NSString *)kUTTypeImage completionHandler:^(NSData * _Nullable data, NSError * _Nullable error) {
+                UIImage *image = [[UIImage alloc] initWithData:data];
+                
+                [assets addObject:[self mapImageToAsset:image data:data]];
+                dispatch_group_leave(completionGroup);
             }];
         }
-        else if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeMovie]) {
-            [provider loadFileRepresentationForTypeIdentifier:(NSString *)kUTTypeMovie
-                                            completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
-                [self onVideoObtained:url];
+        
+        if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeMovie]) {
+            [provider loadFileRepresentationForTypeIdentifier:(NSString *)kUTTypeMovie completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
+                [assets addObject:[self mapVideoToAsset:url]];
+                dispatch_group_leave(completionGroup);
             }];
         }
     }
+    
+    dispatch_group_notify(completionGroup, dispatch_get_main_queue(), ^{
+        // parsing video asset can fail and will call the callback immediately with the error.
+        // bail out here to prevent calling the callback twice
+        for (NSDictionary *asset in assets) {
+            if (nil == asset) return;
+        }
+        
+        NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
+        [response setObject:assets forKey:@"assets"];
+        
+        self.callback(@[response]);
+    });
 }
 
-- (void)onImageObtained:(UIImage*)image data:(NSData*)data
-{
+#pragma mark - Helpers
+
+-(NSMutableDictionary *)mapImageToAsset:(UIImage *)image data:(NSData *)data {
+    NSString *fileType = [ImagePickerUtils getFileType:data];
+    
     if ((target == camera) && [self.options[@"saveToPhotos"] boolValue]) {
         UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
     }
-
-    NSString *fileType = [ImagePickerUtils getFileType:data];
-
+    
     if (![fileType isEqualToString:@"gif"]) {
         image = [ImagePickerUtils resizeImage:image
                                      maxWidth:[self.options[@"maxWidth"] floatValue]
@@ -152,55 +182,50 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
     if ([fileType isEqualToString:@"jpg"]) {
         data = UIImageJPEGRepresentation(image, [self.options[@"quality"] floatValue]);
-    }
-    else if ([fileType isEqualToString:@"png"]) {
+    } else if ([fileType isEqualToString:@"png"]) {
         data = UIImagePNGRepresentation(image);
     }
-    else {
-        data = data;
-    }
-
-    NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
-    response[@"type"] = [@"image/" stringByAppendingString:fileType];
+    
+    NSMutableDictionary *asset = [[NSMutableDictionary alloc] init];
+    asset[@"type"] = [@"image/" stringByAppendingString:fileType];
 
     NSString *fileName = [self getImageFileName:fileType];
     NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
     [data writeToFile:path atomically:YES];
 
     if ([self.options[@"includeBase64"] boolValue]) {
-        response[@"base64"] = [data base64EncodedStringWithOptions:0];
+        asset[@"base64"] = [data base64EncodedStringWithOptions:0];
     }
 
     NSURL *fileURL = [NSURL fileURLWithPath:path];
-    response[@"uri"] = [fileURL absoluteString];
+    asset[@"uri"] = [fileURL absoluteString];
 
     NSNumber *fileSizeValue = nil;
     NSError *fileSizeError = nil;
     [fileURL getResourceValue:&fileSizeValue forKey:NSURLFileSizeKey error:&fileSizeError];
     if (fileSizeValue){
-        response[@"fileSize"] = fileSizeValue;
+        asset[@"fileSize"] = fileSizeValue;
     }
 
-    response[@"fileName"] = fileName;
-    response[@"width"] = @(image.size.width);
-    response[@"height"] = @(image.size.height);
-    self.callback(@[response]);
+    asset[@"fileName"] = fileName;
+    asset[@"width"] = @(image.size.width);
+    asset[@"height"] = @(image.size.height);
+    
+    return asset;
 }
 
-- (void)onVideoObtained:(NSURL *)url
-{
+-(NSMutableDictionary *)mapVideoToAsset:(NSURL *)url {
     NSString *fileName = [url lastPathComponent];
     NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
-
     NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
 
     if ((target == camera) && [self.options[@"saveToPhotos"] boolValue]) {
         UISaveVideoAtPathToSavedPhotosAlbum(url.path, nil, nil, nil);
     }
-
+    
     if (![url.URLByResolvingSymlinksInPath.path isEqualToString:videoDestinationURL.URLByResolvingSymlinksInPath.path]) {
         NSFileManager *fileManager = [NSFileManager defaultManager];
-
+        
         // Delete file if it already exists
         if ([fileManager fileExistsAtPath:videoDestinationURL.path]) {
             [fileManager removeItemAtURL:videoDestinationURL error:nil];
@@ -218,20 +243,17 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
           if (error) {
               self.callback(@[@{@"errorCode": errOthers, @"errorMessage":  error.localizedFailureReason}]);
-              return;
+              return nil;
           }
         }
     }
     
-    NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
-    AVAsset *asset = [AVAsset assetWithURL:videoDestinationURL];
-    response[@"duration"] = @(roundf(CMTimeGetSeconds(asset.duration)));
-    response[@"uri"] = videoDestinationURL.absoluteString;
+    NSMutableDictionary *asset = [[NSMutableDictionary alloc] init];
+    asset[@"duration"] = @(roundf(CMTimeGetSeconds([AVAsset assetWithURL:videoDestinationURL].duration)));
+    asset[@"uri"] = videoDestinationURL.absoluteString;
     
-    self.callback(@[response]);
+    return asset;
 }
-
-#pragma mark - Helpers
 
 - (void)checkCameraPermissions:(void(^)(BOOL granted))callback
 {

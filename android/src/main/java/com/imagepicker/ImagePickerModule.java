@@ -142,6 +142,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             libraryIntent.addCategory(Intent.CATEGORY_OPENABLE);
         }
 
+        if (this.options.allowMultiple) {
+            libraryIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        }
+
         try {
             currentActivity.startActivityForResult(Intent.createChooser(libraryIntent, null), requestCode);
         } catch (ActivityNotFoundException e) {
@@ -151,7 +155,13 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     }
 
     void onAssetsObtained(List<Uri> fileUris) {
-        callback.invoke(getResponseMap(fileUris, options, reactContext));
+        try {
+            callback.invoke(getResponseMap(fileUris, options, reactContext));
+        } catch (RuntimeException exception) {
+            callback.invoke(getErrorMap(errOthers, exception.getMessage()));
+        } finally {
+            callback = null;
+        }
     }
 
     @Override
