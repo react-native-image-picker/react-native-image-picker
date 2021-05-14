@@ -17,8 +17,10 @@
 @interface ImagePickerManager (UIImagePickerControllerDelegate) <UINavigationControllerDelegate, UIImagePickerControllerDelegate>
 @end
 
+#if __has_include(<PhotosUI/PHPicker.h>)
 @interface ImagePickerManager (PHPickerViewControllerDelegate) <PHPickerViewControllerDelegate>
 @end
+#endif
 
 @implementation ImagePickerManager
 
@@ -56,6 +58,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     
     self.options = options;
 
+#if __has_include(<PhotosUI/PHPicker.h>)
     if (@available(iOS 14, *)) {
         if (target == library) {
             PHPickerConfiguration *configuration = [ImagePickerUtils makeConfigurationFromOptions:options];
@@ -66,6 +69,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             return;
         }
     }
+#endif
 
     UIImagePickerController *picker = [[UIImagePickerController alloc] init];
     [ImagePickerUtils setupPickerFromOptions:picker options:self.options target:target];
@@ -325,6 +329,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
 @end
 
+#if __has_include(<PhotosUI/PHPicker.h>)
 @implementation ImagePickerManager (PHPickerViewControllerDelegate)
 
 - (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14)){
@@ -356,3 +361,4 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 }
 
 @end
+#endif

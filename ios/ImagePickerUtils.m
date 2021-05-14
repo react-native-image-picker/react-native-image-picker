@@ -44,8 +44,10 @@
     picker.modalPresentationStyle = UIModalPresentationCurrentContext;
 }
 
+
 + (PHPickerConfiguration *)makeConfigurationFromOptions:(NSDictionary *)options API_AVAILABLE(ios(14))
 {
+#if __has_include(<PhotosUI/PHPicker.h>)
     PHPickerConfiguration *configuration = [[PHPickerConfiguration alloc] init];
     configuration.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCurrent;
 
@@ -55,9 +57,12 @@
     else {
         configuration.filter = [PHPickerFilter imagesFilter];
     }
-
     return configuration;
+#else
+    return nil;
+#endif
 }
+
 
 + (BOOL) isSimulator
 {
