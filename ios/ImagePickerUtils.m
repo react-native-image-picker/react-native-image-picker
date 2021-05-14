@@ -44,7 +44,6 @@
     picker.modalPresentationStyle = UIModalPresentationCurrentContext;
 }
 
-
 + (PHPickerConfiguration *)makeConfigurationFromOptions:(NSDictionary *)options API_AVAILABLE(ios(14))
 {
 #if __has_include(<PhotosUI/PHPicker.h>)
