@@ -23,10 +23,10 @@ import static com.imagepicker.Utils.*;
 public class ImagePickerModule extends ReactContextBaseJavaModule implements ActivityEventListener {
     static final String NAME = "ImagePickerManager";
 
-    static final int REQUEST_LAUNCH_IMAGE_CAPTURE = 13001;
-    static final int REQUEST_LAUNCH_IMAGE_LIBRARY = 13002;
-    static final int REQUEST_LAUNCH_VIDEO_LIBRARY = 13003;
-    static final int REQUEST_LAUNCH_VIDEO_CAPTURE = 13004;
+    public static final int REQUEST_LAUNCH_IMAGE_CAPTURE = 13001;
+    public static final int REQUEST_LAUNCH_IMAGE_LIBRARY = 13002;
+    public static final int REQUEST_LAUNCH_VIDEO_LIBRARY = 13003;
+    public static final int REQUEST_LAUNCH_VIDEO_CAPTURE = 13004;
 
     private Uri fileUri;
 
