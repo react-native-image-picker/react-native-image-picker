@@ -52,7 +52,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
     if (@available(iOS 14, *)) {
         if (target == library) {
-            PHPickerConfiguration *configuration = [ImagePickerUtils makeConfigurationFromOptions:options];
+            PHPickerConfiguration *configuration = [ImagePickerUtils makeConfigurationFromOptions:options target:target];
             PHPickerViewController *picker = [[PHPickerViewController alloc] initWithConfiguration:configuration];
             picker.delegate = self;
 
