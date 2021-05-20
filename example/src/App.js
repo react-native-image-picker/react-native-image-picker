@@ -76,6 +76,7 @@ export default function App() {
           onPress={() =>
             ImagePicker.launchImageLibrary(
               {
+                allowMultiple: true,
                 mediaType: 'mixed',
                 maxHeight: 200,
                 maxWidth: 200,

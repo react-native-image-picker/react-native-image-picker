@@ -404,7 +404,8 @@ public class Utils {
             Uri uri = fileUris.get(i);
 
             if (isImageType(uri, context)) {
-                assets.pushMap(getImageResponseMap(uri, options, context));
+                Uri localUri = getAppSpecificStorageUri(uri, context);
+                assets.pushMap(getImageResponseMap(localUri, options, context));
             } else if (isVideoType(uri, context)) {
                 assets.pushMap(getVideoResponseMap(uri, context));
             } else {
