@@ -22,7 +22,8 @@ import static com.imagepicker.Utils.*;
 @ReactModule(name = ImagePickerModule.NAME)
 public class ImagePickerModule extends ReactContextBaseJavaModule implements ActivityEventListener {
     static final String NAME = "ImagePickerManager";
-    
+
+    // Public to let consuming apps hook into the image picker response
     public static final int REQUEST_LAUNCH_IMAGE_CAPTURE = 13001;
     public static final int REQUEST_LAUNCH_VIDEO_CAPTURE = 13002;
     public static final int REQUEST_LAUNCH_LIBRARY = 13003;
