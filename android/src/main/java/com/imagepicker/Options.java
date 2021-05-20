@@ -4,7 +4,6 @@ import com.facebook.react.bridge.ReadableMap;
 import android.text.TextUtils;
 
 public class Options {
-    Boolean pickVideo = false;
     Boolean includeBase64;
     int videoQuality = 1;
     int quality;
@@ -13,12 +12,11 @@ public class Options {
     Boolean saveToPhotos;
     int durationLimit;
     Boolean useFrontCamera = false;
+    String mediaType;
 
 
     Options(ReadableMap options) {
-        if (options.getString("mediaType").equals("video")) {
-            pickVideo = true;
-        }
+        mediaType = options.getString("mediaType");
         includeBase64 = options.getBoolean("includeBase64");
         
         String videoQualityString = options.getString("videoQuality");
