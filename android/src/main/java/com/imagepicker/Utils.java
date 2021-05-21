@@ -343,11 +343,23 @@ public class Utils {
     }
 
     static boolean isImageType(Uri uri, Context context) {
+        String imageMimeType = "image/";
+
+        if (uri.getScheme().equals("file")) {
+            return getMimeTypeFromFileUri(uri).contains(imageMimeType);
+        }
+
         ContentResolver contentResolver = context.getContentResolver();
-        return contentResolver.getType(uri).contains("image/");
+        return contentResolver.getType(uri).contains(imageMimeType);
     }
 
     static boolean isVideoType(Uri uri, Context context) {
+        String videoMimeType = "video/";
+
+        if (uri.getScheme().equals("file")) {
+            return getMimeTypeFromFileUri(uri).contains(videoMimeType);
+        }
+        
         ContentResolver contentResolver = context.getContentResolver();
         return contentResolver.getType(uri).contains("video/");
     }
