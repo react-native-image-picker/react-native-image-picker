@@ -23,6 +23,7 @@ export default function App() {
           onPress={() =>
             ImagePicker.launchCamera(
               {
+                saveToPhotos: true,
                 mediaType: 'photo',
                 includeBase64: false,
                 maxHeight: 200,
@@ -64,7 +65,7 @@ export default function App() {
         <Button
           title="Select video"
           onPress={() =>
-            ImagePicker.launchImageLibrary({mediaType: 'video'}, (response) => {
+            ImagePicker.launchImageLibrary({mediaType: 'video', saveToPhotos: true}, (response) => {
               setResponse(response);
             })
           }
