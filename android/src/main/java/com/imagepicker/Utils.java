@@ -80,9 +80,11 @@ public class Utils {
 
         if (mediaType.equals("video")) {
             fileDetails.put(MediaStore.Video.Media.DISPLAY_NAME, UUID.randomUUID().toString());
+            fileDetails.put(MediaStore.Video.Media.MIME_TYPE, resolver.getType(uri));
             mediaStoreUri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, fileDetails);
         } else {
             fileDetails.put(MediaStore.Images.Media.DISPLAY_NAME, UUID.randomUUID().toString());
+            fileDetails.put(MediaStore.Images.Media.MIME_TYPE, resolver.getType(uri));
             mediaStoreUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, fileDetails);
         }
 
