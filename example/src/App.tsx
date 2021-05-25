@@ -64,11 +64,18 @@ const styles = StyleSheet.create({
   },
 });
 
-const actions = [
+interface Action {
+  title: string;
+  type: 'capture' | 'library';
+  options: ImagePicker.CameraOptions | ImagePicker.ImageLibraryOptions;
+}
+
+const actions: Action[] = [
   {
     title: 'Take Image',
     type: 'capture',
     options: {
+      saveToPhotos: true,
       mediaType: 'photo',
       includeBase64: false,
     },
@@ -85,6 +92,7 @@ const actions = [
     title: 'Take Video',
     type: 'capture',
     options: {
+      saveToPhotos: true,
       mediaType: 'video',
     },
   },
