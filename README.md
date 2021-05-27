@@ -7,8 +7,8 @@ A React Native module that allows you to select a photo/video from the device li
   <img src="https://img.shields.io/npm/v/react-native-image-picker" />
 </p>
 
-## Make sure you'r reading the doc applicable to your version, for example if your using version 3.8.0 go to tag 3.8.0 and read those docs. This doc is always that of master.
-## Also read version release notes for any breaking changes especially if you'r updating the major version.
+### Make sure you'r reading the doc applicable to your version, for example if your using version 3.8.0 go to tag 3.8.0 and read those docs. This doc is always that of master.
+### Also read version release notes for any breaking changes especially if you'r updating the major version.
 
 
 # Install
@@ -86,7 +86,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | cameraType    | OK  | OK      | 'back' or 'front'. May not be supported in few android devices                                        |
 | includeBase64 | OK  | OK      | If true, creates base64 string of the image (Avoid using on large image files due to performance)     |
 | saveToPhotos  | OK  | OK      | (Boolean) Only for launchCamera, saves the image/video file captured to public photo                  |
-| selectionLimit| OK  | OK      | Default is 1, 0 to allow any number of files. Only iOS version >= 14 support `0`|
+| selectionLimit| OK  | OK      | Default is `1`, use `0` to allow any number of files. Only iOS version >= 14 support `0` and also it supports providing any integer value|
 
 ## The Response Object
 
