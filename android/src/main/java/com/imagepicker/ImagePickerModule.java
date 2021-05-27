@@ -186,7 +186,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
                     saveToPublicDirectory(cameraCaptureURI, reactContext, "photo");
                 }
 
-                onAssetsObtained(new ArrayList<>(Collections.singletonList(fileUri)));
+                onAssetsObtained(Collections.singletonList(fileUri));
                 break;
 
             case REQUEST_LAUNCH_LIBRARY:
@@ -198,7 +198,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
                     saveToPublicDirectory(cameraCaptureURI, reactContext, "video");
                 }
 
-                onAssetsObtained(new ArrayList<>(Collections.singletonList(fileUri)));
+                onAssetsObtained(Collections.singletonList(fileUri));
                 break;
         }
     }
