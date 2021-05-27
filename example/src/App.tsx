@@ -84,6 +84,7 @@ const actions: Action[] = [
     title: 'Select Image',
     type: 'library',
     options: {
+      allowMultiple: true,
       mediaType: 'photo',
       includeBase64: false,
     },
@@ -100,6 +101,7 @@ const actions: Action[] = [
     title: 'Select Video',
     type: 'library',
     options: {
+      allowMultiple: true,
       mediaType: 'video',
     },
   },
@@ -107,6 +109,7 @@ const actions: Action[] = [
     title: `Select Image or Video\n(mixed)`,
     type: 'library',
     options: {
+      allowMultiple: true,
       mediaType: 'mixed',
     },
   },
