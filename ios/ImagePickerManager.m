@@ -89,17 +89,14 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
         if ([info[UIImagePickerControllerMediaType] isEqualToString:(NSString *) kUTTypeImage]) {
             UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
-            [assets addObject:[self mapImageToAsset:image data:nil]];
+            [assets addObject:[self mapImageToAsset:image data:[NSData dataWithContentsOfURL:[ImagePickerManager getNSURLFromInfo:info]]]];
         } else {
             NSDictionary *asset = [self mapVideoToAsset:info[UIImagePickerControllerMediaURL]];
-            if (asset == nil) return;
-            
             [assets addObject:asset];
         }
 
         NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
-        [response setObject:assets forKey:@"assets"];
-        
+        response[@"assets"] = assets;
         self.callback(@[response]);
     };
 

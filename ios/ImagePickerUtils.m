@@ -50,7 +50,7 @@
 {
     PHPickerConfiguration *configuration = [[PHPickerConfiguration alloc] init];
     configuration.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCurrent;
-    configuration.selectionLimit = [options[@"allowMultiple"] boolValue] ? 0 : 1;
+    configuration.selectionLimit = [options[@"selectionLimit"] integerValue];
 
     if ([options[@"mediaType"] isEqualToString:@"video"]) {
         configuration.filter = [PHPickerFilter videosFilter];
