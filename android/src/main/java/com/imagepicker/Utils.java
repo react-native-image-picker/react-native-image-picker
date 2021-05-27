@@ -2,6 +2,7 @@ package com.imagepicker;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ClipData;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -26,6 +27,7 @@ import androidx.exifinterface.media.ExifInterface;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 
 import java.io.ByteArrayOutputStream;
@@ -34,7 +36,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import static com.imagepicker.ImagePickerModule.*;
@@ -340,16 +345,45 @@ public class Utils {
     }
 
     static boolean isImageType(Uri uri, Context context) {
+        String imageMimeType = "image/";
+
+        if (uri.getScheme().equals("file")) {
+            return getMimeTypeFromFileUri(uri).contains(imageMimeType);
+        }
+
         ContentResolver contentResolver = context.getContentResolver();
-        return contentResolver.getType(uri).contains("image/");
+        return contentResolver.getType(uri).contains(imageMimeType);
     }
 
     static boolean isVideoType(Uri uri, Context context) {
+        String videoMimeType = "video/";
+
+        if (uri.getScheme().equals("file")) {
+            return getMimeTypeFromFileUri(uri).contains(videoMimeType);
+        }
+        
         ContentResolver contentResolver = context.getContentResolver();
         return contentResolver.getType(uri).contains("video/");
     }
 
-    static ReadableMap getResponseMap(Uri uri, Options options, Context context) {
+    static List<Uri> collectUrisFromData(Intent data) {
+        // Default Gallery app on older Android versions doesnt support multiple image
+        // picking and thus never uses clip data.
+        if (data.getClipData() == null) {
+            return Collections.singletonList(data.getData());
+        }
+
+        ClipData clipData = data.getClipData();
+        List<Uri> fileUris = new ArrayList<>(clipData.getItemCount());
+
+        for (int i = 0; i < clipData.getItemCount(); ++i) {
+            fileUris.add(clipData.getItemAt(i).getUri());
+        }
+
+        return fileUris;
+    }
+
+    static ReadableMap getImageResponseMap(Uri uri, Options options, Context context) {
         String fileName = uri.getLastPathSegment();
         int[] dimensions = getImageDimensions(uri, context);
 
@@ -375,6 +409,28 @@ public class Utils {
         map.putInt("duration", getDuration(uri, context));
         map.putString("fileName", fileName);
         return map;
+    }
+
+    static ReadableMap getResponseMap(List<Uri> fileUris, Options options, Context context) throws RuntimeException {
+        WritableArray assets = Arguments.createArray();
+
+        for(int i = 0; i < fileUris.size(); ++i) {
+            Uri uri = fileUris.get(i);
+
+            if (isImageType(uri, context)) {
+                Uri localUri = getAppSpecificStorageUri(uri, context);
+                assets.pushMap(getImageResponseMap(localUri, options, context));
+            } else if (isVideoType(uri, context)) {
+                assets.pushMap(getVideoResponseMap(uri, context));
+            } else {
+                throw new RuntimeException("Unsupported file type");
+            }
+        }
+
+        WritableMap response = Arguments.createMap();
+        response.putArray("assets", assets);
+
+        return response;
     }
 
     static ReadableMap getErrorMap(String errCode, String errMsg) {

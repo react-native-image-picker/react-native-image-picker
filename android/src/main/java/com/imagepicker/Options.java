@@ -4,6 +4,7 @@ import com.facebook.react.bridge.ReadableMap;
 import android.text.TextUtils;
 
 public class Options {
+    Boolean allowMultiple;
     Boolean includeBase64;
     int videoQuality = 1;
     int quality;
@@ -17,8 +18,9 @@ public class Options {
 
     Options(ReadableMap options) {
         mediaType = options.getString("mediaType");
+        allowMultiple = options.getBoolean("allowMultiple");
         includeBase64 = options.getBoolean("includeBase64");
-        
+
         String videoQualityString = options.getString("videoQuality");
         if(!TextUtils.isEmpty(videoQualityString) && !videoQualityString.toLowerCase().equals("high")) {
             videoQuality = 0;
