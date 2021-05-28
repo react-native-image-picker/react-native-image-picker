@@ -7,6 +7,6 @@ typedef NS_ENUM(NSInteger, RNImagePickerTarget) {
   library
 };
 
-@interface ImagePickerManager : NSObject <RCTBridgeModule, UINavigationControllerDelegate, UIActionSheetDelegate, UIImagePickerControllerDelegate, PHPickerViewControllerDelegate>
+@interface ImagePickerManager : NSObject <RCTBridgeModule, UINavigationControllerDelegate, UIActionSheetDelegate, UIImagePickerControllerDelegate, PHPickerViewControllerDelegate, UIAdaptivePresentationControllerDelegate>
 
 @end
