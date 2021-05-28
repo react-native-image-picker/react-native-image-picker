@@ -55,6 +55,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             PHPickerConfiguration *configuration = [ImagePickerUtils makeConfigurationFromOptions:options target:target];
             PHPickerViewController *picker = [[PHPickerViewController alloc] initWithConfiguration:configuration];
             picker.delegate = self;
+            picker.presentationController.delegate = self;
 
             [self showPickerViewController:picker];
             return;
@@ -167,6 +168,10 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         
         self.callback(@[response]);
     });
+}
+
+- (void)presentationControllerDidDismiss:(UIPresentationController *)presentationController {
+    self.callback(@[@{@"didCancel": @YES}]);
 }
 
 #pragma mark - Helpers
