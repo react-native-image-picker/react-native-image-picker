@@ -2,7 +2,6 @@ package com.imagepicker;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
-import android.content.ClipData;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -17,8 +16,6 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.module.annotations.ReactModule;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -143,7 +140,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             libraryIntent.addCategory(Intent.CATEGORY_OPENABLE);
         }
 
-        if (this.options.allowMultiple) {
+        if (this.options.selectionLimit != 1) {
             libraryIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         }
 

@@ -367,7 +367,7 @@ public class Utils {
     }
 
     static List<Uri> collectUrisFromData(Intent data) {
-        // Default Gallery app on older Android versions doesnt support multiple image
+        // Default Gallery app on older Android versions doesn't support multiple image
         // picking and thus never uses clip data.
         if (data.getClipData() == null) {
             return Collections.singletonList(data.getData());
@@ -418,8 +418,11 @@ public class Utils {
             Uri uri = fileUris.get(i);
 
             if (isImageType(uri, context)) {
-                Uri localUri = getAppSpecificStorageUri(uri, context);
-                assets.pushMap(getImageResponseMap(localUri, options, context));
+                if (uri.getScheme().contains("content")) {
+                    uri = getAppSpecificStorageUri(uri, context);
+                }
+                uri = resizeImage(uri, context, options);
+                assets.pushMap(getImageResponseMap(uri, options, context));
             } else if (isVideoType(uri, context)) {
                 assets.pushMap(getVideoResponseMap(uri, context));
             } else {
