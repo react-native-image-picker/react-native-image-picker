@@ -403,7 +403,7 @@ public class Utils {
         int[] dimensions = getImageDimensions(uri, context);
 
         WritableMap map = Arguments.createMap();
-        map.putString("uri", resizeImage(uri, context, options).toString());
+        map.putString("uri", uri.toString());
         map.putDouble("fileSize", getFileSize(uri, context));
         map.putString("fileName", fileName);
         map.putString("type", getMimeTypeFromFileUri(uri));
