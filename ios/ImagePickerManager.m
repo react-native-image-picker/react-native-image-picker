@@ -55,6 +55,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             PHPickerConfiguration *configuration = [ImagePickerUtils makeConfigurationFromOptions:options target:target];
             PHPickerViewController *picker = [[PHPickerViewController alloc] initWithConfiguration:configuration];
             picker.delegate = self;
+            picker.presentationController.delegate = self;
 
             [self showPickerViewController:picker];
             return;
@@ -89,17 +90,19 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
         if ([info[UIImagePickerControllerMediaType] isEqualToString:(NSString *) kUTTypeImage]) {
             UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
-            [assets addObject:[self mapImageToAsset:image data:nil]];
+            [assets addObject:[self mapImageToAsset:image data:[NSData dataWithContentsOfURL:[ImagePickerManager getNSURLFromInfo:info]]]];
         } else {
-            NSDictionary *asset = [self mapVideoToAsset:info[UIImagePickerControllerMediaURL]];
-            if (asset == nil) return;
-            
+            NSError *error;
+            NSDictionary *asset = [self mapVideoToAsset:info[UIImagePickerControllerMediaURL] error:&error];
+            if (asset == nil) {
+                self.callback(@[@{@"errorCode": errOthers, @"errorMessage":  error.localizedFailureReason}]);
+                return;
+            }
             [assets addObject:asset];
         }
 
         NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
-        [response setObject:assets forKey:@"assets"];
-        
+        response[@"assets"] = assets;
         self.callback(@[response]);
     };
 
@@ -145,17 +148,19 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         
         if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeMovie]) {
             [provider loadFileRepresentationForTypeIdentifier:(NSString *)kUTTypeMovie completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
-                [assets addObject:[self mapVideoToAsset:url]];
+                [assets addObject:[self mapVideoToAsset:url error:nil]];
                 dispatch_group_leave(completionGroup);
             }];
         }
     }
     
     dispatch_group_notify(completionGroup, dispatch_get_main_queue(), ^{
-        // parsing video asset can fail and will call the callback immediately with the error.
-        // bail out here to prevent calling the callback twice
+        //  mapVideoToAsset can fail and return nil.
         for (NSDictionary *asset in assets) {
-            if (nil == asset) return;
+            if (nil == asset) {
+                self.callback(@[@{@"errorCode": errOthers}]);
+                return;
+            }
         }
         
         NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
@@ -163,6 +168,10 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         
         self.callback(@[response]);
     });
+}
+
+- (void)presentationControllerDidDismiss:(UIPresentationController *)presentationController {
+    self.callback(@[@{@"didCancel": @YES}]);
 }
 
 #pragma mark - Helpers
@@ -214,7 +223,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     return asset;
 }
 
--(NSMutableDictionary *)mapVideoToAsset:(NSURL *)url {
+-(NSMutableDictionary *)mapVideoToAsset:(NSURL *)url error:(NSError **)error {
     NSString *fileName = [url lastPathComponent];
     NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
     NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
@@ -232,17 +241,15 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         }
 
         if (url) { // Protect against reported crash
-          NSError *error = nil;
 
           // If we have write access to the source file, move it. Otherwise use copy.
           if ([fileManager isWritableFileAtPath:[url path]]) {
-            [fileManager moveItemAtURL:url toURL:videoDestinationURL error:&error];
+            [fileManager moveItemAtURL:url toURL:videoDestinationURL error:error];
           } else {
-            [fileManager copyItemAtURL:url toURL:videoDestinationURL error:&error];
+            [fileManager copyItemAtURL:url toURL:videoDestinationURL error:error];
           }
 
           if (error) {
-              self.callback(@[@{@"errorCode": errOthers, @"errorMessage":  error.localizedFailureReason}]);
               return nil;
           }
         }

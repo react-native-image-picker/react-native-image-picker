@@ -7,13 +7,9 @@ A React Native module that allows you to select a photo/video from the device li
   <img src="https://img.shields.io/npm/v/react-native-image-picker" />
 </p>
 
-**Note:** If you are still using deprecated version 2.x.x [check](https://github.com/react-native-image-picker/react-native-image-picker/tree/2.3.4) this for documentation.
+### Make sure you're reading the doc applicable to your version, for example if your using version 3.8.0 go to tag 3.8.0 and read those docs. This doc is always that of main branch.
+### Also read version release notes for any breaking changes especially if you're updating the major version.
 
-## Migration from 2.x.x to 3.x.x
-
-- `showImagePicker` API is removed.
-- No permission required for default `options` on Android.
-- Removed and updated some values in `options`, so please check them carefully.
 
 # Install
 
@@ -90,15 +86,16 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | cameraType    | OK  | OK      | 'back' or 'front'. May not be supported in few android devices                                        |
 | includeBase64 | OK  | OK      | If true, creates base64 string of the image (Avoid using on large image files due to performance)     |
 | saveToPhotos  | OK  | OK      | (Boolean) Only for launchCamera, saves the image/video file captured to public photo                  |
+| selectionLimit| OK  | OK      | Default is `1`, use `0` to allow any number of files. Only iOS version >= 14 support `0` and also it supports providing any integer value|
 
 ## The Response Object
 
-| key          | iOS | Android | Description                                             |
-| ------------ | --- | ------- | ------------------------------------------------------- |
-| didCancel    | OK  | OK      | `true` if the user cancelled the process                |
-| errorCode    | OK  | OK      | Check [ErrorCode](#ErrorCode) for all error codes       |
-| errorMessage | OK  | OK      | Description of the error, use it for debug purpose only |
-| assets       | OK  | OK      | Response object array for the selected media            |
+| key                         | iOS | Android | Description                                             |
+| --------------------------- | --- | ------- | ------------------------------------------------------- |
+| didCancel                   | OK  | OK      | `true` if the user cancelled the process                |
+| errorCode                   | OK  | OK      | Check [ErrorCode](#ErrorCode) for all error codes       |
+| errorMessage                | OK  | OK      | Description of the error, use it for debug purpose only |
+| assets                      | OK  | OK      | Array of the selected media, [refer to Asset Object](#Asset-Object) |
 
 ## Asset Object
 
