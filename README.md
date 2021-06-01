@@ -14,7 +14,7 @@ A React Native module that allows you to select a photo/video from the device li
 # Install
 
 ```
-yarn add react-native-image-picker
+yarn add react-native-image-picker@2.3.3
 
 # RN >= 0.60
 cd ios && pod install
