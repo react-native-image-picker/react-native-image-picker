@@ -10,7 +10,8 @@ export interface ImageLibraryOptions {
   includeBase64?: boolean;
 }
 
-export interface CameraOptions extends Omit<ImageLibraryOptions, 'allowMultiple'> {
+export interface CameraOptions
+  extends Omit<ImageLibraryOptions, 'selectionLimit'> {
   durationLimit?: number;
   saveToPhotos?: boolean;
   cameraType?: CameraType;
