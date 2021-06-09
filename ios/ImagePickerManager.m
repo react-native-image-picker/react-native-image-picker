@@ -93,7 +93,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             [assets addObject:[self mapImageToAsset:image data:[NSData dataWithContentsOfURL:[ImagePickerManager getNSURLFromInfo:info]]]];
         } else {
             NSError *error;
-            NSDictionary *asset = [self mapVideoToAsset:info[UIImagePickerControllerMediaURL] error:nil];
+            NSDictionary *asset = [self mapVideoToAsset:info[UIImagePickerControllerMediaURL] error:&error];
             if (asset == nil) {
                 self.callback(@[@{@"errorCode": errOthers, @"errorMessage":  error.localizedFailureReason}]);
                 return;
@@ -241,15 +241,15 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         }
 
         if (url) { // Protect against reported crash
-            NSError * err = nil;
+            NSError * error;
           // If we have write access to the source file, move it. Otherwise use copy.
           if ([fileManager isWritableFileAtPath:[url path]]) {
-            [fileManager moveItemAtURL:url toURL:videoDestinationURL error:&err];
+            [fileManager moveItemAtURL:url toURL:videoDestinationURL error:&error];
           } else {
-            [fileManager copyItemAtURL:url toURL:videoDestinationURL error:&err];
+            [fileManager copyItemAtURL:url toURL:videoDestinationURL error:&error];
           }
 
-          if (err) {
+          if (error) {
               return nil;
           }
         }
