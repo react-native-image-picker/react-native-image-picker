@@ -241,15 +241,14 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         }
 
         if (url) { // Protect against reported crash
-            NSError * error;
           // If we have write access to the source file, move it. Otherwise use copy.
           if ([fileManager isWritableFileAtPath:[url path]]) {
-            [fileManager moveItemAtURL:url toURL:videoDestinationURL error:&error];
+            [fileManager moveItemAtURL:url toURL:videoDestinationURL error:error];
           } else {
-            [fileManager copyItemAtURL:url toURL:videoDestinationURL error:&error];
+            [fileManager copyItemAtURL:url toURL:videoDestinationURL error:error];
           }
 
-          if (error) {
+          if (*error) {
               return nil;
           }
         }
