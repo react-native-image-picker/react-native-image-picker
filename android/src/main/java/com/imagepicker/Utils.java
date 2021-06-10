@@ -2,6 +2,7 @@ package com.imagepicker;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ClipData;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -26,6 +27,7 @@ import androidx.exifinterface.media.ExifInterface;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 
 import java.io.ByteArrayOutputStream;
@@ -34,7 +36,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import static com.imagepicker.ImagePickerModule.*;
@@ -45,6 +50,9 @@ public class Utils {
     public static String errCameraUnavailable = "camera_unavailable";
     public static String errPermission = "permission";
     public static String errOthers = "others";
+
+    public static String mediaTypePhoto = "photo";
+    public static String mediaTypeVideo = "video";
 
     public static String cameraPermissionDescription = "This library does not require Manifest.permission.CAMERA, if you add this permission in manifest then you have to obtain the same.";
 
@@ -77,9 +85,11 @@ public class Utils {
 
         if (mediaType.equals("video")) {
             fileDetails.put(MediaStore.Video.Media.DISPLAY_NAME, UUID.randomUUID().toString());
+            fileDetails.put(MediaStore.Video.Media.MIME_TYPE, resolver.getType(uri));
             mediaStoreUri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, fileDetails);
         } else {
             fileDetails.put(MediaStore.Images.Media.DISPLAY_NAME, UUID.randomUUID().toString());
+            fileDetails.put(MediaStore.Images.Media.MIME_TYPE, resolver.getType(uri));
             mediaStoreUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, fileDetails);
         }
 
@@ -303,9 +313,8 @@ public class Utils {
     static boolean isValidRequestCode(int requestCode) {
         switch (requestCode) {
             case REQUEST_LAUNCH_IMAGE_CAPTURE:
-            case REQUEST_LAUNCH_IMAGE_LIBRARY:
             case REQUEST_LAUNCH_VIDEO_CAPTURE:
-            case REQUEST_LAUNCH_VIDEO_LIBRARY: return true;
+            case REQUEST_LAUNCH_LIBRARY: return true;
             default: return false;
         }
     }
@@ -335,7 +344,46 @@ public class Utils {
         }
     }
 
-    static ReadableMap getResponseMap(Uri uri, Options options, Context context) {
+    static boolean isImageType(Uri uri, Context context) {
+        String imageMimeType = "image/";
+
+        if (uri.getScheme().equals("file")) {
+            return getMimeTypeFromFileUri(uri).contains(imageMimeType);
+        }
+
+        ContentResolver contentResolver = context.getContentResolver();
+        return contentResolver.getType(uri).contains(imageMimeType);
+    }
+
+    static boolean isVideoType(Uri uri, Context context) {
+        String videoMimeType = "video/";
+
+        if (uri.getScheme().equals("file")) {
+            return getMimeTypeFromFileUri(uri).contains(videoMimeType);
+        }
+        
+        ContentResolver contentResolver = context.getContentResolver();
+        return contentResolver.getType(uri).contains("video/");
+    }
+
+    static List<Uri> collectUrisFromData(Intent data) {
+        // Default Gallery app on older Android versions doesn't support multiple image
+        // picking and thus never uses clip data.
+        if (data.getClipData() == null) {
+            return Collections.singletonList(data.getData());
+        }
+
+        ClipData clipData = data.getClipData();
+        List<Uri> fileUris = new ArrayList<>(clipData.getItemCount());
+
+        for (int i = 0; i < clipData.getItemCount(); ++i) {
+            fileUris.add(clipData.getItemAt(i).getUri());
+        }
+
+        return fileUris;
+    }
+
+    static ReadableMap getImageResponseMap(Uri uri, Options options, Context context) {
         String fileName = uri.getLastPathSegment();
         int[] dimensions = getImageDimensions(uri, context);
 
@@ -361,6 +409,31 @@ public class Utils {
         map.putInt("duration", getDuration(uri, context));
         map.putString("fileName", fileName);
         return map;
+    }
+
+    static ReadableMap getResponseMap(List<Uri> fileUris, Options options, Context context) throws RuntimeException {
+        WritableArray assets = Arguments.createArray();
+
+        for(int i = 0; i < fileUris.size(); ++i) {
+            Uri uri = fileUris.get(i);
+
+            if (isImageType(uri, context)) {
+                if (uri.getScheme().contains("content")) {
+                    uri = getAppSpecificStorageUri(uri, context);
+                }
+                uri = resizeImage(uri, context, options);
+                assets.pushMap(getImageResponseMap(uri, options, context));
+            } else if (isVideoType(uri, context)) {
+                assets.pushMap(getVideoResponseMap(uri, context));
+            } else {
+                throw new RuntimeException("Unsupported file type");
+            }
+        }
+
+        WritableMap response = Arguments.createMap();
+        response.putArray("assets", assets);
+
+        return response;
     }
 
     static ReadableMap getErrorMap(String errCode, String errMsg) {
