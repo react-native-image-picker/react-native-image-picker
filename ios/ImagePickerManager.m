@@ -14,6 +14,17 @@
 
 @end
 
+@interface ImagePickerManager (UIImagePickerControllerDelegate) <UINavigationControllerDelegate, UIImagePickerControllerDelegate>
+@end
+
+@interface ImagePickerManager (UIAdaptivePresentationControllerDelegate) <UIAdaptivePresentationControllerDelegate>
+@end
+
+#if __has_include(<PhotosUI/PHPicker.h>)
+@interface ImagePickerManager (PHPickerViewControllerDelegate) <PHPickerViewControllerDelegate>
+@end
+#endif
+
 @implementation ImagePickerManager
 
 NSString *errCameraUnavailable = @"camera_unavailable";
@@ -50,6 +61,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     
     self.options = options;
 
+#if __has_include(<PhotosUI/PHPicker.h>)
     if (@available(iOS 14, *)) {
         if (target == library) {
             PHPickerConfiguration *configuration = [ImagePickerUtils makeConfigurationFromOptions:options target:target];
@@ -61,6 +73,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             return;
         }
     }
+#endif
     
     UIImagePickerController *picker = [[UIImagePickerController alloc] init];
     [ImagePickerUtils setupPickerFromOptions:picker options:self.options target:target];
@@ -81,97 +94,6 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         UIViewController *root = RCTPresentedViewController();
         [root presentViewController:picker animated:YES completion:nil];
     });
-}
-
-- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info
-{
-    dispatch_block_t dismissCompletionBlock = ^{
-        NSMutableArray<NSDictionary *> *assets = [[NSMutableArray alloc] initWithCapacity:1];
-
-        if ([info[UIImagePickerControllerMediaType] isEqualToString:(NSString *) kUTTypeImage]) {
-            UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
-            [assets addObject:[self mapImageToAsset:image data:[NSData dataWithContentsOfURL:[ImagePickerManager getNSURLFromInfo:info]]]];
-        } else {
-            NSError *error;
-            NSDictionary *asset = [self mapVideoToAsset:info[UIImagePickerControllerMediaURL] error:&error];
-            if (asset == nil) {
-                self.callback(@[@{@"errorCode": errOthers, @"errorMessage":  error.localizedFailureReason}]);
-                return;
-            }
-            [assets addObject:asset];
-        }
-
-        NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
-        response[@"assets"] = assets;
-        self.callback(@[response]);
-    };
-
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [picker dismissViewControllerAnimated:YES completion:dismissCompletionBlock];
-    });
-}
-
-- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
-{
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [picker dismissViewControllerAnimated:YES completion:^{
-            self.callback(@[@{@"didCancel": @YES}]);
-        }];
-    });
-}
-
-- (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14)){
-    [picker dismissViewControllerAnimated:YES completion:nil];
-
-    if (results.count == 0) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            self.callback(@[@{@"didCancel": @YES}]);
-        });
-        return;
-    }
-    
-    dispatch_group_t completionGroup = dispatch_group_create();
-    NSMutableArray<NSDictionary *> *assets = [[NSMutableArray alloc] initWithCapacity:results.count];
-    
-    for (PHPickerResult *result in results) {
-        NSItemProvider *provider = result.itemProvider;
-        dispatch_group_enter(completionGroup);
-        
-        if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeImage]) {
-            [provider loadDataRepresentationForTypeIdentifier:(NSString *)kUTTypeImage completionHandler:^(NSData * _Nullable data, NSError * _Nullable error) {
-                UIImage *image = [[UIImage alloc] initWithData:data];
-                
-                [assets addObject:[self mapImageToAsset:image data:data]];
-                dispatch_group_leave(completionGroup);
-            }];
-        }
-        
-        if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeMovie]) {
-            [provider loadFileRepresentationForTypeIdentifier:(NSString *)kUTTypeMovie completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
-                [assets addObject:[self mapVideoToAsset:url error:nil]];
-                dispatch_group_leave(completionGroup);
-            }];
-        }
-    }
-    
-    dispatch_group_notify(completionGroup, dispatch_get_main_queue(), ^{
-        //  mapVideoToAsset can fail and return nil.
-        for (NSDictionary *asset in assets) {
-            if (nil == asset) {
-                self.callback(@[@{@"errorCode": errOthers}]);
-                return;
-            }
-        }
-        
-        NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
-        [response setObject:assets forKey:@"assets"];
-        
-        self.callback(@[response]);
-    });
-}
-
-- (void)presentationControllerDidDismiss:(UIPresentationController *)presentationController {
-    self.callback(@[@{@"didCancel": @YES}]);
 }
 
 #pragma mark - Helpers
@@ -374,3 +296,110 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 }
 
 @end
+
+@implementation ImagePickerManager (UIImagePickerControllerDelegate)
+
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info
+{
+    dispatch_block_t dismissCompletionBlock = ^{
+        NSMutableArray<NSDictionary *> *assets = [[NSMutableArray alloc] initWithCapacity:1];
+
+        if ([info[UIImagePickerControllerMediaType] isEqualToString:(NSString *) kUTTypeImage]) {
+            UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
+            [assets addObject:[self mapImageToAsset:image data:[NSData dataWithContentsOfURL:[ImagePickerManager getNSURLFromInfo:info]]]];
+        } else {
+            NSError *error;
+            NSDictionary *asset = [self mapVideoToAsset:info[UIImagePickerControllerMediaURL] error:&error];
+            if (asset == nil) {
+                self.callback(@[@{@"errorCode": errOthers, @"errorMessage":  error.localizedFailureReason}]);
+                return;
+            }
+            [assets addObject:asset];
+        }
+
+        NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
+        response[@"assets"] = assets;
+        self.callback(@[response]);
+    };
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [picker dismissViewControllerAnimated:YES completion:dismissCompletionBlock];
+    });
+}
+
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [picker dismissViewControllerAnimated:YES completion:^{
+            self.callback(@[@{@"didCancel": @YES}]);
+        }];
+    });
+}
+
+@end
+
+@implementation ImagePickerManager (presentationControllerDidDismiss)
+
+- (void)presentationControllerDidDismiss:(UIPresentationController *)presentationController
+{
+    self.callback(@[@{@"didCancel": @YES}]);
+}
+
+@end
+
+#if __has_include(<PhotosUI/PHPicker.h>)
+@implementation ImagePickerManager (PHPickerViewControllerDelegate)
+
+- (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14))
+{
+    [picker dismissViewControllerAnimated:YES completion:nil];
+
+    if (results.count == 0) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.callback(@[@{@"didCancel": @YES}]);
+        });
+        return;
+    }
+
+    dispatch_group_t completionGroup = dispatch_group_create();
+    NSMutableArray<NSDictionary *> *assets = [[NSMutableArray alloc] initWithCapacity:results.count];
+
+    for (PHPickerResult *result in results) {
+        NSItemProvider *provider = result.itemProvider;
+        dispatch_group_enter(completionGroup);
+
+        if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeImage]) {
+            [provider loadDataRepresentationForTypeIdentifier:(NSString *)kUTTypeImage completionHandler:^(NSData * _Nullable data, NSError * _Nullable error) {
+                UIImage *image = [[UIImage alloc] initWithData:data];
+
+                [assets addObject:[self mapImageToAsset:image data:data]];
+                dispatch_group_leave(completionGroup);
+            }];
+        }
+
+        if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeMovie]) {
+            [provider loadFileRepresentationForTypeIdentifier:(NSString *)kUTTypeMovie completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
+                [assets addObject:[self mapVideoToAsset:url error:nil]];
+                dispatch_group_leave(completionGroup);
+            }];
+        }
+    }
+
+    dispatch_group_notify(completionGroup, dispatch_get_main_queue(), ^{
+        //  mapVideoToAsset can fail and return nil.
+        for (NSDictionary *asset in assets) {
+            if (nil == asset) {
+                self.callback(@[@{@"errorCode": errOthers}]);
+                return;
+            }
+        }
+
+        NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
+        [response setObject:assets forKey:@"assets"];
+
+        self.callback(@[response]);
+    });
+}
+
+@end
+#endif

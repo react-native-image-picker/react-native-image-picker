@@ -48,6 +48,7 @@
 
 + (PHPickerConfiguration *)makeConfigurationFromOptions:(NSDictionary *)options target:(RNImagePickerTarget)target API_AVAILABLE(ios(14))
 {
+#if __has_include(<PhotosUI/PHPicker.h>)
     PHPickerConfiguration *configuration = [[PHPickerConfiguration alloc] init];
     configuration.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCurrent;
     configuration.selectionLimit = [options[@"selectionLimit"] integerValue];
@@ -59,9 +60,12 @@
     } else if ((target == library) && ([options[@"mediaType"] isEqualToString:@"mixed"])) {
         configuration.filter = [PHPickerFilter anyFilterMatchingSubfilters: @[PHPickerFilter.imagesFilter, PHPickerFilter.videosFilter]];
     }
-
     return configuration;
+#else
+    return nil;
+#endif
 }
+
 
 + (BOOL) isSimulator
 {
