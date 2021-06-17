@@ -9,6 +9,7 @@ export interface ImageLibraryOptions {
   videoQuality?: AndroidVideoOptions | iOSVideoOptions;
   includeBase64?: boolean;
   includeExtra?: boolean;
+  includeLocation?: boolean;
 }
 
 export interface CameraOptions
@@ -27,7 +28,10 @@ export interface Asset {
   type?: string;
   fileName?: string;
   duration?: number;
-  timestamp?: string,
+  timestamp?: string;
+  latitude?: string;
+  longitude?: string;
+  dateTime?: string;
 }
 
 export interface ImagePickerResponse {

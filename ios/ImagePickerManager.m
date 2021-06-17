@@ -126,13 +126,27 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
                                     maxHeight:[self.options[@"maxHeight"] floatValue]];
     }
 
+    NSMutableDictionary *asset = [[NSMutableDictionary alloc] init];
+    
+    CGImageSourceRef source = CGImageSourceCreateWithData((CFDataRef)data, NULL);
+    NSDictionary *metadata = (NSDictionary *) CFBridgingRelease(CGImageSourceCopyPropertiesAtIndex(source, 0, NULL));
+    NSDictionary *exifTiffDictionary = [metadata objectForKey:(NSString *)kCGImagePropertyTIFFDictionary];
+    NSDictionary *exifGPSDictionary = [metadata objectForKey:(NSString *)kCGImagePropertyGPSDictionary];
+ 
+    NSNumber *latitude = [exifGPSDictionary objectForKey:@"Latitude"];
+    NSNumber *longitude = [exifGPSDictionary objectForKey:@"Longitude"];
+    NSString *dateTime = [exifTiffDictionary objectForKey:@"DateTime"];
+    
+    asset[@"dateTime"] = @(dateTime.UTF8String);
+    asset[@"latitude"] = @(latitude.floatValue);
+    asset[@"longitude"] = @(longitude.floatValue);
+    
     if ([fileType isEqualToString:@"jpg"]) {
         data = UIImageJPEGRepresentation(image, [self.options[@"quality"] floatValue]);
     } else if ([fileType isEqualToString:@"png"]) {
         data = UIImagePNGRepresentation(image);
     }
     
-    NSMutableDictionary *asset = [[NSMutableDictionary alloc] init];
     asset[@"type"] = [@"image/" stringByAppendingString:fileType];
 
     NSString *fileName = [self getImageFileName:fileType];
