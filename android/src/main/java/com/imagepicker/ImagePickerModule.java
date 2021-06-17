@@ -127,21 +127,27 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         Intent libraryIntent;
         requestCode = REQUEST_LAUNCH_LIBRARY;
 
-        if (this.options.mediaType.equals(mediaTypeVideo)) {
+        boolean isSingleSelect = this.options.selectionLimit == 1;
+        boolean isPhoto = this.options.mediaType.equals(mediaTypePhoto);
+        boolean isVideo = this.options.mediaType.equals(mediaTypeVideo);
+
+        if(isSingleSelect && (isPhoto || isVideo)) {
             libraryIntent = new Intent(Intent.ACTION_PICK);
-            libraryIntent.setType("video/*");
-        } else if (this.options.mediaType.equals(mediaTypePhoto)) {
-            libraryIntent = new Intent(Intent.ACTION_PICK);
-            libraryIntent.setType("image/*");
         } else {
             libraryIntent = new Intent(Intent.ACTION_GET_CONTENT);
-            libraryIntent.setType("*/*");
-            libraryIntent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "video/*"});
             libraryIntent.addCategory(Intent.CATEGORY_OPENABLE);
+            libraryIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         }
 
-        if (this.options.selectionLimit != 1) {
-            libraryIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        if(isPhoto) {
+            libraryIntent.setType("image/*");
+            libraryIntent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*"});
+        } else if (isVideo) {
+            libraryIntent.setType("video/*");
+            libraryIntent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"video/*"});
+        } else {
+            libraryIntent.setType("*/*");
+            libraryIntent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "video/*"});
         }
 
         try {
