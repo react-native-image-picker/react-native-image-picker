@@ -141,10 +141,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
         if(isPhoto) {
             libraryIntent.setType("image/*");
-            libraryIntent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*"});
         } else if (isVideo) {
             libraryIntent.setType("video/*");
-            libraryIntent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"video/*"});
         } else {
             libraryIntent.setType("*/*");
             libraryIntent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "video/*"});
