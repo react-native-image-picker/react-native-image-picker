@@ -136,6 +136,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         } else {
             libraryIntent = new Intent(Intent.ACTION_GET_CONTENT);
             libraryIntent.addCategory(Intent.CATEGORY_OPENABLE);
+        }
+
+        if(!isSingleSelect) {
             libraryIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         }
 
