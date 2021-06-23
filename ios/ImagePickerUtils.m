@@ -80,6 +80,7 @@
     const uint8_t firstByteJpg = 0xFF;
     const uint8_t firstBytePng = 0x89;
     const uint8_t firstByteGif = 0x47;
+    const uint8_t firstByteHeic = 0x00;
     
     uint8_t firstByte;
     [imageData getBytes:&firstByte length:1];
@@ -90,6 +91,14 @@
         return @"png";
       case firstByteGif:
         return @"gif";
+      case firstByteHeic:
+       if(isCamera)
+        {
+        return @"jpg";
+        }
+        else{
+        return @"heic";
+        }
       default:
         return @"jpg";
     }

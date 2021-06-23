@@ -99,7 +99,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 #pragma mark - Helpers
 
 -(NSMutableDictionary *)mapImageToAsset:(UIImage *)image data:(NSData *)data {
-    NSString *fileType = [ImagePickerUtils getFileType:data];
+    NSString *fileType = [ImagePickerUtils getFileType:data isCamera:target == camera];
     
     if ((target == camera) && [self.options[@"saveToPhotos"] boolValue]) {
         UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
