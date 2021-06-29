@@ -248,7 +248,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             [fileManager copyItemAtURL:url toURL:videoDestinationURL error:error];
           }
 
-          if (*error) {
+          if (error && *error) {
               return nil;
           }
         }
