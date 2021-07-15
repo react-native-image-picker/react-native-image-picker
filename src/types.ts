@@ -32,7 +32,7 @@ export interface ImagePickerResponse {
   didCancel?: boolean;
   errorCode?: ErrorCode;
   errorMessage?: string;
-  assets: Asset[];
+  assets?: Asset[];
 }
 
 export type PhotoQuality =
