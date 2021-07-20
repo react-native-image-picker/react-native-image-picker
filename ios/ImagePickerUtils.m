@@ -6,30 +6,30 @@
 
 + (void) setupPickerFromOptions:(UIImagePickerController *)picker options:(NSDictionary *)options target:(RNImagePickerTarget)target
 {
+    if ([[options objectForKey:@"mediaType"] isEqualToString:@"video"]) {
+
+        if ([[options objectForKey:@"videoQuality"] isEqualToString:@"high"]) {
+            picker.videoQuality = UIImagePickerControllerQualityTypeHigh;
+        }
+        else if ([[options objectForKey:@"videoQuality"] isEqualToString:@"low"]) {
+            picker.videoQuality = UIImagePickerControllerQualityTypeLow;
+        }
+        else {
+            picker.videoQuality = UIImagePickerControllerQualityTypeMedium;
+        }
+    }
+    
     if (target == camera) {
         picker.sourceType = UIImagePickerControllerSourceTypeCamera;
+
+        if (options[@"durationLimit"] > 0) {
+            picker.videoMaximumDuration = [options[@"durationLimit"] doubleValue];
+        }
 
         if ([options[@"cameraType"] isEqualToString:@"front"]) {
             picker.cameraDevice = UIImagePickerControllerCameraDeviceFront;
         } else {
             picker.cameraDevice = UIImagePickerControllerCameraDeviceRear;
-        }
-
-        if ([[options objectForKey:@"mediaType"] isEqualToString:@"video"]) {
-
-            if ([[options objectForKey:@"videoQuality"] isEqualToString:@"high"]) {
-                picker.videoQuality = UIImagePickerControllerQualityTypeHigh;
-            }
-            else if ([[options objectForKey:@"videoQuality"] isEqualToString:@"low"]) {
-                picker.videoQuality = UIImagePickerControllerQualityTypeLow;
-            }
-            else {
-                picker.videoQuality = UIImagePickerControllerQualityTypeMedium;
-            }
-
-            if (options[@"durationLimit"] > 0) {
-                picker.videoMaximumDuration = [options[@"durationLimit"] doubleValue];
-            }
         }
     } else {
         picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
