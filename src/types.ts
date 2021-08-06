@@ -28,7 +28,6 @@ export interface Asset {
   fileName?: string;
   duration?: number;
   timestamp?: string,
-  location?: any,
 }
 
 export interface ImagePickerResponse {

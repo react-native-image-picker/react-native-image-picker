@@ -160,7 +160,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         NSString *creationDate = [formatter stringFromDate:phAsset.creationDate];
         
         asset[@"timestamp"] = creationDate;
-        // asset[@"location"] = phAsset.location;
+        // Add more exif data here ...
     }
     
     return asset;
