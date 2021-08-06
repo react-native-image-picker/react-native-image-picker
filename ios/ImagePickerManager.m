@@ -69,7 +69,19 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             picker.delegate = self;
             picker.presentationController.delegate = self;
 
-            [self showPickerViewController:picker];
+            if([self.options[@"includeExif"] boolValue]) {
+                
+                [self checkPhotosPermissions:^(BOOL granted) {
+                    if (!granted) {
+                        self.callback(@[@{@"errorCode": errPermission}]);
+                        return;
+                    }
+                    [self showPickerViewController:picker];
+                }];
+            } else {
+                [self showPickerViewController:picker];
+            }
+            
             return;
         }
     }
@@ -98,7 +110,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
 #pragma mark - Helpers
 
--(NSMutableDictionary *)mapImageToAsset:(UIImage *)image data:(NSData *)data {
+-(NSMutableDictionary *)mapImageToAsset:(UIImage *)image data:(NSData *)data phAsset:(PHAsset * _Nullable)phAsset {
     NSString *fileType = [ImagePickerUtils getFileType:data];
     
     if ((target == camera) && [self.options[@"saveToPhotos"] boolValue]) {
@@ -141,6 +153,15 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     asset[@"fileName"] = fileName;
     asset[@"width"] = @(image.size.width);
     asset[@"height"] = @(image.size.height);
+    
+    if(phAsset){
+        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+        [formatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
+        NSString *creationDate = [formatter stringFromDate:phAsset.creationDate];
+        
+        asset[@"timestamp"] = creationDate;
+        // asset[@"location"] = phAsset.location;
+    }
     
     return asset;
 }
@@ -306,7 +327,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
         if ([info[UIImagePickerControllerMediaType] isEqualToString:(NSString *) kUTTypeImage]) {
             UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
-            [assets addObject:[self mapImageToAsset:image data:[NSData dataWithContentsOfURL:[ImagePickerManager getNSURLFromInfo:info]]]];
+            [assets addObject:[self mapImageToAsset:image data:[NSData dataWithContentsOfURL:[ImagePickerManager getNSURLFromInfo:info]] phAsset:nil]];
         } else {
             NSError *error;
             NSDictionary *asset = [self mapVideoToAsset:info[UIImagePickerControllerMediaURL] error:&error];
@@ -365,14 +386,22 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     NSMutableArray<NSDictionary *> *assets = [[NSMutableArray alloc] initWithCapacity:results.count];
 
     for (PHPickerResult *result in results) {
+        PHAsset *asset = nil;
         NSItemProvider *provider = result.itemProvider;
+
+        // If include exif, we fetch the PHAsset, this required library permissions
+        if([self.options[@"includeExif"] boolValue] && result.assetIdentifier != nil) {
+            PHFetchResult* fetchResult = [PHAsset fetchAssetsWithLocalIdentifiers:@[result.assetIdentifier] options:nil];
+            asset = fetchResult.firstObject;
+        }
+        
         dispatch_group_enter(completionGroup);
 
         if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeImage]) {
             [provider loadDataRepresentationForTypeIdentifier:(NSString *)kUTTypeImage completionHandler:^(NSData * _Nullable data, NSError * _Nullable error) {
                 UIImage *image = [[UIImage alloc] initWithData:data];
-
-                [assets addObject:[self mapImageToAsset:image data:data]];
+                
+                [assets addObject:[self mapImageToAsset:image data:data phAsset:asset]];
                 dispatch_group_leave(completionGroup);
             }];
         }

@@ -8,6 +8,7 @@ export interface ImageLibraryOptions {
   quality?: PhotoQuality;
   videoQuality?: AndroidVideoOptions | iOSVideoOptions;
   includeBase64?: boolean;
+  includeExif?: boolean;
 }
 
 export interface CameraOptions
@@ -26,6 +27,8 @@ export interface Asset {
   type?: string; //TODO
   fileName?: string;
   duration?: number;
+  timestamp?: string,
+  location?: any,
 }
 
 export interface ImagePickerResponse {
