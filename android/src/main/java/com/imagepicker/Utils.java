@@ -399,6 +399,19 @@ public class Utils {
         if (options.includeBase64) {
             map.putString("base64", getBase64String(uri, context));
         }
+
+        if(options.includeExif) {
+          try (InputStream inputStream = context.getContentResolver().openInputStream(uri)) {
+            ExifInterface exif = new ExifInterface(inputStream);
+            String datetime =  exif.getAttribute(ExifInterface.TAG_DATETIME);
+            // Add more exif data here ...
+
+            map.putString("timestamp", datetime);
+          } catch (Exception e) {
+            Log.e("RNIP", "Could not load image exif data: " + e.getMessage());
+          }
+        }
+
         return map;
     }
 
