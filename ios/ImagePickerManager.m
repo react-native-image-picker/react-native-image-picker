@@ -326,8 +326,22 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         NSMutableArray<NSDictionary *> *assets = [[NSMutableArray alloc] initWithCapacity:1];
 
         if ([info[UIImagePickerControllerMediaType] isEqualToString:(NSString *) kUTTypeImage]) {
+            PHAsset *asset = nil;
             UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
-            [assets addObject:[self mapImageToAsset:image data:[NSData dataWithContentsOfURL:[ImagePickerManager getNSURLFromInfo:info]] phAsset:nil]];
+            
+            // If include exif, we fetch the PHAsset, this required library permissions
+            if([self.options[@"includeExif"] boolValue]) {
+                NSURL *referenceURL = [info objectForKey:UIImagePickerControllerReferenceURL];
+                
+                if(referenceURL != nil) {
+                    // We fetch the asset like this to support iOS 10 and lower
+                    // see: https://stackoverflow.com/a/52529904/4177049
+                    PHFetchResult* fetchResult = [PHAsset fetchAssetsWithALAssetURLs:@[referenceURL] options:nil];
+                    asset = fetchResult.firstObject;
+                }
+            }
+            
+            [assets addObject:[self mapImageToAsset:image data:[NSData dataWithContentsOfURL:[ImagePickerManager getNSURLFromInfo:info]] phAsset:asset]];
         } else {
             NSError *error;
             NSDictionary *asset = [self mapVideoToAsset:info[UIImagePickerControllerMediaURL] error:&error];
