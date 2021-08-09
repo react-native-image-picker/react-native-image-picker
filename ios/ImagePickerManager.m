@@ -86,18 +86,21 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         }
     }
 #endif
-    
     UIImagePickerController *picker = [[UIImagePickerController alloc] init];
     [ImagePickerUtils setupPickerFromOptions:picker options:self.options target:target];
     picker.delegate = self;
-
-    [self checkPermission:^(BOOL granted) {
-        if (!granted) {
-            self.callback(@[@{@"errorCode": errPermission}]);
-            return;
-        }
-        [self showPickerViewController:picker];
-    }];
+    
+    if([self.options[@"includeExif"] boolValue]) {
+        [self checkPhotosPermissions:^(BOOL granted) {
+            if (!granted) {
+                self.callback(@[@{@"errorCode": errPermission}]);
+                return;
+            }
+            [self showPickerViewController:picker];
+        }];
+    } else {
+      [self showPickerViewController:picker];
+    }
 }
 
 - (void) showPickerViewController:(UIViewController *)picker
