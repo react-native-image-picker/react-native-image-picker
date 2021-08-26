@@ -95,6 +95,14 @@
     }
 }
 
++ (NSString *) getFileTypeFromUrl:(NSURL *)url {
+    CFStringRef fileExtension = (__bridge CFStringRef)[url pathExtension];
+    CFStringRef UTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, fileExtension, NULL);
+    CFStringRef MIMEType = UTTypeCopyPreferredTagWithClass(UTI, kUTTagClassMIMEType);
+    CFRelease(UTI);
+    return (__bridge_transfer NSString *)MIMEType;
+}
+
 + (UIImage*)resizeImage:(UIImage*)image maxWidth:(float)maxWidth maxHeight:(float)maxHeight
 {
     if ((maxWidth == 0) || (maxHeight == 0)) {

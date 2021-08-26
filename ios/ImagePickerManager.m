@@ -180,6 +180,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     NSMutableDictionary *asset = [[NSMutableDictionary alloc] init];
     asset[@"duration"] = @(roundf(CMTimeGetSeconds([AVAsset assetWithURL:videoDestinationURL].duration)));
     asset[@"uri"] = videoDestinationURL.absoluteString;
+    asset[@"type"] = [ImagePickerUtils getFileTypeFromUrl:videoDestinationURL];
     
     return asset;
 }
