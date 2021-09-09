@@ -69,7 +69,6 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             picker.delegate = self;
             picker.presentationController.delegate = self;
             [self checkPermission:^(BOOL granted) {
-                NSLog(@"this is very test image gallery");
                 if (!granted) {
                     self.callback(@[@{@"errorCode": errPermission}]);
                     return;
