@@ -22,13 +22,15 @@ class CameraActivityLib : AppCompatActivity() {
     camera.setLifecycleOwner(this)
     camera.addCameraListener(object : CameraListener() {
       override fun onPictureTaken(result: PictureResult) {
-        val file = File(cap)
-        result.toFile(
-          file
-        ) {
-          setResult(Activity.RESULT_OK)
-          finish()
-        };
+        cap?.let {
+          val file = File(it)
+          result.toFile(
+            file
+          ) {
+            setResult(Activity.RESULT_OK)
+            finish()
+          }
+        } ?: finish()
       }
 
       override fun onVideoTaken(result: VideoResult) {
