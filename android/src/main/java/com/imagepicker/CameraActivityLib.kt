@@ -18,7 +18,7 @@ class CameraActivityLib : AppCompatActivity() {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_camera)
     val camera: CameraView = findViewById(R.id.camera)
-    val cap: String = intent.getStringExtra(StaticStringKeys.FILE_LOCATION)
+    val cap: String? = intent.getStringExtra(StaticStringKeys.FILE_LOCATION)
     camera.setLifecycleOwner(this)
     camera.addCameraListener(object : CameraListener() {
       override fun onPictureTaken(result: PictureResult) {
