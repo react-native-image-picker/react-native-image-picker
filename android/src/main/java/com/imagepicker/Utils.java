@@ -346,25 +346,24 @@ public class Utils {
     }
 
     static boolean isImageType(Uri uri, Context context) {
-        String imageMimeType = "image/";
+        final String imageMimeType = "image/";
 
-        if (uri.getScheme().equals("file")) {
-            return getMimeTypeFromFileUri(uri).contains(imageMimeType);
-        }
-
-        ContentResolver contentResolver = context.getContentResolver();
-        return contentResolver.getType(uri).contains(imageMimeType);
+        return getMimeType(uri, context).contains(imageMimeType);
     }
 
     static boolean isVideoType(Uri uri, Context context) {
-        String videoMimeType = "video/";
+        final String videoMimeType = "video/";
 
-        if (uri.getScheme().equals("file")) {
-            return getMimeTypeFromFileUri(uri).contains(videoMimeType);
-        }
-        
-        ContentResolver contentResolver = context.getContentResolver();
-        return contentResolver.getType(uri).contains("video/");
+        return getMimeType(uri, context).contains(videoMimeType);
+    }
+
+    static String getMimeType(Uri uri, Context context) {
+      if (uri.getScheme().equals("file")) {
+        return getMimeTypeFromFileUri(uri);
+      }
+
+      ContentResolver contentResolver = context.getContentResolver();
+      return contentResolver.getType(uri);
     }
 
     static List<Uri> collectUrisFromData(Intent data) {
@@ -395,6 +394,7 @@ public class Utils {
         map.putString("type", getMimeTypeFromFileUri(uri));
         map.putInt("width", dimensions[0]);
         map.putInt("height", dimensions[1]);
+        map.putString("type", getMimeType(uri, context));
 
         if (options.includeBase64) {
             map.putString("base64", getBase64String(uri, context));
@@ -409,6 +409,7 @@ public class Utils {
         map.putDouble("fileSize", getFileSize(uri, context));
         map.putInt("duration", getDuration(uri, context));
         map.putString("fileName", fileName);
+        map.putString("type", getMimeType(uri, context));
         return map;
     }
 

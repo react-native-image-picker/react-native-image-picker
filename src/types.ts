@@ -23,7 +23,7 @@ export interface Asset {
   width?: number;
   height?: number;
   fileSize?: number;
-  type?: string; //TODO
+  type?: string;
   fileName?: string;
   duration?: number;
 }
