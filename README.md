@@ -75,33 +75,34 @@ The `callback` will be called with a response object, refer to [The Response Obj
 
 ## Options
 
-| Option        | iOS | Android | Description                                                                                           |
-| ------------- | --- | ------- | ----------------------------------------------------------------------------------------------------- |
-| mediaType     | OK  | OK      | 'photo' or 'video' or 'mixed'(mixed supported only for launchImageLibrary, to pick an photo or video) |
-| maxWidth      | OK  | OK      | To resize the image                                                                                   |
-| maxHeight     | OK  | OK      | To resize the image                                                                                   |
-| videoQuality  | OK  | OK      | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android                                         |
-| durationLimit | OK  | OK      | Video max duration in seconds                                                                         |
-| quality       | OK  | OK      | 0 to 1, photos                                                                                        |
-| cameraType    | OK  | OK      | 'back' or 'front'. May not be supported in few android devices                                        |
-| includeBase64 | OK  | OK      | If true, creates base64 string of the image (Avoid using on large image files due to performance)     |
-| saveToPhotos  | OK  | OK      | (Boolean) Only for launchCamera, saves the image/video file captured to public photo                  |
-| selectionLimit| OK  | OK      | Default is `1`, use `0` to allow any number of files. Only iOS version >= 14 support `0` and also it supports providing any integer value|
+| Option        | iOS | Android | Description                                                                                                                               |
+| ------------- | --- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| mediaType     | OK  | OK      | 'photo' or 'video' or 'mixed'(mixed supported only for launchImageLibrary, to pick an photo or video)                                     |
+| maxWidth      | OK  | OK      | To resize the image                                                                                                                       |
+| maxHeight     | OK  | OK      | To resize the image                                                                                                                       |
+| videoQuality  | OK  | OK      | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android                                                                             |
+| durationLimit | OK  | OK      | Video max duration in seconds                                                                                                             |
+| quality       | OK  | OK      | 0 to 1, photos                                                                                                                            |
+| cameraType    | OK  | OK      | 'back' or 'front'. May not be supported in few android devices                                                                            |
+| saveToPhotos  | OK  | OK      | (Boolean) Only for launchCamera, saves the image/video file captured to public photo                                                      |
+| selectionLimit| OK  | OK      | Default is `1`, use `0` to allow any number of files. Only iOS version >= 14 support `0` and also it supports providing any integer value |
+| originalUri   | -   | OK      | (Boolean) When set to `true` (`false` by default) does not copy the file and returns the oiginal uri.                                     |
+| include       | -   | OK      | When provided only return the selected types. Omit to receive all types. [refer to Asset Object](#Asset-Object)                           |
 
 ## The Response Object
 
-| key                         | iOS | Android | Description                                             |
-| --------------------------- | --- | ------- | ------------------------------------------------------- |
-| didCancel                   | OK  | OK      | `true` if the user cancelled the process                |
-| errorCode                   | OK  | OK      | Check [ErrorCode](#ErrorCode) for all error codes       |
-| errorMessage                | OK  | OK      | Description of the error, use it for debug purpose only |
+| key                         | iOS | Android | Description                                                         |
+| --------------------------- | --- | ------- | ------------------------------------------------------------------- |
+| didCancel                   | OK  | OK      | `true` if the user cancelled the process                            |
+| errorCode                   | OK  | OK      | Check [ErrorCode](#ErrorCode) for all error codes                   |
+| errorMessage                | OK  | OK      | Description of the error, use it for debug purpose only             |
 | assets                      | OK  | OK      | Array of the selected media, [refer to Asset Object](#Asset-Object) |
 
 ## Asset Object
 
 | key      | iOS | Android | Description                                                                                                                                                                                                                                |
 | -------- | --- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| base64   | OK  | OK      | The base64 string of the image (photos only)                                                                                                                                                                                               |
+| base64   | OK  | OK      | The base64 string of the image (photos only) NOTE: Creates base64 string of the image (Avoid using on large image files due to performance)                                                                                                |
 | uri      | OK  | OK      | The file uri in app specific cache storage. Except when picking **video from Android gallery** where you will get read only content uri, to get file uri in this case copy the file to app specific storage using any react-native library |
 | width    | OK  | OK      | Image dimensions (photos only)                                                                                                                                                                                                             |
 | height   | OK  | OK      | Image dimensions (photos only)                                                                                                                                                                                                             |

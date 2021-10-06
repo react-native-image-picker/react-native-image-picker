@@ -1,26 +1,28 @@
 package com.imagepicker;
 
 import com.facebook.react.bridge.ReadableMap;
+import java.util.ArrayList;
 import android.text.TextUtils;
 
 public class Options {
     int selectionLimit;
-    Boolean includeBase64;
     int videoQuality = 1;
     int quality;
     int maxWidth;
     int maxHeight;
+    Boolean originalUri;
     Boolean saveToPhotos;
     int durationLimit;
     Boolean useFrontCamera = false;
     String mediaType;
+    ArrayList<Object> include;
 
 
     Options(ReadableMap options) {
         mediaType = options.getString("mediaType");
         selectionLimit = options.getInt("selectionLimit");
-        includeBase64 = options.getBoolean("includeBase64");
-
+        originalUri = options.getBoolean("originalUri");
+        
         String videoQualityString = options.getString("videoQuality");
         if(!TextUtils.isEmpty(videoQualityString) && !videoQualityString.toLowerCase().equals("high")) {
             videoQuality = 0;
@@ -35,5 +37,7 @@ public class Options {
         maxWidth = options.getInt("maxWidth");
         saveToPhotos = options.getBoolean("saveToPhotos");
         durationLimit = options.getInt("durationLimit");
+
+        include = options.getArray("include").toArrayList();
     }
 }

@@ -324,13 +324,13 @@ public class Utils {
     // https://issuetracker.google.com/issues/37063818
     public static boolean isCameraPermissionFulfilled(Context context, Activity activity) {
         try {
-             String[] declaredPermissions = context.getPackageManager()
-                     .getPackageInfo(context.getPackageName(), PackageManager.GET_PERMISSIONS)
-                     .requestedPermissions;
+            String[] declaredPermissions = context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), PackageManager.GET_PERMISSIONS)
+                    .requestedPermissions;
 
-             if (declaredPermissions == null) {
-                 return true;
-             }
+            if (declaredPermissions == null) {
+                return true;
+            }
 
             if (Arrays.asList(declaredPermissions).contains(Manifest.permission.CAMERA)
                     && ActivityCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
@@ -358,12 +358,12 @@ public class Utils {
     }
 
     static String getMimeType(Uri uri, Context context) {
-      if (uri.getScheme().equals("file")) {
-        return getMimeTypeFromFileUri(uri);
-      }
+        if (uri.getScheme().equals("file")) {
+            return getMimeTypeFromFileUri(uri);
+        }
 
-      ContentResolver contentResolver = context.getContentResolver();
-      return contentResolver.getType(uri);
+        ContentResolver contentResolver = context.getContentResolver();
+        return contentResolver.getType(uri);
     }
 
     static List<Uri> collectUrisFromData(Intent data) {
@@ -384,32 +384,53 @@ public class Utils {
     }
 
     static ReadableMap getImageResponseMap(Uri uri, Options options, Context context) {
-        String fileName = uri.getLastPathSegment();
-        int[] dimensions = getImageDimensions(uri, context);
-
         WritableMap map = Arguments.createMap();
-        map.putString("uri", uri.toString());
-        map.putDouble("fileSize", getFileSize(uri, context));
-        map.putString("fileName", fileName);
-        map.putString("type", getMimeTypeFromFileUri(uri));
-        map.putInt("width", dimensions[0]);
-        map.putInt("height", dimensions[1]);
-        map.putString("type", getMimeType(uri, context));
-
-        if (options.includeBase64) {
+        if (options.include.contains("uri")) {
+            map.putString("uri", uri.toString());
+        }
+        if (options.include.contains("fileSize")) {
+            map.putDouble("fileSize", getFileSize(uri, context));
+        }
+        if (options.include.contains("fileName")) {
+            String fileName = uri.getLastPathSegment();
+            map.putString("fileName", fileName);
+        }
+        if (options.include.contains("type")) {
+            map.putString("type", getMimeTypeFromFileUri(uri));
+        }
+        if (options.include.contains("width") || options.include.contains("height")) {
+            int[] dimensions = getImageDimensions(uri, context);
+            if (options.include.contains("width")) {
+                map.putInt("width", dimensions[0]);
+            }
+            if (options.include.contains("height")) {
+                map.putInt("height", dimensions[1]);
+            }
+        }
+        if (options.include.contains("base64")) {
             map.putString("base64", getBase64String(uri, context));
         }
         return map;
     }
 
-    static ReadableMap getVideoResponseMap(Uri uri, Context context) {
-        String fileName = uri.getLastPathSegment();
+    static ReadableMap getVideoResponseMap(Uri uri, Options options, Context context) {
         WritableMap map = Arguments.createMap();
-        map.putString("uri", uri.toString());
-        map.putDouble("fileSize", getFileSize(uri, context));
-        map.putInt("duration", getDuration(uri, context));
-        map.putString("fileName", fileName);
-        map.putString("type", getMimeType(uri, context));
+        if (options.include.contains("uri")) {
+            map.putString("uri", uri.toString());
+        }
+        if (options.include.contains("fileSize")) {
+            map.putDouble("fileSize", getFileSize(uri, context));
+        }
+        if (options.include.contains("duration")) {
+            map.putInt("duration", getDuration(uri, context));
+        }
+        if (options.include.contains("type")) {
+            map.putString("type", getMimeType(uri, context));
+        }
+        if (options.include.contains("fileName")) {
+            String fileName = uri.getLastPathSegment();
+            map.putString("fileName", fileName);
+        }
         return map;
     }
 
@@ -420,13 +441,16 @@ public class Utils {
             Uri uri = fileUris.get(i);
 
             if (isImageType(uri, context)) {
-                if (uri.getScheme().contains("content")) {
-                    uri = getAppSpecificStorageUri(uri, context);
+                if(!options.originalUri) {
+                    if (uri.getScheme().contains("content")) {
+                        uri = getAppSpecificStorageUri(uri, context);
+                    }
+                
+                    uri = resizeImage(uri, context, options);
                 }
-                uri = resizeImage(uri, context, options);
                 assets.pushMap(getImageResponseMap(uri, options, context));
             } else if (isVideoType(uri, context)) {
-                assets.pushMap(getVideoResponseMap(uri, context));
+                assets.pushMap(getVideoResponseMap(uri, options, context));
             } else {
                 throw new RuntimeException("Unsupported file type");
             }

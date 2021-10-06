@@ -7,7 +7,8 @@ export interface ImageLibraryOptions {
   maxHeight?: number;
   quality?: PhotoQuality;
   videoQuality?: AndroidVideoOptions | iOSVideoOptions;
-  includeBase64?: boolean;
+  originalUri?: boolean;
+  include?: IncludeTypes[];
 }
 
 export interface CameraOptions
@@ -52,3 +53,4 @@ export type MediaType = 'photo' | 'video' | 'mixed';
 export type AndroidVideoOptions = 'low' | 'high';
 export type iOSVideoOptions = 'low' | 'medium' | 'high';
 export type ErrorCode = 'camera_unavailable' | 'permission' | 'others';
+export type IncludeTypes = "base64" | "uri" | "width" | "height" | "fileSize" | "type" | "fileName" | "duration";
