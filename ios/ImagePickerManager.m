@@ -113,6 +113,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         }
     }
     
+    // Determine when fileType is needed
     NSString *fileType;
     if (
         (![self.options[@"originalUri"] boolValue]) ||
@@ -122,9 +123,11 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         fileType = [ImagePickerUtils getFileType:data];
     }
     
+    // Determine when fileName is needed
     NSString *fileName;
     if(
         ([self.include containsObject:@"type"]) ||
+        ([self.include containsObject:@"uri"]) ||
         ([self.include containsObject:@"fileName"])
         ) {
         fileName = [self getImageFileName:fileType];
@@ -457,3 +460,4 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
 @end
 #endif
+
