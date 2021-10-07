@@ -118,6 +118,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     if (
         (![self.options[@"originalUri"] boolValue]) ||
         ([self.include containsObject:@"type"]) ||
+        ([self.include containsObject:@"uri"]) ||
         ([self.include containsObject:@"fileName"])
         ) {
         fileType = [ImagePickerUtils getFileType:data];
