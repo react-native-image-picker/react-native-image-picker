@@ -262,6 +262,21 @@ public class Utils {
         }
     }
 
+    static String getFileName(Uri uri, Context context) {
+        try {
+            Cursor c = context.getContentResolver().query(uri, null, null, null, null);
+            if(c != null) {
+                if(c.moveToFirst()) {
+                    return c.getString(c.getColumnIndex("_display_name"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return uri.getLastPathSegment();
+    }
+
     static int getDuration(Uri uri, Context context) {
         MediaMetadataRetriever m = new MediaMetadataRetriever();
         m.setDataSource(context, uri);
@@ -392,7 +407,7 @@ public class Utils {
             map.putDouble("fileSize", getFileSize(uri, context));
         }
         if (options.include.contains("fileName")) {
-            String fileName = uri.getLastPathSegment();
+            String fileName = getFileName(uri, context);
             map.putString("fileName", fileName);
         }
         if (options.include.contains("type")) {
