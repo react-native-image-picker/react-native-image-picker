@@ -11,6 +11,7 @@
 
 @property (nonatomic, strong) RCTResponseSenderBlock callback;
 @property (nonatomic, copy) NSDictionary *options;
+@property (nonatomic, copy) NSArray *include;
 
 @end
 
@@ -60,6 +61,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     }
     
     self.options = options;
+    self.include = [self.options objectForKey:@"include"];
 
 #if __has_include(<PhotosUI/PHPicker.h>)
     if (@available(iOS 14, *)) {
@@ -98,54 +100,95 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
 #pragma mark - Helpers
 
--(NSMutableDictionary *)mapImageToAsset:(UIImage *)image data:(NSData *)data {
-    NSString *fileType = [ImagePickerUtils getFileType:data];
+-(NSMutableDictionary *)mapImageToAsset:(NSURL *)url error:(NSError **)error {
+    NSMutableDictionary *asset = [[NSMutableDictionary alloc] init];
     
+    NSData *data = [[NSData alloc] initWithContentsOfURL:url];
+    UIImage *image = [UIImage imageWithData:data];
     if ((target == camera) && [self.options[@"saveToPhotos"] boolValue]) {
         UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
+        
+        if ([self.include containsObject:@"uri"]) {
+            asset[@"uri"] = [url absoluteString];
+        }
     }
     
-    if (![fileType isEqualToString:@"gif"]) {
-        image = [ImagePickerUtils resizeImage:image
-                                     maxWidth:[self.options[@"maxWidth"] floatValue]
-                                    maxHeight:[self.options[@"maxHeight"] floatValue]];
-    }
-
-    if ([fileType isEqualToString:@"jpg"]) {
-        data = UIImageJPEGRepresentation(image, [self.options[@"quality"] floatValue]);
-    } else if ([fileType isEqualToString:@"png"]) {
-        data = UIImagePNGRepresentation(image);
+    NSString *fileType;
+    if (
+        (![self.options[@"originalUri"] boolValue]) ||
+        ([self.include containsObject:@"type"]) ||
+        ([self.include containsObject:@"fileName"])
+        ) {
+        fileType = [ImagePickerUtils getFileType:data];
     }
     
-    NSMutableDictionary *asset = [[NSMutableDictionary alloc] init];
-    asset[@"type"] = [@"image/" stringByAppendingString:fileType];
-
-    NSString *fileName = [self getImageFileName:fileType];
-    NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
-    [data writeToFile:path atomically:YES];
-
-    if ([self.options[@"includeBase64"] boolValue]) {
-        asset[@"base64"] = [data base64EncodedStringWithOptions:0];
+    NSString *fileName;
+    if(
+        ([self.include containsObject:@"type"]) ||
+        ([self.include containsObject:@"fileName"])
+        ) {
+        fileName = [self getImageFileName:fileType];
     }
 
-    NSURL *fileURL = [NSURL fileURLWithPath:path];
-    asset[@"uri"] = [fileURL absoluteString];
+    if (target == library) {
+        if (![self.options[@"originalUri"] boolValue]) {
+            if (![fileType isEqualToString:@"gif"]) {
+                image = [ImagePickerUtils resizeImage:image
+                                             maxWidth:[self.options[@"maxWidth"] floatValue]
+                                            maxHeight:[self.options[@"maxHeight"] floatValue]];
+            }
 
-    NSNumber *fileSizeValue = nil;
-    NSError *fileSizeError = nil;
-    [fileURL getResourceValue:&fileSizeValue forKey:NSURLFileSizeKey error:&fileSizeError];
-    if (fileSizeValue){
-        asset[@"fileSize"] = fileSizeValue;
+            if ([fileType isEqualToString:@"jpg"]) {
+                data = UIImageJPEGRepresentation(image, [self.options[@"quality"] floatValue]);
+            } else if ([fileType isEqualToString:@"png"]) {
+                data = UIImagePNGRepresentation(image);
+            }
+            
+            NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
+            [data writeToFile:path atomically:YES];
+            
+            if ([self.include containsObject:@"base64"]) {
+                asset[@"base64"] = [data base64EncodedStringWithOptions:0];
+            }
+            
+            if ([self.include containsObject:@"uri"]) {
+                NSURL *fileURL = [NSURL fileURLWithPath:path];
+                asset[@"uri"] = [fileURL absoluteString];
+            }
+        } else {
+            if ([self.include containsObject:@"uri"]) {
+                asset[@"uri"] = [url absoluteString];
+            }
+        }
     }
-
-    asset[@"fileName"] = fileName;
-    asset[@"width"] = @(image.size.width);
-    asset[@"height"] = @(image.size.height);
     
+    if ([self.include containsObject:@"type"]) {
+        asset[@"type"] = [@"image/" stringByAppendingString:fileType];
+    }
+    if ([self.include containsObject:@"fileSize"]) {
+        NSNumber *fileSizeValue = nil;
+        NSError *fileSizeError = nil;
+        [url getResourceValue:&fileSizeValue forKey:NSURLFileSizeKey error:&fileSizeError];
+        if (fileSizeValue){
+            asset[@"fileSize"] = fileSizeValue;
+        }
+    }
+    if ([self.include containsObject:@"fileName"]) {
+        asset[@"fileName"] = fileName;
+    }
+    if ([self.include containsObject:@"width"]) {
+        asset[@"width"] = @(image.size.width);
+    }
+    if ([self.include containsObject:@"height"]) {
+        asset[@"height"] = @(image.size.height);
+    }
+
     return asset;
 }
 
 -(NSMutableDictionary *)mapVideoToAsset:(NSURL *)url error:(NSError **)error {
+    NSMutableDictionary *asset = [[NSMutableDictionary alloc] init];
+    
     NSString *fileName = [url lastPathComponent];
     NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
     NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
@@ -154,33 +197,46 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         UISaveVideoAtPathToSavedPhotosAlbum(url.path, nil, nil, nil);
     }
     
-    if (![url.URLByResolvingSymlinksInPath.path isEqualToString:videoDestinationURL.URLByResolvingSymlinksInPath.path]) {
-        NSFileManager *fileManager = [NSFileManager defaultManager];
-        
-        // Delete file if it already exists
-        if ([fileManager fileExistsAtPath:videoDestinationURL.path]) {
-            [fileManager removeItemAtURL:videoDestinationURL error:nil];
+    if(![self.options[@"originalUri"] boolValue]) {
+        if (![url.URLByResolvingSymlinksInPath.path isEqualToString:videoDestinationURL.URLByResolvingSymlinksInPath.path]) {
+            NSFileManager *fileManager = [NSFileManager defaultManager];
+            
+            // Delete file if it already exists
+            if ([fileManager fileExistsAtPath:videoDestinationURL.path]) {
+                [fileManager removeItemAtURL:videoDestinationURL error:nil];
+            }
+
+            if (url) { // Protect against reported crash
+
+                // If we have write access to the source file, move it. Otherwise use copy.
+                if ([fileManager isWritableFileAtPath:[url path]]) {
+                    [fileManager moveItemAtURL:url toURL:videoDestinationURL error:error];
+                } else {
+                    [fileManager copyItemAtURL:url toURL:videoDestinationURL error:error];
+                }
+
+                if (error) {
+                    return nil;
+                }
+            }
         }
-
-        if (url) { // Protect against reported crash
-
-          // If we have write access to the source file, move it. Otherwise use copy.
-          if ([fileManager isWritableFileAtPath:[url path]]) {
-            [fileManager moveItemAtURL:url toURL:videoDestinationURL error:error];
-          } else {
-            [fileManager copyItemAtURL:url toURL:videoDestinationURL error:error];
-          }
-
-          if (error) {
-              return nil;
-          }
+        
+        if ([self.include containsObject:@"uri"]) {
+            asset[@"uri"] = videoDestinationURL.absoluteString;
+        }
+    } else {
+        if ([self.include containsObject:@"uri"]) {
+            asset[@"uri"] = [url absoluteString];
         }
     }
     
-    NSMutableDictionary *asset = [[NSMutableDictionary alloc] init];
-    asset[@"duration"] = @(roundf(CMTimeGetSeconds([AVAsset assetWithURL:videoDestinationURL].duration)));
-    asset[@"uri"] = videoDestinationURL.absoluteString;
-    asset[@"type"] = [ImagePickerUtils getFileTypeFromUrl:videoDestinationURL];
+    if ([self.include containsObject:@"duration"]) {
+        asset[@"duration"] = @(roundf(CMTimeGetSeconds([AVAsset assetWithURL:videoDestinationURL].duration)));
+    }
+    
+    if ([self.include containsObject:@"type"]) {
+        asset[@"type"] = [ImagePickerUtils getFileTypeFromUrl:videoDestinationURL];
+    }
     
     return asset;
 }
@@ -306,8 +362,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         NSMutableArray<NSDictionary *> *assets = [[NSMutableArray alloc] initWithCapacity:1];
 
         if ([info[UIImagePickerControllerMediaType] isEqualToString:(NSString *) kUTTypeImage]) {
-            UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
-            [assets addObject:[self mapImageToAsset:image data:[NSData dataWithContentsOfURL:[ImagePickerManager getNSURLFromInfo:info]]]];
+            [assets addObject:[self mapImageToAsset:[ImagePickerManager getNSURLFromInfo:info] error:nil]];
         } else {
             NSError *error;
             NSDictionary *asset = [self mapVideoToAsset:info[UIImagePickerControllerMediaURL] error:&error];
@@ -370,10 +425,8 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         dispatch_group_enter(completionGroup);
 
         if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeImage]) {
-            [provider loadDataRepresentationForTypeIdentifier:(NSString *)kUTTypeImage completionHandler:^(NSData * _Nullable data, NSError * _Nullable error) {
-                UIImage *image = [[UIImage alloc] initWithData:data];
-
-                [assets addObject:[self mapImageToAsset:image data:data]];
+            [provider loadFileRepresentationForTypeIdentifier:(NSString *)kUTTypeImage completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
+                [assets addObject:[self mapImageToAsset:url error:nil]];
                 dispatch_group_leave(completionGroup);
             }];
         }

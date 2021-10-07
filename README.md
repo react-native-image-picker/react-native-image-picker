@@ -75,19 +75,19 @@ The `callback` will be called with a response object, refer to [The Response Obj
 
 ## Options
 
-| Option        | iOS | Android | Description                                                                                                                               |
-| ------------- | --- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| mediaType     | OK  | OK      | 'photo' or 'video' or 'mixed'(mixed supported only for launchImageLibrary, to pick an photo or video)                                     |
-| maxWidth      | OK  | OK      | To resize the image                                                                                                                       |
-| maxHeight     | OK  | OK      | To resize the image                                                                                                                       |
-| videoQuality  | OK  | OK      | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android                                                                             |
-| durationLimit | OK  | OK      | Video max duration in seconds                                                                                                             |
-| quality       | OK  | OK      | 0 to 1, photos                                                                                                                            |
-| cameraType    | OK  | OK      | 'back' or 'front'. May not be supported in few android devices                                                                            |
-| saveToPhotos  | OK  | OK      | (Boolean) Only for launchCamera, saves the image/video file captured to public photo                                                      |
-| selectionLimit| OK  | OK      | Default is `1`, use `0` to allow any number of files. Only iOS version >= 14 support `0` and also it supports providing any integer value |
-| originalUri   | -   | OK      | (Boolean) When set to `true` (`false` by default) does not copy the file and returns the oiginal uri.                                     |
-| include       | -   | OK      | When provided only return the selected types. Omit to receive all types. [refer to Asset Object](#Asset-Object)                           |
+| Option        | iOS | Android | Description                                                                                                                                    |
+| ------------- | --- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| mediaType     | OK  | OK      | 'photo' or 'video' or 'mixed'(mixed supported only for launchImageLibrary, to pick an photo or video)                                          |
+| maxWidth      | OK  | OK      | To resize the image                                                                                                                            |
+| maxHeight     | OK  | OK      | To resize the image                                                                                                                            |
+| videoQuality  | OK  | OK      | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android                                                                                  |
+| durationLimit | OK  | OK      | Video max duration in seconds                                                                                                                  |
+| quality       | OK  | OK      | 0 to 1, photos                                                                                                                                 |
+| cameraType    | OK  | OK      | 'back' or 'front'. May not be supported in few android devices                                                                                 |
+| saveToPhotos  | OK  | OK      | (Boolean) Only for launchCamera, saves the image/video file captured to public photo                                                           |
+| selectionLimit| OK  | OK      | Default is `1`, use `0` to allow any number of files. Only iOS version >= 14 support `0` and also it supports providing any integer value      |
+| originalUri   | OK  | OK      | (Boolean) When set to `true` (`false` by default) does not copy the file and returns the original uri. This also disables resizing and quality |
+| include       | OK  | OK      | (Array of Asset keys) When provided only return the selected types. Omit to receive all types. [refer to Asset Object](#Asset-Object)          |
 
 ## The Response Object
 
