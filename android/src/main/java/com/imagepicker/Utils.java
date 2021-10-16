@@ -383,11 +383,12 @@ public class Utils {
         return fileUris;
     }
 
-    static ReadableMap getImageResponseMap(Uri uri, Options options, Context context) {
+    static ReadableMap getImageResponseMap(Uri uri, String id, Options options, Context context) {
         String fileName = uri.getLastPathSegment();
         int[] dimensions = getImageDimensions(uri, context);
 
         WritableMap map = Arguments.createMap();
+        map.putString("id", id);
         map.putString("uri", uri.toString());
         map.putDouble("fileSize", getFileSize(uri, context));
         map.putString("fileName", fileName);
@@ -402,9 +403,10 @@ public class Utils {
         return map;
     }
 
-    static ReadableMap getVideoResponseMap(Uri uri, Context context) {
+    static ReadableMap getVideoResponseMap(Uri uri, String id, Context context) {
         String fileName = uri.getLastPathSegment();
         WritableMap map = Arguments.createMap();
+        map.putString("id", id);
         map.putString("uri", uri.toString());
         map.putDouble("fileSize", getFileSize(uri, context));
         map.putInt("duration", getDuration(uri, context));
@@ -418,15 +420,16 @@ public class Utils {
 
         for(int i = 0; i < fileUris.size(); ++i) {
             Uri uri = fileUris.get(i);
+            String id = uri.getLastPathSegment();
 
             if (isImageType(uri, context)) {
                 if (uri.getScheme().contains("content")) {
                     uri = getAppSpecificStorageUri(uri, context);
                 }
                 uri = resizeImage(uri, context, options);
-                assets.pushMap(getImageResponseMap(uri, options, context));
+                assets.pushMap(getImageResponseMap(uri, id, options, context));
             } else if (isVideoType(uri, context)) {
-                assets.pushMap(getVideoResponseMap(uri, context));
+                assets.pushMap(getVideoResponseMap(uri, id, context));
             } else {
                 throw new RuntimeException("Unsupported file type");
             }
