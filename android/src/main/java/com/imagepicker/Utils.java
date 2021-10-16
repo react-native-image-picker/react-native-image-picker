@@ -323,21 +323,21 @@ public class Utils {
     }
 
     public static class VideoMetadata {
-      int duration;
-      int bitrate;
+        int duration;
+        int bitrate;
 
         public VideoMetadata(int duration, int bitrate) {
             this.duration = duration;
             this.bitrate = bitrate;
         }
 
-         public int getBitrate() {
+        public int getBitrate() {
             return bitrate;
-         }
+        }
 
-         public int getDuration() {
+        public int getDuration() {
             return duration;
-          }
+        }
     }
 
     // This library does not require Manifest.permission.CAMERA permission, but if user app declares as using this permission which is not granted, then attempting to use ACTION_IMAGE_CAPTURE|ACTION_VIDEO_CAPTURE will result in a SecurityException.
