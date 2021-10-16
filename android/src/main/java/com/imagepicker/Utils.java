@@ -42,6 +42,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import static java.lang.Integer.parseInt;
 import static com.imagepicker.ImagePickerModule.*;
 
 public class Utils {
@@ -262,12 +263,13 @@ public class Utils {
         }
     }
 
-    static int getDuration(Uri uri, Context context) {
+    static VideoMetadata getVideoMetaData(Uri uri, Context context) {
         MediaMetadataRetriever m = new MediaMetadataRetriever();
         m.setDataSource(context, uri);
         int duration = Math.round(Float.parseFloat(m.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION))) / 1000;
+        int bitrate = parseInt(m.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE));
         m.release();
-        return duration;
+        return new VideoMetadata(duration, bitrate);
     }
 
     static boolean shouldResizeImage(int origWidth, int origHeight, Options options) {
@@ -318,6 +320,24 @@ public class Utils {
             case REQUEST_LAUNCH_LIBRARY: return true;
             default: return false;
         }
+    }
+
+    public static class VideoMetadata {
+      int duration;
+      int bitrate;
+
+        public VideoMetadata(int duration, int bitrate) {
+            this.duration = duration;
+            this.bitrate = bitrate;
+        }
+
+         public int getBitrate() {
+            return bitrate;
+         }
+
+         public int getDuration() {
+            return duration;
+          }
     }
 
     // This library does not require Manifest.permission.CAMERA permission, but if user app declares as using this permission which is not granted, then attempting to use ACTION_IMAGE_CAPTURE|ACTION_VIDEO_CAPTURE will result in a SecurityException.
@@ -407,7 +427,9 @@ public class Utils {
         WritableMap map = Arguments.createMap();
         map.putString("uri", uri.toString());
         map.putDouble("fileSize", getFileSize(uri, context));
-        map.putInt("duration", getDuration(uri, context));
+        VideoMetadata videoMetadata = getVideoMetaData(uri, context);
+        map.putInt("duration", videoMetadata.getDuration());
+        map.putInt("bitrate", videoMetadata.getBitrate());
         map.putString("fileName", fileName);
         map.putString("type", getMimeType(uri, context));
         return map;
