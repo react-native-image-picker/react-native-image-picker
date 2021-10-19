@@ -383,7 +383,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             }];
         } else {
             // The provider didn't have an item matching photo or video (fails on M1 Mac Simulator)
-            dispatch_group_leave(completionGroup)
+            dispatch_group_leave(completionGroup);
         }
     }
 
