@@ -376,13 +376,14 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
                 [assets addObject:[self mapImageToAsset:image data:data]];
                 dispatch_group_leave(completionGroup);
             }];
-        }
-
-        if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeMovie]) {
+        } else if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeMovie]) {
             [provider loadFileRepresentationForTypeIdentifier:(NSString *)kUTTypeMovie completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
                 [assets addObject:[self mapVideoToAsset:url error:nil]];
                 dispatch_group_leave(completionGroup);
             }];
+        } else {
+            // The provider didn't have an item matching photo or video (fails on M1 Mac Simulator)
+            dispatch_group_leave(completionGroup)
         }
     }
 
