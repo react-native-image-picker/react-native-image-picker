@@ -369,8 +369,13 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         NSItemProvider *provider = result.itemProvider;
         dispatch_group_enter(completionGroup);
 
-        if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeImage]) {
-            [provider loadDataRepresentationForTypeIdentifier:(NSString *)kUTTypeImage completionHandler:^(NSData * _Nullable data, NSError * _Nullable error) {
+        if ([provider canLoadObjectOfClass:[UIImage class]]) {
+            NSString *identifier = provider.registeredTypeIdentifiers.firstObject;
+            if ([identifier isEqualToString:@"com.apple.live-photo-bundle"]) {
+                // Handle live photos
+                identifier = @"public.jpeg";
+            }
+            [provider loadDataRepresentationForTypeIdentifier:identifier completionHandler:^(NSData * _Nullable data, NSError * _Nullable error) {
                 UIImage *image = [[UIImage alloc] initWithData:data];
 
                 [assets addObject:[self mapImageToAsset:image data:data]];
@@ -386,7 +391,6 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             dispatch_group_leave(completionGroup);
         }
     }
-
     dispatch_group_notify(completionGroup, dispatch_get_main_queue(), ^{
         //  mapVideoToAsset can fail and return nil.
         for (NSDictionary *asset in assets) {
