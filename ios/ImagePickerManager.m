@@ -375,7 +375,9 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
                 // Handle live photos
                 identifier = @"public.jpeg";
             }
-            [provider loadDataRepresentationForTypeIdentifier:identifier completionHandler:^(NSData * _Nullable data, NSError * _Nullable error) {
+
+            [provider loadFileRepresentationForTypeIdentifier:identifier completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
+                NSData *data = [[NSData alloc] initWithContentsOfURL:url];
                 UIImage *image = [[UIImage alloc] initWithData:data];
 
                 [assets addObject:[self mapImageToAsset:image data:data]];
@@ -391,6 +393,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             dispatch_group_leave(completionGroup);
         }
     }
+
     dispatch_group_notify(completionGroup, dispatch_get_main_queue(), ^{
         //  mapVideoToAsset can fail and return nil.
         for (NSDictionary *asset in assets) {
