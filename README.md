@@ -85,7 +85,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | quality        | OK  | OK      | 0 to 1, photos                                                                                                                            |
 | cameraType     | OK  | OK      | 'back' or 'front'. May not be supported in few android devices                                                                            |
 | includeBase64  | OK  | OK      | If true, creates base64 string of the image (Avoid using on large image                                                                   |
-| includeExif    | OK  | OK      | If true, will include exif data. Library permissions are required for this option                                                         |
+| includeExtra   | OK  | OK      | If true, will include extra data which requires library permissions to be requested (i.e. exif data)                                      |
 | saveToPhotos   | OK  | OK      | (Boolean) Only for launchCamera, saves the image/video file captured to public photo                                                      |
 | selectionLimit | OK  | OK      | Default is `1`, use `0` to allow any number of files. Only iOS version >= 14 support `0` and also it supports providing any integer value |
 
@@ -110,7 +110,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | type      | OK  | OK      | The file type (photos only)                                                                                                                                                                                                                |
 | fileName  | OK  | OK      | The file name                                                                                                                                                                                                                              |
 | duration  | OK  | OK      | The selected video duration in seconds                                                                                                                                                                                                     |
-| timestamp | OK  | OK      | Timestamp of the photo. Only included if 'includeExif' is true                                                                                                                                                                             |
+| timestamp | OK  | OK      | Timestamp of the photo. Only included if 'includeExtra' is true                                                                                                                                                                            |
 
 ## Note on file storage
 

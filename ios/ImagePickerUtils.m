@@ -51,7 +51,7 @@
 #if __has_include(<PhotosUI/PHPicker.h>)
     PHPickerConfiguration *configuration;
     
-    if(options[@"includeExif"]) {
+    if(options[@"includeExtra"]) {
         PHPhotoLibrary *photoLibrary = [PHPhotoLibrary sharedPhotoLibrary];
         configuration = [[PHPickerConfiguration alloc] initWithPhotoLibrary:photoLibrary];
     } else {

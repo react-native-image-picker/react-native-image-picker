@@ -8,7 +8,7 @@ export interface ImageLibraryOptions {
   quality?: PhotoQuality;
   videoQuality?: AndroidVideoOptions | iOSVideoOptions;
   includeBase64?: boolean;
-  includeExif?: boolean;
+  includeExtra?: boolean;
 }
 
 export interface CameraOptions

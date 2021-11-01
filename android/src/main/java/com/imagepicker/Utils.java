@@ -401,7 +401,7 @@ public class Utils {
             map.putString("base64", getBase64String(uri, context));
         }
 
-        if(options.includeExif) {
+        if(options.includeExtra) {
           try (InputStream inputStream = context.getContentResolver().openInputStream(uri)) {
             ExifInterface exif = new ExifInterface(inputStream);
             String datetime =  exif.getAttribute(ExifInterface.TAG_DATETIME);

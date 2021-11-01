@@ -69,7 +69,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             picker.delegate = self;
             picker.presentationController.delegate = self;
 
-            if([self.options[@"includeExif"] boolValue]) {
+            if([self.options[@"includeExtra"] boolValue]) {
                 
                 [self checkPhotosPermissions:^(BOOL granted) {
                     if (!granted) {
@@ -90,7 +90,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     [ImagePickerUtils setupPickerFromOptions:picker options:self.options target:target];
     picker.delegate = self;
     
-    if([self.options[@"includeExif"] boolValue]) {
+    if([self.options[@"includeExtra"] boolValue]) {
         [self checkPhotosPermissions:^(BOOL granted) {
             if (!granted) {
                 self.callback(@[@{@"errorCode": errPermission}]);
@@ -333,7 +333,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
             
             // If include exif, we fetch the PHAsset, this required library permissions
-            if([self.options[@"includeExif"] boolValue]) {
+            if([self.options[@"includeExtra"] boolValue]) {
                 NSURL *referenceURL = [info objectForKey:UIImagePickerControllerReferenceURL];
                 
                 if(referenceURL != nil) {
@@ -407,7 +407,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         NSItemProvider *provider = result.itemProvider;
 
         // If include exif, we fetch the PHAsset, this required library permissions
-        if([self.options[@"includeExif"] boolValue] && result.assetIdentifier != nil) {
+        if([self.options[@"includeExtra"] boolValue] && result.assetIdentifier != nil) {
             PHFetchResult* fetchResult = [PHAsset fetchAssetsWithLocalIdentifiers:@[result.assetIdentifier] options:nil];
             asset = fetchResult.firstObject;
         }
