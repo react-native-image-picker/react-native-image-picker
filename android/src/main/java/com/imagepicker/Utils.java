@@ -37,10 +37,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import static com.imagepicker.ImagePickerModule.*;
@@ -404,10 +407,14 @@ public class Utils {
         if(options.includeExtra) {
           try (InputStream inputStream = context.getContentResolver().openInputStream(uri)) {
             ExifInterface exif = new ExifInterface(inputStream);
-            String datetime =  exif.getAttribute(ExifInterface.TAG_DATETIME);
+            Date datetime = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss").parse(exif.getAttribute(ExifInterface.TAG_DATETIME));
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+            formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+            String datetimeAsString =  formatter.format(datetime);
+
             // Add more exif data here ...
 
-            map.putString("timestamp", datetime);
+            map.putString("timestamp", datetimeAsString);
           } catch (Exception e) {
             Log.e("RNIP", "Could not load image exif data: " + e.getMessage());
           }
