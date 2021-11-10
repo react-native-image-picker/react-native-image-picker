@@ -14,6 +14,7 @@ const DEFAULT_OPTIONS: ImageLibraryOptions & CameraOptions = {
   selectionLimit: 1,
   saveToPhotos: false,
   durationLimit: 0,
+  includeExtra: false,
 };
 
 export function launchCamera(options: CameraOptions, callback: Callback) {

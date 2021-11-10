@@ -8,8 +8,8 @@ A React Native module that allows you to select a photo/video from the device li
 </p>
 
 ### Make sure you're reading the doc applicable to your version, for example if your using version 3.8.0 go to tag 3.8.0 and read those docs. This doc is always that of main branch.
-### Also read version release notes for any breaking changes especially if you're updating the major version.
 
+### Also read version release notes for any breaking changes especially if you're updating the major version.
 
 # Install
 
@@ -66,7 +66,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 Launch gallery to pick image or video.
 
 ```js
-launchImageLibrary(options?, callback)
+launchImageLibrary(options?, callback);
 ```
 
 See [Options](#options) for further information on `options`.
@@ -75,40 +75,42 @@ The `callback` will be called with a response object, refer to [The Response Obj
 
 ## Options
 
-| Option        | iOS | Android | Description                                                                                           |
-| ------------- | --- | ------- | ----------------------------------------------------------------------------------------------------- |
-| mediaType     | OK  | OK      | 'photo' or 'video' or 'mixed'(mixed supported only for launchImageLibrary, to pick an photo or video) |
-| maxWidth      | OK  | OK      | To resize the image                                                                                   |
-| maxHeight     | OK  | OK      | To resize the image                                                                                   |
-| videoQuality  | OK  | OK      | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android                                         |
-| durationLimit | OK  | OK      | Video max duration in seconds                                                                         |
-| quality       | OK  | OK      | 0 to 1, photos                                                                                        |
-| cameraType    | OK  | OK      | 'back' or 'front'. May not be supported in few android devices                                        |
-| includeBase64 | OK  | OK      | If true, creates base64 string of the image (Avoid using on large image files due to performance)     |
-| saveToPhotos  | OK  | OK      | (Boolean) Only for launchCamera, saves the image/video file captured to public photo                  |
-| selectionLimit| OK  | OK      | Default is `1`, use `0` to allow any number of files. Only iOS version >= 14 support `0` and also it supports providing any integer value|
+| Option         | iOS | Android | Description                                                                                                                               |
+| -------------- | --- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| mediaType      | OK  | OK      | 'photo' or 'video' or 'mixed'(mixed supported only for launchImageLibrary, to pick an photo or video)                                     |
+| maxWidth       | OK  | OK      | To resize the image                                                                                                                       |
+| maxHeight      | OK  | OK      | To resize the image                                                                                                                       |
+| videoQuality   | OK  | OK      | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android                                                                             |
+| durationLimit  | OK  | OK      | Video max duration in seconds                                                                                                             |
+| quality        | OK  | OK      | 0 to 1, photos                                                                                                                            |
+| cameraType     | OK  | OK      | 'back' or 'front'. May not be supported in few android devices                                                                            |
+| includeBase64  | OK  | OK      | If true, creates base64 string of the image (Avoid using on large image                                                                   |
+| includeExtra   | OK  | OK      | If true, will include extra data which requires library permissions to be requested (i.e. exif data)                                      |
+| saveToPhotos   | OK  | OK      | (Boolean) Only for launchCamera, saves the image/video file captured to public photo                                                      |
+| selectionLimit | OK  | OK      | Default is `1`, use `0` to allow any number of files. Only iOS version >= 14 support `0` and also it supports providing any integer value |
 
 ## The Response Object
 
-| key                         | iOS | Android | Description                                             |
-| --------------------------- | --- | ------- | ------------------------------------------------------- |
-| didCancel                   | OK  | OK      | `true` if the user cancelled the process                |
-| errorCode                   | OK  | OK      | Check [ErrorCode](#ErrorCode) for all error codes       |
-| errorMessage                | OK  | OK      | Description of the error, use it for debug purpose only |
-| assets                      | OK  | OK      | Array of the selected media, [refer to Asset Object](#Asset-Object) |
+| key          | iOS | Android | Description                                                         |
+| ------------ | --- | ------- | ------------------------------------------------------------------- |
+| didCancel    | OK  | OK      | `true` if the user cancelled the process                            |
+| errorCode    | OK  | OK      | Check [ErrorCode](#ErrorCode) for all error codes                   |
+| errorMessage | OK  | OK      | Description of the error, use it for debug purpose only             |
+| assets       | OK  | OK      | Array of the selected media, [refer to Asset Object](#Asset-Object) |
 
 ## Asset Object
 
-| key      | iOS | Android | Description                                                                                                                                                                                                                                |
-| -------- | --- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| base64   | OK  | OK      | The base64 string of the image (photos only)                                                                                                                                                                                               |
-| uri      | OK  | OK      | The file uri in app specific cache storage. Except when picking **video from Android gallery** where you will get read only content uri, to get file uri in this case copy the file to app specific storage using any react-native library |
-| width    | OK  | OK      | Image dimensions (photos only)                                                                                                                                                                                                             |
-| height   | OK  | OK      | Image dimensions (photos only)                                                                                                                                                                                                             |
-| fileSize | OK  | OK      | The file size (except for videos on Android)                                                                                                                                                                                                                |
-| type     | OK  | OK      | The file type (photos only)                                                                                                                                                                                                                |
-| fileName | OK  | OK      | The file name                                                                                                                                                                                                                              |
-| duration | OK  | OK      | The selected video duration in seconds                                                                                                                                                                                                     |
+| key       | iOS | Android | Description                                                                                                                                                                                                                                |
+| --------- | --- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| base64    | OK  | OK      | The base64 string of the image (photos only)                                                                                                                                                                                               |
+| uri       | OK  | OK      | The file uri in app specific cache storage. Except when picking **video from Android gallery** where you will get read only content uri, to get file uri in this case copy the file to app specific storage using any react-native library |
+| width     | OK  | OK      | Image dimensions (photos only)                                                                                                                                                                                                             |
+| height    | OK  | OK      | Image dimensions (photos only)                                                                                                                                                                                                             |
+| fileSize  | OK  | OK      | The file size (photos only)                                                                                                                                                                                                                |
+| type      | OK  | OK      | The file type (photos only)                                                                                                                                                                                                                |
+| fileName  | OK  | OK      | The file name                                                                                                                                                                                                                              |
+| duration  | OK  | OK      | The selected video duration in seconds                                                                                                                                                                                                     |
+| timestamp | OK  | OK      | Timestamp of the photo. Only included if 'includeExtra' is true                                                                                                                                                                            |
 
 ## Note on file storage
 
