@@ -103,6 +103,19 @@
     return (__bridge_transfer NSString *)MIMEType;
 }
 
++ (NSNumber *) getFileSizeFromUrl:(NSURL *)url {
+    NSError *attributesError;
+    NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[url path] error:&attributesError];
+    NSNumber *fileSizeNumber = [fileAttributes objectForKey:NSFileSize];
+    long fileSize = [fileSizeNumber longLongValue];
+
+    if (attributesError) {
+        return nil;
+    }
+
+    return [NSNumber numberWithLong:fileSize];
+}
+
 + (UIImage*)resizeImage:(UIImage*)image maxWidth:(float)maxWidth maxHeight:(float)maxHeight
 {
     if ((maxWidth == 0) || (maxHeight == 0)) {

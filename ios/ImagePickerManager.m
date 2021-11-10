@@ -181,6 +181,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     asset[@"duration"] = [NSNumber numberWithDouble:CMTimeGetSeconds([AVAsset assetWithURL:videoDestinationURL].duration)];
     asset[@"uri"] = videoDestinationURL.absoluteString;
     asset[@"type"] = [ImagePickerUtils getFileTypeFromUrl:videoDestinationURL];
+    asset[@"fileSize"] = [ImagePickerUtils getFileSizeFromUrl:videoDestinationURL];
     
     return asset;
 }
