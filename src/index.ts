@@ -1,6 +1,6 @@
 import {NativeModules} from 'react-native';
 
-import {CameraOptions, ImageLibraryOptions, Callback} from './types';
+import {CameraOptions, ImageLibraryOptions, Callback, ImagePickerResponse} from './types';
 export * from './types';
 
 const DEFAULT_OPTIONS: ImageLibraryOptions & CameraOptions = {
@@ -16,6 +16,12 @@ const DEFAULT_OPTIONS: ImageLibraryOptions & CameraOptions = {
   durationLimit: 0,
 };
 
+export function launchCameraAsPromise(options: CameraOptions) : Promise<ImagePickerResponse> {
+  return new Promise(resolve => {
+    launchCamera(options, result => resolve(result));
+  });
+}
+
 export function launchCamera(options: CameraOptions, callback: Callback) {
   if (typeof callback !== 'function') {
     console.error("Send proper callback function, check API");
@@ -26,6 +32,12 @@ export function launchCamera(options: CameraOptions, callback: Callback) {
     {...DEFAULT_OPTIONS, ...options},
     callback,
   );
+}
+
+export function launchImageLibraryAsPromise(options: ImageLibraryOptions) : Promise<ImagePickerResponse> {
+  return new Promise(resolve => {
+    launchImageLibrary(options, result => resolve(result));
+  });
 }
 
 export function launchImageLibrary(

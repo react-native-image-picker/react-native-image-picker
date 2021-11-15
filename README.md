@@ -61,6 +61,14 @@ See [Options](#options) for further information on `options`.
 
 The `callback` will be called with a response object, refer to [The Response Object](#the-response-object).
 
+#### `launchCameraAsPromise`
+
+```ts
+const result : ImagePickerResponse = await launchCameraAsPromise(options?);
+```
+
+See [Options](#options) for further information on `options`.
+
 ### `launchImageLibrary`
 
 Launch gallery to pick image or video.
@@ -72,6 +80,14 @@ launchImageLibrary(options?, callback)
 See [Options](#options) for further information on `options`.
 
 The `callback` will be called with a response object, refer to [The Response Object](#the-response-object).
+
+#### `launchImageLibraryAsPromise`
+
+```ts
+const result : ImagePickerResponse = await launchImageLibraryAsPromise(options?);
+```
+
+See [Options](#options) for further information on `options`.
 
 ## Options
 
