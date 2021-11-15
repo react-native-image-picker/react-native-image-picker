@@ -417,20 +417,28 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         
         dispatch_group_enter(completionGroup);
 
-        if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeImage]) {
-            [provider loadDataRepresentationForTypeIdentifier:(NSString *)kUTTypeImage completionHandler:^(NSData * _Nullable data, NSError * _Nullable error) {
+        if ([provider canLoadObjectOfClass:[UIImage class]]) {
+            NSString *identifier = provider.registeredTypeIdentifiers.firstObject;
+            if ([identifier isEqualToString:@"com.apple.live-photo-bundle"]) {
+                // Handle live photos
+                identifier = @"public.jpeg";
+            }
+
+            [provider loadFileRepresentationForTypeIdentifier:identifier completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
+                NSData *data = [[NSData alloc] initWithContentsOfURL:url];
                 UIImage *image = [[UIImage alloc] initWithData:data];
                 
                 [assets addObject:[self mapImageToAsset:image data:data phAsset:asset]];
                 dispatch_group_leave(completionGroup);
             }];
-        }
-
-        if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeMovie]) {
+        } else if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeMovie]) {
             [provider loadFileRepresentationForTypeIdentifier:(NSString *)kUTTypeMovie completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
                 [assets addObject:[self mapVideoToAsset:url error:nil]];
                 dispatch_group_leave(completionGroup);
             }];
+        } else {
+            // The provider didn't have an item matching photo or video (fails on M1 Mac Simulator)
+            dispatch_group_leave(completionGroup);
         }
     }
 
