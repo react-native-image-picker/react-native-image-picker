@@ -17,40 +17,30 @@ const DEFAULT_OPTIONS: ImageLibraryOptions & CameraOptions = {
   includeExtra: false,
 };
 
-export function launchCameraAsPromise(options: CameraOptions) : Promise<ImagePickerResponse> {
+export function launchCamera(options: CameraOptions, callback?: Callback) : Promise<ImagePickerResponse> {
   return new Promise(resolve => {
-    launchCamera(options, result => resolve(result));
-  });
-}
-
-export function launchCamera(options: CameraOptions, callback: Callback) {
-  if (typeof callback !== 'function') {
-    console.error("Send proper callback function, check API");
-    return;
-  }
-
-  NativeModules.ImagePickerManager.launchCamera(
-    {...DEFAULT_OPTIONS, ...options},
-    callback,
-  );
-}
-
-export function launchImageLibraryAsPromise(options: ImageLibraryOptions) : Promise<ImagePickerResponse> {
-  return new Promise(resolve => {
-    launchImageLibrary(options, result => resolve(result));
-  });
+    NativeModules.ImagePickerManager.launchCamera(
+      {...DEFAULT_OPTIONS, ...options},
+      (result: ImagePickerResponse) => {
+        if(callback) callback(result);
+        resolve(result);
+      },
+    );
+  });  
 }
 
 export function launchImageLibrary(
   options: ImageLibraryOptions,
-  callback: Callback,
-) {
-  if (typeof callback !== 'function') {
-    console.error("Send proper callback function, check API");
-    return;
-  }
-  NativeModules.ImagePickerManager.launchImageLibrary(
-    {...DEFAULT_OPTIONS, ...options},
-    callback,
-  );
+  callback?: Callback,
+) : Promise<ImagePickerResponse> {
+  return new Promise(resolve => {
+    NativeModules.ImagePickerManager.launchImageLibrary(
+      {...DEFAULT_OPTIONS, ...options},
+      (result: ImagePickerResponse) => {
+        if(callback) callback(result);
+        resolve(result);
+      },
+    );
+  })
+  
 }

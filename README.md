@@ -55,35 +55,29 @@ Launch camera to take photo or video.
 
 ```js
 launchCamera(options?, callback);
+
+// You can also use as a promise without 'callback':
+const result = await launchCamera(options?);
 ```
 
 See [Options](#options) for further information on `options`.
 
 The `callback` will be called with a response object, refer to [The Response Object](#the-response-object).
-
-#### `launchCameraAsPromise`
-
-```ts
-const result : ImagePickerResponse = await launchCameraAsPromise(options?);
-```
 
 ### `launchImageLibrary`
 
 Launch gallery to pick image or video.
 
 ```js
-launchImageLibrary(options?, callback);
+launchImageLibrary(options?, callback)
+
+// You can also use as a promise without 'callback':
+const result = await launchImageLibrary(options?);
 ```
 
 See [Options](#options) for further information on `options`.
 
 The `callback` will be called with a response object, refer to [The Response Object](#the-response-object).
-
-#### `launchImageLibraryAsPromise`
-
-```ts
-const result : ImagePickerResponse = await launchImageLibraryAsPromise(options?);
-```
 
 ## Options
 
