@@ -49,7 +49,15 @@
 + (PHPickerConfiguration *)makeConfigurationFromOptions:(NSDictionary *)options target:(RNImagePickerTarget)target API_AVAILABLE(ios(14))
 {
 #if __has_include(<PhotosUI/PHPicker.h>)
-    PHPickerConfiguration *configuration = [[PHPickerConfiguration alloc] init];
+    PHPickerConfiguration *configuration;
+    
+    if(options[@"includeExtra"]) {
+        PHPhotoLibrary *photoLibrary = [PHPhotoLibrary sharedPhotoLibrary];
+        configuration = [[PHPickerConfiguration alloc] initWithPhotoLibrary:photoLibrary];
+    } else {
+        configuration = [[PHPickerConfiguration alloc] init];
+    }
+    
     configuration.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCurrent;
     configuration.selectionLimit = [options[@"selectionLimit"] integerValue];
 
