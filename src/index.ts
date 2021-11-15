@@ -1,6 +1,6 @@
 import {NativeModules} from 'react-native';
 
-import {CameraOptions, ImageLibraryOptions, Callback} from './types';
+import {CameraOptions, ImageLibraryOptions, Callback, ImagePickerResponse} from './types';
 export * from './types';
 
 const DEFAULT_OPTIONS: ImageLibraryOptions & CameraOptions = {
@@ -17,28 +17,30 @@ const DEFAULT_OPTIONS: ImageLibraryOptions & CameraOptions = {
   includeExtra: false,
 };
 
-export function launchCamera(options: CameraOptions, callback: Callback) {
-  if (typeof callback !== 'function') {
-    console.error("Send proper callback function, check API");
-    return;
-  }
-
-  NativeModules.ImagePickerManager.launchCamera(
-    {...DEFAULT_OPTIONS, ...options},
-    callback,
-  );
+export function launchCamera(options: CameraOptions, callback?: Callback) : Promise<ImagePickerResponse> {
+  return new Promise(resolve => {
+    NativeModules.ImagePickerManager.launchCamera(
+      {...DEFAULT_OPTIONS, ...options},
+      (result: ImagePickerResponse) => {
+        if(callback) callback(result);
+        resolve(result);
+      },
+    );
+  });  
 }
 
 export function launchImageLibrary(
   options: ImageLibraryOptions,
-  callback: Callback,
-) {
-  if (typeof callback !== 'function') {
-    console.error("Send proper callback function, check API");
-    return;
-  }
-  NativeModules.ImagePickerManager.launchImageLibrary(
-    {...DEFAULT_OPTIONS, ...options},
-    callback,
-  );
+  callback?: Callback,
+) : Promise<ImagePickerResponse> {
+  return new Promise(resolve => {
+    NativeModules.ImagePickerManager.launchImageLibrary(
+      {...DEFAULT_OPTIONS, ...options},
+      (result: ImagePickerResponse) => {
+        if(callback) callback(result);
+        resolve(result);
+      },
+    );
+  })
+  
 }

@@ -55,6 +55,9 @@ Launch camera to take photo or video.
 
 ```js
 launchCamera(options?, callback);
+
+// You can also use as a promise without 'callback':
+const result = await launchCamera(options?);
 ```
 
 See [Options](#options) for further information on `options`.
@@ -66,7 +69,10 @@ The `callback` will be called with a response object, refer to [The Response Obj
 Launch gallery to pick image or video.
 
 ```js
-launchImageLibrary(options?, callback);
+launchImageLibrary(options?, callback)
+
+// You can also use as a promise without 'callback':
+const result = await launchImageLibrary(options?);
 ```
 
 See [Options](#options) for further information on `options`.
@@ -84,7 +90,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | durationLimit  | OK  | OK      | Video max duration in seconds                                                                                                             |
 | quality        | OK  | OK      | 0 to 1, photos                                                                                                                            |
 | cameraType     | OK  | OK      | 'back' or 'front'. May not be supported in few android devices                                                                            |
-| includeBase64  | OK  | OK      | If true, creates base64 string of the image (Avoid using on large image                                                                   |
+| includeBase64  | OK  | OK      | If true, creates base64 string of the image (Avoid using on large image files due to performance)                                         |                                                   |
 | includeExtra   | OK  | OK      | If true, will include extra data which requires library permissions to be requested (i.e. exif data)                                      |
 | saveToPhotos   | OK  | OK      | (Boolean) Only for launchCamera, saves the image/video file captured to public photo                                                      |
 | selectionLimit | OK  | OK      | Default is `1`, use `0` to allow any number of files. Only iOS version >= 14 support `0` and also it supports providing any integer value |
