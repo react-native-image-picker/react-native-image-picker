@@ -216,7 +216,7 @@ public class Utils {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return  null;
+            return uri; // cannot resize the image, return the original uri
         }
     }
 
