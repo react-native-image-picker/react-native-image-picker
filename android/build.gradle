@@ -57,6 +57,6 @@ dependencies {
     testImplementation "org.powermock:powermock-module-junit4-rule:${POWERMOCK_VERSION}"
     testImplementation "org.powermock:powermock-classloading-xstream:${POWERMOCK_VERSION}"
     testImplementation "org.mockito:mockito-core:${MOCKITO_CORE_VERSION}"
-    implementation "androidx.core:core-ktx:+"
+    implementation "androidx.core:core-ktx:1.6.0"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
