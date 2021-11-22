@@ -133,14 +133,22 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     NSDictionary *exifTiffDictionary = [metadata objectForKey:(NSString *)kCGImagePropertyTIFFDictionary];
     NSDictionary *exifGPSDictionary = [metadata objectForKey:(NSString *)kCGImagePropertyGPSDictionary];
  
+   
+    
     NSNumber *latitude = [exifGPSDictionary objectForKey:@"Latitude"];
     NSNumber *longitude = [exifGPSDictionary objectForKey:@"Longitude"];
+
+    if (latitude != nil && longitude != nil) {
+        asset[@"latitude"] = @(latitude.floatValue);
+        asset[@"longitude"] = @(longitude.floatValue);
+    }
+
     NSString *dateTime = [exifTiffDictionary objectForKey:@"DateTime"];
     
-    asset[@"dateTime"] = @(dateTime.UTF8String);
-    asset[@"latitude"] = @(latitude.floatValue);
-    asset[@"longitude"] = @(longitude.floatValue);
-    
+    if (dateTime != nil) {
+        asset[@"dateTime"] = @(dateTime.UTF8String);
+    }
+
     if ([fileType isEqualToString:@"jpg"]) {
         data = UIImageJPEGRepresentation(image, [self.options[@"quality"] floatValue]);
     } else if ([fileType isEqualToString:@"png"]) {
