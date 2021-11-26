@@ -436,8 +436,15 @@ public class Utils {
 
     static ReadableMap getResponseMap(List<Uri> fileUris, Options options, Context context) throws RuntimeException {
         WritableArray assets = Arguments.createArray();
+        int size;
+        if(fileUris.size() > options.selectionLimit) {
+            size = options.selectionLimit;
+        }
+        else {
+            size = fileUris.size();
+        }
 
-        for(int i = 0; i < fileUris.size(); ++i) {
+        for(int i = 0; i < size; ++i) {
             Uri uri = fileUris.get(i);
 
             if (isImageType(uri, context)) {
