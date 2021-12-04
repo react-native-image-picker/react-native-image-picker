@@ -49,6 +49,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 import java.util.TimeZone;
 import java.util.UUID;
 
@@ -485,13 +486,20 @@ public class Utils {
     }
 
     static ReadableMap getVideoResponseMap(Uri uri, Context context) {
+        String mimeType = getMimeType(uri, context);
+
         String fileName = uri.getLastPathSegment();
+        String extensionFromMimeType = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType);
+        if (!Pattern.matches("\\..+$", fileName) && extensionFromMimeType != null) {
+            fileName = fileName + '.' + extensionFromMimeType;
+        }
+
         WritableMap map = Arguments.createMap();
         map.putString("uri", uri.toString());
         map.putDouble("fileSize", getFileSize(uri, context));
         map.putInt("duration", getDuration(uri, context));
         map.putString("fileName", fileName);
-        map.putString("type", getMimeType(uri, context));
+        map.putString("type", mimeType);
         return map;
     }
 
