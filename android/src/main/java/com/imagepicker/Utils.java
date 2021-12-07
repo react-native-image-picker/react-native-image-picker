@@ -467,14 +467,10 @@ public class Utils {
    * @return formatted timestamp
    */
     static @Nullable String getDateTimeInUTC(String value, String format) {
-      Log.i("RNIF", "Date value:" + value);
-
       try {
         Date datetime = new SimpleDateFormat(format, Locale.US).parse(value);
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
         formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-
-        Log.i("RNIF", "parsed datetime" + datetime);
 
         if (datetime != null) {
           return formatter.format(datetime);
