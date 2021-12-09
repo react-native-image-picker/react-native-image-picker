@@ -13,9 +13,13 @@ public class VideoMetadata {
   public VideoMetadata(Uri uri, Context context) {
     MediaMetadataRetriever m = new MediaMetadataRetriever();
     m.setDataSource(context, uri);
-    this.duration = Math.round(Float.parseFloat(m.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION))) / 1000;
-    this.bitrate = parseInt(m.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE));
-    m.release();
+    String duration = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+    String bitrate = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE);
+    // Extract anymore metadata here...
+
+    this.duration = Math.round(Float.parseFloat(duration)) / 1000;
+    this.bitrate = parseInt(bitrate);
+    metadataRetriever.release();
   }
 
   public int getBitrate() {
