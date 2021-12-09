@@ -27,6 +27,7 @@ export interface Asset {
   type?: string;
   fileName?: string;
   duration?: number;
+  bitrate?: number;
   timestamp?: string;
   id?: string;
 }
