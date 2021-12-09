@@ -11,7 +11,6 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.camera2.CameraCharacteristics;
-import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
@@ -266,14 +265,6 @@ public class Utils {
         }
     }
 
-    static int getDuration(Uri uri, Context context) {
-        MediaMetadataRetriever m = new MediaMetadataRetriever();
-        m.setDataSource(context, uri);
-        int duration = Math.round(Float.parseFloat(m.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION))) / 1000;
-        m.release();
-        return duration;
-    }
-
     static boolean shouldResizeImage(int origWidth, int origHeight, Options options) {
         if ((options.maxWidth == 0 || options.maxHeight == 0) && options.quality == 100) {
             return false;
@@ -483,7 +474,9 @@ public class Utils {
         WritableMap map = Arguments.createMap();
         map.putString("uri", uri.toString());
         map.putDouble("fileSize", getFileSize(uri, context));
-        map.putInt("duration", getDuration(uri, context));
+        VideoMetadata videoMetadata = new VideoMetadata(uri, context);
+        map.putInt("duration", videoMetadata.getDuration());
+        map.putInt("bitrate", videoMetadata.getBitrate());
         map.putString("fileName", fileName);
         map.putString("type", getMimeType(uri, context));
         return map;

@@ -115,8 +115,9 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | fileSize  | OK  | OK      | The file size                                                                                                                                                                                                                |
 | type      | OK  | OK      | The file type (photos only)                                                                                                                                                                                                                |
 | fileName  | OK  | OK      | The file name                                                                                                                                                                                                                              |
-| duration  | OK  | OK      | The selected video duration in seconds                                                                                                                                                                                                     |
-| timestamp | OK  | OK      | Timestamp of the photo. Only included if 'includeExtra' is true                                                                                                                                                                            |
+| duration  | OK  | OK      | The selected video duration in seconds
+| bitrate   | --- | OK      | The average bitrate (in bits/sec) of the selected video, if available.|
+| timestamp | OK  | OK      | Timestamp of the photo. Only included if 'includeExtra' is true
 
 ## Note on file storage
 
