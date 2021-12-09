@@ -49,7 +49,15 @@
 + (PHPickerConfiguration *)makeConfigurationFromOptions:(NSDictionary *)options target:(RNImagePickerTarget)target API_AVAILABLE(ios(14))
 {
 #if __has_include(<PhotosUI/PHPicker.h>)
-    PHPickerConfiguration *configuration = [[PHPickerConfiguration alloc] init];
+    PHPickerConfiguration *configuration;
+    
+    if(options[@"includeExtra"]) {
+        PHPhotoLibrary *photoLibrary = [PHPhotoLibrary sharedPhotoLibrary];
+        configuration = [[PHPickerConfiguration alloc] initWithPhotoLibrary:photoLibrary];
+    } else {
+        configuration = [[PHPickerConfiguration alloc] init];
+    }
+    
     configuration.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCurrent;
     configuration.selectionLimit = [options[@"selectionLimit"] integerValue];
 
@@ -101,6 +109,19 @@
     CFStringRef MIMEType = UTTypeCopyPreferredTagWithClass(UTI, kUTTagClassMIMEType);
     CFRelease(UTI);
     return (__bridge_transfer NSString *)MIMEType;
+}
+
++ (NSNumber *) getFileSizeFromUrl:(NSURL *)url {
+    NSError *attributesError;
+    NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[url path] error:&attributesError];
+    NSNumber *fileSizeNumber = [fileAttributes objectForKey:NSFileSize];
+    long fileSize = [fileSizeNumber longLongValue];
+
+    if (attributesError) {
+        return nil;
+    }
+
+    return [NSNumber numberWithLong:fileSize];
 }
 
 + (UIImage*)resizeImage:(UIImage*)image maxWidth:(float)maxWidth maxHeight:(float)maxHeight
