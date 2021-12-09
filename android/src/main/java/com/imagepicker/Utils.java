@@ -8,7 +8,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.camera2.CameraCharacteristics;
@@ -17,7 +16,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
-import android.provider.OpenableColumns;
 import android.util.Base64;
 import android.webkit.MimeTypeMap;
 
@@ -263,15 +261,6 @@ public class Utils {
         }
     }
 
-    static VideoMetadata getVideoMetaData(Uri uri, Context context) {
-        MediaMetadataRetriever m = new MediaMetadataRetriever();
-        m.setDataSource(context, uri);
-        int duration = Math.round(Float.parseFloat(m.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION))) / 1000;
-        int bitrate = parseInt(m.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE));
-        m.release();
-        return new VideoMetadata(duration, bitrate);
-    }
-
     static boolean shouldResizeImage(int origWidth, int origHeight, Options options) {
         if ((options.maxWidth == 0 || options.maxHeight == 0) && options.quality == 100) {
             return false;
@@ -319,24 +308,6 @@ public class Utils {
             case REQUEST_LAUNCH_VIDEO_CAPTURE:
             case REQUEST_LAUNCH_LIBRARY: return true;
             default: return false;
-        }
-    }
-
-    public static class VideoMetadata {
-        int duration;
-        int bitrate;
-
-        public VideoMetadata(int duration, int bitrate) {
-            this.duration = duration;
-            this.bitrate = bitrate;
-        }
-
-        public int getBitrate() {
-            return bitrate;
-        }
-
-        public int getDuration() {
-            return duration;
         }
     }
 
@@ -427,7 +398,7 @@ public class Utils {
         WritableMap map = Arguments.createMap();
         map.putString("uri", uri.toString());
         map.putDouble("fileSize", getFileSize(uri, context));
-        VideoMetadata videoMetadata = getVideoMetaData(uri, context);
+        VideoMetadata videoMetadata = new VideoMetadata(uri, context);
         map.putInt("duration", videoMetadata.getDuration());
         map.putInt("bitrate", videoMetadata.getBitrate());
         map.putString("fileName", fileName);
