@@ -11,8 +11,8 @@ public class VideoMetadata {
   int bitrate;
 
   public VideoMetadata(Uri uri, Context context) {
-    MediaMetadataRetriever m = new MediaMetadataRetriever();
-    m.setDataSource(context, uri);
+    MediaMetadataRetriever metadataRetriever = new MediaMetadataRetriever();
+    metadataRetriever.setDataSource(context, uri);
     String duration = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
     String bitrate = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE);
     // Extract anymore metadata here...
