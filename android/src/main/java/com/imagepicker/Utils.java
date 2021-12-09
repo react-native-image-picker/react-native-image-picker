@@ -11,7 +11,6 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.camera2.CameraCharacteristics;
-import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
@@ -46,7 +45,6 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
 
-import static java.lang.Integer.parseInt;
 import static com.imagepicker.ImagePickerModule.*;
 
 public class Utils {
