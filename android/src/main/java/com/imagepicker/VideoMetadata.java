@@ -16,9 +16,6 @@ public class VideoMetadata {
     this.duration = Math.round(Float.parseFloat(m.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION))) / 1000;
     this.bitrate = parseInt(m.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE));
     m.release();
-
-
-
   }
 
   public int getBitrate() {
