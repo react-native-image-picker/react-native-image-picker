@@ -116,7 +116,9 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | type      | OK  | OK      | The file type (photos only)                                                                                                                                                                                                                |
 | fileName  | OK  | OK      | The file name                                                                                                                                                                                                                              |
 | duration  | OK  | OK      | The selected video duration in seconds                                                                                                                                                                                                     |
-| timestamp | OK  | OK      | Timestamp of the photo. Only included if 'includeExtra' is true                                                                                                                                                                            |
+| timestamp | OK  | OK      | Timestamp of the photo. Only included if 'includeExtra' is true                                                                                                                                        
+| id | OK  | OK      | local identifier of the photo or video. Only included on iOS if 'includeExtra' is true |
+
 
 ## Note on file storage
 
