@@ -156,7 +156,7 @@
     return newImage;
 }
 
-+ (PHAsset *)fetchPHAsset:(NSDictionary<NSString *,id> *)info
++ (PHAsset *)fetchPHAssetOnIOS13:(NSDictionary<NSString *,id> *)info
 {
     NSURL *referenceURL = [info objectForKey:UIImagePickerControllerReferenceURL];
 

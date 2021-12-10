@@ -342,7 +342,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
         // If include extra, we fetch the PHAsset, this required library permissions
         if([self.options[@"includeExtra"] boolValue]) {
-          asset = [ImagePickerUtils fetchPHAsset:info];
+          asset = [ImagePickerUtils fetchPHAssetOnIOS13:info];
         }
 
         if ([info[UIImagePickerControllerMediaType] isEqualToString:(NSString *) kUTTypeImage]) {
