@@ -156,4 +156,18 @@
     return newImage;
 }
 
++ (PHAsset *)fetchPHAssetOnIOS13:(NSDictionary<NSString *,id> *)info
+{
+    NSURL *referenceURL = [info objectForKey:UIImagePickerControllerReferenceURL];
+
+    if(!referenceURL) {
+      return nil;
+    }
+
+    // We fetch the asset like this to support iOS 10 and lower
+    // see: https://stackoverflow.com/a/52529904/4177049
+    PHFetchResult* fetchResult = [PHAsset fetchAssetsWithALAssetURLs:@[referenceURL] options:nil];
+    return fetchResult.firstObject;
+}
+
 @end

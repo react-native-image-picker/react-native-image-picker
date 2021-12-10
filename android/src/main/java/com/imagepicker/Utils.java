@@ -412,8 +412,9 @@ public class Utils {
 
         if(options.includeExtra) {
           String datetime = getDateTimeExif(uri, context);
-          // Add more exif data here ...
+          // Add more extra data here ...
           map.putString("timestamp", datetime);
+          map.putString("id", fileName);
         }
 
         return map;
@@ -469,7 +470,7 @@ public class Utils {
       }
     }
 
-    static ReadableMap getVideoResponseMap(Uri uri, Context context) {
+    static ReadableMap getVideoResponseMap(Uri uri, Options options, Context context) {
         String fileName = uri.getLastPathSegment();
         WritableMap map = Arguments.createMap();
         map.putString("uri", uri.toString());
@@ -479,6 +480,11 @@ public class Utils {
         map.putInt("bitrate", videoMetadata.getBitrate());
         map.putString("fileName", fileName);
         map.putString("type", getMimeType(uri, context));
+
+        if(options.includeExtra) {
+          map.putString("id", fileName);
+        }
+
         return map;
     }
 
@@ -495,7 +501,7 @@ public class Utils {
                 uri = resizeImage(uri, context, options);
                 assets.pushMap(getImageResponseMap(uri, options, context));
             } else if (isVideoType(uri, context)) {
-                assets.pushMap(getVideoResponseMap(uri, context));
+                assets.pushMap(getVideoResponseMap(uri, options, context));
             } else {
                 throw new RuntimeException("Unsupported file type");
             }

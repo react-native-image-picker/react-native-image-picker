@@ -114,10 +114,11 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | height    | OK  | OK      | Image dimensions (photos only)                                                                                                                                                                                                             |
 | fileSize  | OK  | OK      | The file size                                                                                                                                                                                                                |
 | type      | OK  | OK      | The file type (photos only)                                                                                                                                                                                                                |
-| fileName  | OK  | OK      | The file name                                                                                                                                                                                                                              |
+| fileName  | OK  | OK      | The file name   
 | duration  | OK  | OK      | The selected video duration in seconds
-| bitrate   | --- | OK      | The average bitrate (in bits/sec) of the selected video, if available.|
+| bitrate   | --- | OK      | The average bitrate (in bits/sec) of the selected video, if available. (Android only)
 | timestamp | OK  | OK      | Timestamp of the photo. Only included if 'includeExtra' is true
+| id | OK  | OK      | local identifier of the photo or video. On Android, this is the same as fileName |
 
 ## Note on file storage
 
