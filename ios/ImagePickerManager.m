@@ -133,7 +133,11 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     }
     
     NSMutableDictionary *asset = [[NSMutableDictionary alloc] init];
-    asset[@"type"] = [@"image/" stringByAppendingString:fileType];
+    if ([fileType isEqualToString:@"jpg"]) {
+        asset[@"type"] = [@"image/" stringByAppendingString:@"jpeg"];
+    } else {
+        asset[@"type"] = [@"image/" stringByAppendingString:fileType];
+    }
 
     NSString *fileName = [self getImageFileName:fileType];
     NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
