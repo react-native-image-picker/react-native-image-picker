@@ -158,12 +158,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     asset[@"height"] = @(image.size.height);
     
     if(phAsset){
-        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-        [formatter setTimeZone:[NSTimeZone timeZoneWithAbbreviation:@"UTC"]];
-        [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSSZ"];
-        NSString *creationDate = [formatter stringFromDate:phAsset.creationDate];
-        
-        asset[@"timestamp"] = creationDate;
+        asset[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
         asset[@"id"] = phAsset.localIdentifier;
         // Add more extra data here ...
     }
@@ -204,19 +199,29 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     }
 
     NSMutableDictionary *asset = [[NSMutableDictionary alloc] init];
+    CGSize dimentions = [ImagePickerUtils getVideoDimensionsFromUrl:videoDestinationURL];
     asset[@"fileName"] = fileName;
     asset[@"duration"] = [NSNumber numberWithDouble:CMTimeGetSeconds([AVAsset assetWithURL:videoDestinationURL].duration)];
     asset[@"uri"] = videoDestinationURL.absoluteString;
     asset[@"type"] = [ImagePickerUtils getFileTypeFromUrl:videoDestinationURL];
     asset[@"fileSize"] = [ImagePickerUtils getFileSizeFromUrl:videoDestinationURL];
+    asset[@"width"] = @(dimentions.width);
+    asset[@"height"] = @(dimentions.height);
 
-    if (phAsset) {
-      asset[@"id"] = phAsset.localIdentifier;
-      // Add more extra data here ...
+    if(phAsset){
+        asset[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
+        asset[@"id"] = phAsset.localIdentifier;
+        // Add more extra data here ...
     }
 
-    
     return asset;
+}
+
+- (NSString *) getDateTimeInUTC:(NSDate *)date {
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setTimeZone:[NSTimeZone timeZoneWithAbbreviation:@"UTC"]];
+    [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSSZ"];
+    return [formatter stringFromDate:date];
 }
 
 - (void)checkCameraPermissions:(void(^)(BOOL granted))callback

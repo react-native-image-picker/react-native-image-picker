@@ -124,6 +124,18 @@
     return [NSNumber numberWithLong:fileSize];
 }
 
++ (CGSize)getVideoDimensionsFromUrl:(NSURL *)url {
+    AVURLAsset *asset = [AVURLAsset URLAssetWithURL:url options:nil];
+    NSArray *tracks = [asset tracksWithMediaType:AVMediaTypeVideo];
+    
+    if ([tracks count] > 0) {
+        AVAssetTrack *track = [tracks objectAtIndex:0];
+        return track.naturalSize;
+    }
+    
+    return CGSizeMake(0, 0);
+}
+
 + (UIImage*)resizeImage:(UIImage*)image maxWidth:(float)maxWidth maxHeight:(float)maxHeight
 {
     if ((maxWidth == 0) || (maxHeight == 0)) {

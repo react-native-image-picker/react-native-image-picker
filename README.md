@@ -106,19 +106,19 @@ The `callback` will be called with a response object, refer to [The Response Obj
 
 ## Asset Object
 
-| key       | iOS | Android | Description                                                                                                                                                                                                                                |
-| --------- | --- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| base64    | OK  | OK      | The base64 string of the image (photos only)                                                                                                                                                                                               |
-| uri       | OK  | OK      | The file uri in app specific cache storage. Except when picking **video from Android gallery** where you will get read only content uri, to get file uri in this case copy the file to app specific storage using any react-native library |
-| width     | OK  | OK      | Image dimensions (photos only)                                                                                                                                                                                                             |
-| height    | OK  | OK      | Image dimensions (photos only)                                                                                                                                                                                                             |
-| fileSize  | OK  | OK      | The file size                                                                                                                                                                                                                |
-| type      | OK  | OK      | The file type (photos only)                                                                                                                                                                                                                |
-| fileName  | OK  | OK      | The file name   
-| duration  | OK  | OK      | The selected video duration in seconds
-| bitrate   | --- | OK      | The average bitrate (in bits/sec) of the selected video, if available. (Android only)
-| timestamp | OK  | OK      | Timestamp of the photo. Only included if 'includeExtra' is true
-| id | OK  | OK      | local identifier of the photo or video. On Android, this is the same as fileName |
+| key       | iOS | Android | Photo/Video | Requires Permissions | Description               |
+| --------- | --- | ------- | ----------- | -------------------- | ------------------------- |
+| base64    | OK  | OK      | PHOTO ONLY  | NO                   | The base64 string of the image (photos only) |
+| uri       | OK  | OK      | BOTH        | NO                   | The file uri in app specific cache storage. Except when picking **video from Android gallery** where you will get read only content uri, to get file uri in this case copy the file to app specific storage using any react-native library |
+| width     | OK  | OK      | BOTH        | NO                   | Asset dimensions                |
+| height    | OK  | OK      | BOTH        | NO                   | Asset dimensions                |
+| fileSize  | OK  | OK      | BOTH        | NO                   | The file size                                 |
+| type      | OK  | OK      | BOTH        | NO                   | The file type                                 |
+| fileName  | OK  | OK      | BOTH        | NO                   | The file name                                 |
+| duration  | OK  | OK      | VIDEO ONLY  | NO                   | The selected video duration in seconds        |
+| bitrate   | --- | OK      | VIDEO ONLY  | NO                   | The average bitrate (in bits/sec) of the selected video, if available. (Android only) |
+| timestamp | OK  | OK      | BOTH        | YES                  | Timestamp of the asset. Only included if 'includeExtra' is true |
+| id        | OK  | OK      | BOTH        | YES                  | local identifier of the photo or video. On Android, this is the same as fileName |
 
 ## Note on file storage
 

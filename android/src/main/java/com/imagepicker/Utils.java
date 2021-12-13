@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.camera2.CameraCharacteristics;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
@@ -31,6 +32,7 @@ import com.facebook.react.bridge.WritableMap;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -432,7 +434,7 @@ public class Utils {
         InputStream inputStream = context.getContentResolver().openInputStream(uri);
         ExifInterface exif = new ExifInterface(inputStream);
         String datetimeTag = exif.getAttribute(ExifInterface.TAG_DATETIME);
-        
+
         if(datetimeTag != null) {
           return getDateTimeInUTC(datetimeTag, "yyyy:MM:dd HH:mm:ss");
         }
@@ -480,8 +482,13 @@ public class Utils {
         map.putInt("bitrate", videoMetadata.getBitrate());
         map.putString("fileName", fileName);
         map.putString("type", getMimeType(uri, context));
+        map.putInt("width", videoMetadata.getWidth());
+        map.putInt("height", videoMetadata.getHeight());
 
         if(options.includeExtra) {
+          String datetime = getDateTimeExif(uri, context);
+          // Add more extra data here ...
+          map.putString("timestamp", datetime);
           map.putString("id", fileName);
         }
 
