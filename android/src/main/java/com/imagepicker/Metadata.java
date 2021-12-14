@@ -9,14 +9,14 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
-public class Metadata {
+abstract class Metadata {
   protected String datetime;
   protected int height;
   protected int width;
 
-  public String getDateTime() { return datetime; }
-  public int getWidth() { return width; }
-  public int getHeight() { return height; }
+  abstract public String getDateTime();
+  abstract public int getWidth();
+  abstract public int getHeight();
 
   /**
    * Converts a timestamp to a UTC timestamp

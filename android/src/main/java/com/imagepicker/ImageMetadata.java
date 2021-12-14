@@ -20,4 +20,14 @@ public class ImageMetadata extends Metadata {
       Log.e("RNIP", "Could not load image metadata: " + e.getMessage());
     }
   }
+
+  @Override
+  public String getDateTime() { return datetime; }
+  
+  // At the moment we are not using the ImageMetadata class to get width/height
+  // TODO: to use this class for extracting image width and height in the future
+  @Override
+  public int getWidth() { return 0; }
+  @Override
+  public int getHeight() { return 0; }
 }

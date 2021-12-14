@@ -52,6 +52,12 @@ public class VideoMetadata extends Metadata {
   public int getDuration() {
     return duration;
   }
+  @Override
+  public String getDateTime() { return datetime; }
+  @Override
+  public int getWidth() { return width; }
+  @Override
+  public int getHeight() { return height; }
 
   private @Nullable
   Bitmap getBitmap(Uri uri, Context context, MediaMetadataRetriever retriever) {
