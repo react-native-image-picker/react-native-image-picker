@@ -10,72 +10,58 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
-public class VideoMetadata {
-  int duration;
-  int bitrate;
-  private Bitmap bitmap = null;
+public class VideoMetadata extends Metadata {
+  private int duration;
+  private int bitrate;
 
   public VideoMetadata(Uri uri, Context context) {
     MediaMetadataRetriever metadataRetriever = new MediaMetadataRetriever();
     metadataRetriever.setDataSource(context, uri);
-    Bitmap bitmap = null;
-
+    Bitmap bitmap = getBitmap(uri, context, metadataRetriever);
 
     String duration = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
     String bitrate = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE);
-    // Extract anymore metadata here...
+    String datetime = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DATE);
 
-    this.duration = Math.round(Float.parseFloat(duration)) / 1000;
-    this.bitrate = parseInt(bitrate);
-    this.bitmap = getBitmap(uri, metadataRetriever);
+    // Extract anymore metadata here...
+    if(duration != null) this.duration = Math.round(Float.parseFloat(duration)) / 1000;
+    if(bitrate != null) this.bitrate = parseInt(bitrate);
+
+    if(datetime != null) {
+      // METADATA_KEY_DATE gives us the following format: "20211214T102646.000Z"
+      // This format is very hard to parse, so we convert it to "20211214 102646" ("yyyyMMdd HHmmss")
+      String datetimeToFormat = datetime.substring(0, datetime.indexOf(".")).replace("T", " ");
+      this.datetime = getDateTimeInUTC(datetimeToFormat, "yyyyMMdd HHmmss");
+    }
+
+    if(bitmap != null) {
+      this.width = bitmap.getWidth();
+      this.height = bitmap.getHeight();
+    }
+
     metadataRetriever.release();
   }
 
   public int getBitrate() {
     return bitrate;
   }
-
   public int getDuration() {
     return duration;
   }
 
-  public int getWidth() {
-    if(this.bitmap != null) {
-      return this.bitmap.getWidth();
-    }
-
-    return 0;
-  }
-
-  public int getHeight() {
-    if(this.bitmap != null) {
-      return this.bitmap.getHeight();
-    }
-
-    return 0;
-  }
-
   private @Nullable
-  Bitmap getBitmap(Uri uri, MediaMetadataRetriever retriever) {
-    FileInputStream inputStream = null;
-    File file = new File(uri.getPath());
-
-    // These errors do not bubble up to RN as we don't want failed width/height
-    // retrieval to prevent selection.
+  Bitmap getBitmap(Uri uri, Context context, MediaMetadataRetriever retriever) {
     try {
-      inputStream = new FileInputStream(file.getAbsolutePath());
+      FileDescriptor fileDescriptor = context.getContentResolver().openFileDescriptor(uri, "r").getFileDescriptor();
+      FileInputStream inputStream = new FileInputStream(fileDescriptor);
       retriever.setDataSource(inputStream.getFD());
       return retriever.getFrameAtTime();
-    } catch (FileNotFoundException e) {
-      Log.e("RNIP", "Could not retrieve width and height from video: " + e.getMessage());
-    } catch (IOException e) {
-      Log.e("RNIP", "Could not retrieve width and height from video: " + e.getMessage());
-    } catch (RuntimeException e) {
+    } catch (IOException | RuntimeException e) {
+      // These errors do not bubble up to RN as we don't want failed width/height retrieval to prevent selection.
       Log.e("RNIP", "Could not retrieve width and height from video: " + e.getMessage());
     }
 
