@@ -115,6 +115,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | fileSize  | OK  | OK      | The file size                                                                                                                                                                                                                |
 | type      | OK  | OK      | The file type (photos only)                                                                                                                                                                                                                |
 | fileName  | OK  | OK      | The file name   
+| cookedFileName  | OK  | OK      |  Like `fileName`, but probably better. It has an appropriate filename extension, if found (based on the MIME type in `type`), and if `fileName` doesn't already have an extension.
 | duration  | OK  | OK      | The selected video duration in seconds
 | bitrate   | --- | OK      | The average bitrate (in bits/sec) of the selected video, if available. (Android only)
 | timestamp | OK  | OK      | Timestamp of the photo. Only included if 'includeExtra' is true

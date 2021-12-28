@@ -26,6 +26,7 @@ export interface Asset {
   fileSize?: number;
   type?: string;
   fileName?: string;
+  cookedFileName?: string; // TODO(breaking): Put this value at fileName
   duration?: number;
   bitrate?: number;
   timestamp?: string;
