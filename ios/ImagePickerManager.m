@@ -355,7 +355,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
                         
             if (videoAsset == nil) {
                 NSString *errorMessage = error.localizedFailureReason;
-                if (errorMessage == Nil) errorMessage = @"Video asset not found";
+                if (errorMessage == nil) errorMessage = @"Video asset not found";
                 self.callback(@[@{@"errorCode": errOthers, @"errorMessage": errorMessage}]);
                 return;
             }
