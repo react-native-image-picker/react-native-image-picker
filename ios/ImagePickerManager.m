@@ -197,7 +197,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             [fileManager copyItemAtURL:url toURL:videoDestinationURL error:error];
           }
 
-          if (error) {
+          if (error && *error) {
               return nil;
           }
         }
@@ -352,8 +352,11 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         } else {
             NSError *error;
             NSDictionary *videoAsset = [self mapVideoToAsset:info[UIImagePickerControllerMediaURL] phAsset:asset error:&error];
+                        
             if (videoAsset == nil) {
-                self.callback(@[@{@"errorCode": errOthers, @"errorMessage":  error.localizedFailureReason}]);
+                NSString *errorMessage = error.localizedFailureReason;
+                if (errorMessage == nil) errorMessage = @"Video asset not found";
+                self.callback(@[@{@"errorCode": errOthers, @"errorMessage": errorMessage}]);
                 return;
             }
             [assets addObject:videoAsset];
