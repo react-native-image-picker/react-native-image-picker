@@ -7,7 +7,6 @@ import androidx.annotation.Nullable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-import java.util.TimeZone;
 
 abstract class Metadata {
   protected String datetime;
@@ -30,7 +29,6 @@ abstract class Metadata {
     try {
       Date datetime = new SimpleDateFormat(format, Locale.US).parse(value);
       SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
-      formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
 
       if (datetime != null) {
         return formatter.format(datetime);
