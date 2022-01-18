@@ -30,6 +30,9 @@
 NSString *errCameraUnavailable = @"camera_unavailable";
 NSString *errPermission = @"permission";
 NSString *errOthers = @"others";
+
+BOOL photoSelected = NO;
+
 RNImagePickerTarget target;
 
 RCT_EXPORT_MODULE();
@@ -45,6 +48,7 @@ RCT_EXPORT_METHOD(launchCamera:(NSDictionary *)options callback:(RCTResponseSend
 RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
 {
     target = library;
+    photoSelected = NO;
     dispatch_async(dispatch_get_main_queue(), ^{
         [self launchImagePicker:options callback:callback];
     });
@@ -401,6 +405,11 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
 - (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14))
 {
+    if (photoSelected == YES) {
+        return;
+    }
+    photoSelected = YES;
+
     [picker dismissViewControllerAnimated:YES completion:nil];
 
     if (results.count == 0) {
