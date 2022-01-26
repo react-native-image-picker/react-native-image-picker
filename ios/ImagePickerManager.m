@@ -427,7 +427,8 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
         if ([provider canLoadObjectOfClass:[UIImage class]]) {
             NSString *identifier = provider.registeredTypeIdentifiers.firstObject;
-            if ([identifier isEqualToString:@"com.apple.live-photo-bundle"]) {
+            // Matches both com.apple.live-photo-bundle and com.apple.private.live-photo-bundle
+            if ([identifier containsString:@"live-photo-bundle"]) {
                 // Handle live photos
                 identifier = @"public.jpeg";
             }
