@@ -152,7 +152,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         }
 
         try {
-            currentActivity.startActivityForResult(Intent.createChooser(libraryIntent, null), requestCode);
+            currentActivity.startActivityForResult(libraryIntent, requestCode);
         } catch (ActivityNotFoundException e) {
             callback.invoke(getErrorMap(errOthers, e.getMessage()));
             this.callback = null;
