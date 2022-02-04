@@ -2,7 +2,7 @@ import * as React from 'react';
 import {StyleSheet, SafeAreaView, View, Image, ScrollView} from 'react-native';
 import {DemoTitle, DemoButton, DemoResponse} from './components';
 
-import * as ImagePicker from '../../src';
+import * as ImagePicker from 'react-native-image-picker';
 
 /* toggle includeExtra */
 const includeExtra = true;
