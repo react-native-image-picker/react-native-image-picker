@@ -6,7 +6,7 @@ All work on React Native ImagePicker happens directly on GitHub. Contributors se
 
 > **Working on your first pull request?** You can learn how from this _free_ series: [How to Contribute to an Open Source Project on GitHub](https://egghead.io/series/how-to-contribute-to-an-open-source-project-on-github).
 
-1. Fork the repo and create your branch from `master` (a guide on [how to fork a repository](https://help.github.com/articles/fork-a-repo/)).
+1. Fork the repo and create your branch from `main` (a guide on [how to fork a repository](https://help.github.com/articles/fork-a-repo/)).
 2. Run `yarn` or `npm install` to install all required dependencies.
 3. Now you are ready to make your changes!
 
@@ -45,7 +45,7 @@ We prefix our commit messages with one of the following to signify the kind of c
 
 ## Release process
 
-We use [Semantic Release](http://semantic-release.org) to automatically release new versions of the library when changes are merged into master. Using the commit message convention described above, it will detect if we need to release a patch, minor, or major version of the library.
+We use [Semantic Release](http://semantic-release.org) to automatically release new versions of the library when changes are merged into main. Using the commit message convention described above, it will detect if we need to release a patch, minor, or major version of the library.
 
 ## Reporting issues
 
