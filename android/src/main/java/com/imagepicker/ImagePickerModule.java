@@ -181,8 +181,14 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             if (requestCode == REQUEST_LAUNCH_IMAGE_CAPTURE) {
                 deleteFile(fileUri);
             }
-            callback.invoke(getCancelMap());
-            return;
+            try {
+              callback.invoke(getCancelMap());
+              return;
+            } catch (RuntimeException exception) {
+              callback.invoke(getErrorMap(errOthers, exception.getMessage()));
+            } finally {
+              callback = null;
+            }
         }
 
         switch (requestCode) {
