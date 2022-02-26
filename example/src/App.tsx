@@ -124,4 +124,14 @@ const actions: Action[] = [
       includeExtra,
     },
   },
+  {
+    title: `Select single file with the 'Intent.ACTION_GET_CONTENT' option`,
+    type: 'library',
+    options: {
+      selectionLimit: 1,
+      mediaType: 'mixed',
+      forceGetContent: true,
+      includeExtra,
+    },
+  },
 ];

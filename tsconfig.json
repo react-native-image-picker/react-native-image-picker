@@ -7,6 +7,7 @@
     "jsx": "react-native",
     "isolatedModules": true,
     "strict": true,
+    "types": ["react"],
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true

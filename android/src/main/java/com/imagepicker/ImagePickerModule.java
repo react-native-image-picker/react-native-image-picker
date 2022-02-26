@@ -131,7 +131,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         boolean isPhoto = this.options.mediaType.equals(mediaTypePhoto);
         boolean isVideo = this.options.mediaType.equals(mediaTypeVideo);
 
-        if(isSingleSelect && (isPhoto || isVideo)) {
+        // In some devices using `Intent.ACTION_PICK` always returns the `requestCode=RESULT_CANCELED`, then
+        // the file isn't resolved even if the user chose any file properly. With this option users can choose
+        // if they want to pick the `Intent.ACTION_GET_CONTENT` or not.
+        boolean forceGetContent = this.options.forceGetContent;
+
+        if(isSingleSelect && (isPhoto || isVideo) && !forceGetContent) {
             libraryIntent = new Intent(Intent.ACTION_PICK);
         } else {
             libraryIntent = new Intent(Intent.ACTION_GET_CONTENT);
