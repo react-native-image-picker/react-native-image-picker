@@ -81,19 +81,20 @@ The `callback` will be called with a response object, refer to [The Response Obj
 
 ## Options
 
-| Option         | iOS | Android | Description                                                                                                                               |
-| -------------- | --- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| mediaType      | OK  | OK      | 'photo' or 'video' or 'mixed'(mixed supported only for launchImageLibrary, to pick an photo or video)                                     |
-| maxWidth       | OK  | OK      | To resize the image                                                                                                                       |
-| maxHeight      | OK  | OK      | To resize the image                                                                                                                       |
-| videoQuality   | OK  | OK      | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android                                                                             |
-| durationLimit  | OK  | OK      | Video max duration in seconds                                                                                                             |
-| quality        | OK  | OK      | 0 to 1, photos                                                                                                                            |
-| cameraType     | OK  | OK      | 'back' or 'front'. May not be supported in few android devices                                                                            |
-| includeBase64  | OK  | OK      | If true, creates base64 string of the image (Avoid using on large image files due to performance)                                         |                                                   |
-| includeExtra   | OK  | OK      | If true, will include extra data which requires library permissions to be requested (i.e. exif data)                                      |
-| saveToPhotos   | OK  | OK      | (Boolean) Only for launchCamera, saves the image/video file captured to public photo                                                      |
-| selectionLimit | OK  | OK      | Default is `1`, use `0` to allow any number of files. Only iOS version >= 14 support `0` and also it supports providing any integer value |
+| Option          | iOS | Android | Description                                                                                                                               |
+| --------------  | --- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| mediaType       | OK  | OK      | 'photo' or 'video' or 'mixed'(mixed supported only for launchImageLibrary, to pick an photo or video)                                     |
+| maxWidth        | OK  | OK      | To resize the image                                                                                                                       |
+| maxHeight       | OK  | OK      | To resize the image                                                                                                                       |
+| videoQuality    | OK  | OK      | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android                                                                             |
+| durationLimit   | OK  | OK      | Video max duration in seconds                                                                                                             |
+| quality         | OK  | OK      | 0 to 1, photos                                                                                                                            |
+| cameraType      | OK  | OK      | 'back' or 'front'. May not be supported in few android devices                                                                            |
+| includeBase64   | OK  | OK      | If true, creates base64 string of the image (Avoid using on large image files due to performance)                                         |                                                   |
+| includeExtra    | OK  | OK      | If true, will include extra data which requires library permissions to be requested (i.e. exif data)                                      |
+| saveToPhotos    | OK  | OK      | (Boolean) Only for launchCamera, saves the image/video file captured to public photo                                                      |
+| selectionLimit  | OK  | OK      | Default is `1`, use `0` to allow any number of files. Only iOS version >= 14 support `0` and also it supports providing any integer value |
+| forceGetContent | --- | OK      | Default is `false`, use `true` if you are having troubles with devices that returns `didCancel=true` always.                              |
 
 ## The Response Object
 

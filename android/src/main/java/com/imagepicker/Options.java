@@ -12,6 +12,7 @@ public class Options {
     int maxWidth;
     int maxHeight;
     Boolean saveToPhotos;
+    Boolean forceGetContent;
     int durationLimit;
     Boolean useFrontCamera = false;
     String mediaType;
@@ -22,6 +23,7 @@ public class Options {
         selectionLimit = options.getInt("selectionLimit");
         includeBase64 = options.getBoolean("includeBase64");
         includeExtra = options.getBoolean("includeExtra");
+        forceGetContent = options.getBoolean("forceGetContent");
 
         String videoQualityString = options.getString("videoQuality");
         if(!TextUtils.isEmpty(videoQualityString) && !videoQualityString.toLowerCase().equals("high")) {
