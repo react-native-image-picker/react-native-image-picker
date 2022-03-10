@@ -37,6 +37,7 @@ export interface ImagePickerResponse {
   errorCode?: ErrorCode;
   errorMessage?: string;
   assets?: Asset[];
+  uri?: string;
 }
 
 export type PhotoQuality =
