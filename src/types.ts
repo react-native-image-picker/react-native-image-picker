@@ -9,6 +9,7 @@ export interface ImageLibraryOptions {
   videoQuality?: AndroidVideoOptions | iOSVideoOptions;
   includeBase64?: boolean;
   includeExtra?: boolean;
+  noCopy?: boolean;
 }
 
 export interface CameraOptions
@@ -30,6 +31,7 @@ export interface Asset {
   bitrate?: number;
   timestamp?: string;
   id?: string;
+  originalUri?: string;
 }
 
 export interface ImagePickerResponse {
