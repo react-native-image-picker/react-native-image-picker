@@ -43,7 +43,7 @@
         picker.mediaTypes = @[(NSString *)kUTTypeImage, (NSString *)kUTTypeMovie];
     }
 
-    picker.modalPresentationStyle = UIModalPresentationCurrentContext;
+    picker.modalPresentationStyle = [RCTConvert UIModalPresentationStyle:options[@"presentationStyle"]];
 }
 
 + (PHPickerConfiguration *)makeConfigurationFromOptions:(NSDictionary *)options target:(RNImagePickerTarget)target API_AVAILABLE(ios(14))

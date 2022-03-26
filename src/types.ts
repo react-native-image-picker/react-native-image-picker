@@ -9,6 +9,14 @@ export interface ImageLibraryOptions {
   videoQuality?: AndroidVideoOptions | iOSVideoOptions;
   includeBase64?: boolean;
   includeExtra?: boolean;
+  presentationStyle?:
+    | 'currentContext'
+    | 'fullScreen'
+    | 'pageSheet'
+    | 'formSheet'
+    | 'popover'
+    | 'overFullScreen'
+    | 'overCurrentContext';
 }
 
 export interface CameraOptions

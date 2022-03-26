@@ -15,6 +15,7 @@ const DEFAULT_OPTIONS: ImageLibraryOptions & CameraOptions = {
   saveToPhotos: false,
   durationLimit: 0,
   includeExtra: false,
+  presentationStyle: 'pageSheet'
 };
 
 export function launchCamera(options: CameraOptions, callback?: Callback) : Promise<ImagePickerResponse> {
