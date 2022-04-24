@@ -206,6 +206,9 @@ public class Utils {
             OutputStream os = context.getContentResolver().openOutputStream(Uri.fromFile(file));
             b.compress(getBitmapCompressFormat(mimeType), options.quality, os);
             setOrientation(file, originalOrientation, context);
+
+            deleteFile(uri);
+
             return Uri.fromFile(file);
 
         } catch (Exception e) {
