@@ -67,6 +67,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             PHPickerConfiguration *configuration = [ImagePickerUtils makeConfigurationFromOptions:options target:target];
             PHPickerViewController *picker = [[PHPickerViewController alloc] initWithConfiguration:configuration];
             picker.delegate = self;
+            picker.modalPresentationStyle = [RCTConvert UIModalPresentationStyle:options[@"presentationStyle"]];
             picker.presentationController.delegate = self;
 
             if([self.options[@"includeExtra"] boolValue]) {

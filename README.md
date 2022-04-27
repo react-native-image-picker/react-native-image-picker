@@ -94,6 +94,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | includeExtra   | OK  | OK      | If true, will include extra data which requires library permissions to be requested (i.e. exif data)                                      |
 | saveToPhotos   | OK  | OK      | (Boolean) Only for launchCamera, saves the image/video file captured to public photo                                                      |
 | selectionLimit | OK  | OK      | Default is `1`, use `0` to allow any number of files. Only iOS version >= 14 support `0` and also it supports providing any integer value |
+| presentationStyle | OK  | NO      | Controls how the picker is presented. 'pageSheet', 'fullScreen', 'pageSheet', 'formSheet', 'popover', 'overFullScreen', 'overCurrentContext'. Default is 'currentContext' |
 
 ## The Response Object
 
