@@ -32,6 +32,8 @@ NSString *errPermission = @"permission";
 NSString *errOthers = @"others";
 RNImagePickerTarget target;
 
+BOOL photoSelected = NO;
+
 RCT_EXPORT_MODULE();
 
 RCT_EXPORT_METHOD(launchCamera:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
@@ -45,6 +47,7 @@ RCT_EXPORT_METHOD(launchCamera:(NSDictionary *)options callback:(RCTResponseSend
 RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
 {
     target = library;
+    photoSelected = NO;
     dispatch_async(dispatch_get_main_queue(), ^{
         [self launchImagePicker:options callback:callback];
     });
@@ -345,6 +348,11 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         NSMutableArray<NSDictionary *> *assets = [[NSMutableArray alloc] initWithCapacity:1];
         PHAsset *asset = nil;
 
+        if (photoSelected == YES) {
+           return;
+        }
+        photoSelected = YES;
+
         // If include extra, we fetch the PHAsset, this required library permissions
         if([self.options[@"includeExtra"] boolValue]) {
           asset = [ImagePickerUtils fetchPHAssetOnIOS13:info];
@@ -404,6 +412,11 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 {
     [picker dismissViewControllerAnimated:YES completion:nil];
 
+    if (photoSelected == YES) {
+        return;
+    }
+    photoSelected = YES;
+    
     if (results.count == 0) {
         dispatch_async(dispatch_get_main_queue(), ^{
             self.callback(@[@{@"didCancel": @YES}]);
