@@ -8,7 +8,6 @@ export interface ImageLibraryOptions {
   quality?: PhotoQuality;
   videoQuality?: AndroidVideoOptions | iOSVideoOptions;
   includeBase64?: boolean;
-  includeExtra?: boolean;
   presentationStyle?:
     | 'currentContext'
     | 'fullScreen'

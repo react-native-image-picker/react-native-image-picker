@@ -4,9 +4,6 @@ import {DemoTitle, DemoButton, DemoResponse} from './components';
 
 import * as ImagePicker from 'react-native-image-picker';
 
-/* toggle includeExtra */
-const includeExtra = true;
-
 export default function App() {
   const [response, setResponse] = React.useState<any>(null);
 
@@ -82,7 +79,6 @@ const actions: Action[] = [
       saveToPhotos: true,
       mediaType: 'photo',
       includeBase64: false,
-      includeExtra,
     },
   },
   {
@@ -94,7 +90,6 @@ const actions: Action[] = [
       selectionLimit: 0,
       mediaType: 'photo',
       includeBase64: false,
-      includeExtra,
     },
   },
   {
@@ -103,7 +98,6 @@ const actions: Action[] = [
     options: {
       saveToPhotos: true,
       mediaType: 'video',
-      includeExtra,
     },
   },
   {
@@ -112,7 +106,6 @@ const actions: Action[] = [
     options: {
       selectionLimit: 0,
       mediaType: 'video',
-      includeExtra,
     },
   },
   {
@@ -121,7 +114,6 @@ const actions: Action[] = [
     options: {
       selectionLimit: 0,
       mediaType: 'mixed',
-      includeExtra,
     },
   },
 ];
