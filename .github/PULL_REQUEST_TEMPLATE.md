@@ -3,7 +3,7 @@ Thanks for submitting a PR! Please read these instructions carefully:
 - [ ] Explain the **motivation** for making this change.
 - [ ] Provide a **test plan** demonstrating that the code is solid.
 - [ ] Match the **code formatting** of the rest of the codebase.
-- [ ] Target the `master` branch, NOT a "stable" branch.
+- [ ] Target the `main` branch, NOT a "stable" branch.
 
 ## Motivation (required)
 
