@@ -427,8 +427,11 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
     dispatch_group_t completionGroup = dispatch_group_create();
     NSMutableArray<NSDictionary *> *assets = [[NSMutableArray alloc] initWithCapacity:results.count];
+    for (int i = 0; i < results.count; i++) {
+        [assets addObject:(NSDictionary *)[NSNull null]];
+    }
 
-    for (PHPickerResult *result in results) {
+    [results enumerateObjectsUsingBlock:^(PHPickerResult *result, NSUInteger index, BOOL *stop) {
         PHAsset *asset = nil;
         NSItemProvider *provider = result.itemProvider;
 
@@ -452,24 +455,27 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
                 NSData *data = [[NSData alloc] initWithContentsOfURL:url];
                 UIImage *image = [[UIImage alloc] initWithData:data];
                 
-                [assets addObject:[self mapImageToAsset:image data:data phAsset:asset]];
+                assets[index] = [self mapImageToAsset:image data:data phAsset:asset];
                 dispatch_group_leave(completionGroup);
             }];
         } else if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeMovie]) {
             [provider loadFileRepresentationForTypeIdentifier:(NSString *)kUTTypeMovie completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
-                [assets addObject:[self mapVideoToAsset:url phAsset:asset error:nil]];
+                NSDictionary *mappedAsset = [self mapVideoToAsset:url phAsset:asset error:nil];
+                if (nil != mappedAsset) {
+                    assets[index] = mappedAsset;
+                }
                 dispatch_group_leave(completionGroup);
             }];
         } else {
             // The provider didn't have an item matching photo or video (fails on M1 Mac Simulator)
             dispatch_group_leave(completionGroup);
         }
-    }
+    }];
 
     dispatch_group_notify(completionGroup, dispatch_get_main_queue(), ^{
-        //  mapVideoToAsset can fail and return nil.
+        //  mapVideoToAsset can fail and return nil, leaving asset NSNull.
         for (NSDictionary *asset in assets) {
-            if (nil == asset) {
+            if ([asset isEqual:[NSNull null]]) {
                 self.callback(@[@{@"errorCode": errOthers}]);
                 return;
             }
