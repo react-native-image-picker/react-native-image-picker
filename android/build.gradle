@@ -1,11 +1,11 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion "android-Tiramisu"
+    compileSdkVersion 33
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion "Tiramisu"
+        targetSdkVersion 33
         versionCode 1
         versionName "1.0"
     }
