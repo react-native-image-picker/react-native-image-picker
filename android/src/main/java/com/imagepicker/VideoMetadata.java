@@ -46,7 +46,7 @@ public class VideoMetadata extends Metadata {
     try {
       metadataRetriever.release();
     } catch (IOException e) {
-      e.printStackTrace();
+      Log.e("RNIP", "IO error releasing video metadata: " + e.getMessage());
     }
   }
 
