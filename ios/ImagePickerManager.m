@@ -31,6 +31,7 @@ NSString *errCameraUnavailable = @"camera_unavailable";
 NSString *errPermission = @"permission";
 NSString *errOthers = @"others";
 RNImagePickerTarget target;
+UIViewController* imagePickerController;
 
 BOOL photoSelected = NO;
 
@@ -52,6 +53,18 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     dispatch_async(dispatch_get_main_queue(), ^{
         [self launchImagePicker:options callback:callback];
     });
+}
+
+RCT_EXPORT_METHOD(dismissImagePicker)
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self dismiss];
+    });
+}
+
+- (void)dismiss
+{
+    [imagePickerController dismissViewControllerAnimated:NO completion:nil];
 }
 
 - (void)launchImagePicker:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback
@@ -110,6 +123,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
 - (void) showPickerViewController:(UIViewController *)picker
 {
+    imagePickerController = picker;
     dispatch_async(dispatch_get_main_queue(), ^{
         UIViewController *root = RCTPresentedViewController();
         [root presentViewController:picker animated:YES completion:nil];

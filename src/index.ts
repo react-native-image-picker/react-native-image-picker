@@ -1,4 +1,4 @@
-import {NativeModules} from 'react-native';
+import {NativeModules, Platform} from 'react-native';
 
 import {CameraOptions, ImageLibraryOptions, Callback, ImagePickerResponse} from './types';
 export * from './types';
@@ -44,4 +44,12 @@ export function launchImageLibrary(
     );
   })
   
+}
+
+export function dismissImagePickerIOS(): void {
+  if (Platform.OS === 'android') {
+    return;
+  }
+  
+  NativeModules.ImagePickerManager.dismissImagePicker();
 }
