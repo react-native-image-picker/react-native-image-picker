@@ -43,7 +43,11 @@ public class VideoMetadata extends Metadata {
       this.height = bitmap.getHeight();
     }
 
-    metadataRetriever.release();
+    try {
+      metadataRetriever.release();
+    } catch (IOException e) {
+      Log.w("RNIP", "Could not release metadata retriever: " + e.getMessage());
+    }
   }
 
   public int getBitrate() {
