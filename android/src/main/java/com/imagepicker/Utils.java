@@ -410,7 +410,7 @@ public class Utils {
         }
 
         if(options.includeExtra) {
-          // Add more extra data here ...
+            // Add more extra data here ...
             map.putString("timestamp", imageMetadata.getDateTime());
             map.putString("id", fileName);
         }
@@ -433,7 +433,7 @@ public class Utils {
         map.putInt("height", videoMetadata.getHeight());
 
         if(options.includeExtra) {
-          // Add more extra data here ...
+            // Add more extra data here ...
             map.putString("timestamp", videoMetadata.getDateTime());
             map.putString("id", fileName);
         }
