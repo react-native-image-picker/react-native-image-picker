@@ -6,7 +6,6 @@ import {
   Callback,
   ImagePickerResponse,
 } from '../types';
-export * from '../types';
 
 const DEFAULT_OPTIONS: ImageLibraryOptions & CameraOptions = {
   mediaType: 'photo',

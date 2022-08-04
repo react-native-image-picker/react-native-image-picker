@@ -7,8 +7,6 @@ import {
   Asset,
 } from '../types';
 
-export * from '../types';
-
 const DEFAULT_OPTIONS: ImageLibraryOptions & CameraOptions = {
   mediaType: 'photo',
   videoQuality: 'high',
