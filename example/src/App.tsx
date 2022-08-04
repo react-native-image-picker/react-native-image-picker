@@ -36,7 +36,7 @@ export default function App() {
         <DemoResponse>{response}</DemoResponse>
 
         {response?.assets &&
-          response?.assets.map(({uri}) => (
+          response?.assets.map(({uri}: {uri: string}) => (
             <View key={uri} style={styles.image}>
               <Image
                 resizeMode="cover"
