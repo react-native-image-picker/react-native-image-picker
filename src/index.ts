@@ -1,47 +1,26 @@
-import {NativeModules} from 'react-native';
+import {Platform} from 'react-native';
 
-import {CameraOptions, ImageLibraryOptions, Callback, ImagePickerResponse} from './types';
+import {CameraOptions, ImageLibraryOptions, Callback} from './types';
+import {
+  imageLibrary as nativeImageLibrary,
+  camera as nativeCamera,
+} from './platforms/native';
+import {
+  imageLibrary as webImageLibrary,
+  camera as webCamera,
+} from './platforms/web';
+
 export * from './types';
 
-const DEFAULT_OPTIONS: ImageLibraryOptions & CameraOptions = {
-  mediaType: 'photo',
-  videoQuality: 'high',
-  quality: 1,
-  maxWidth: 0,
-  maxHeight: 0,
-  includeBase64: false,
-  cameraType: 'back',
-  selectionLimit: 1,
-  saveToPhotos: false,
-  durationLimit: 0,
-  includeExtra: false,
-  presentationStyle: 'pageSheet'
-};
+export const launchCamera = (options: CameraOptions, callback?: Callback) =>
+  Platform.OS === 'web'
+    ? webCamera(options, callback)
+    : nativeCamera(options, callback);
 
-export function launchCamera(options: CameraOptions, callback?: Callback) : Promise<ImagePickerResponse> {
-  return new Promise(resolve => {
-    NativeModules.ImagePickerManager.launchCamera(
-      {...DEFAULT_OPTIONS, ...options},
-      (result: ImagePickerResponse) => {
-        if(callback) callback(result);
-        resolve(result);
-      },
-    );
-  });  
-}
-
-export function launchImageLibrary(
+export const launchImageLibrary = (
   options: ImageLibraryOptions,
   callback?: Callback,
-) : Promise<ImagePickerResponse> {
-  return new Promise(resolve => {
-    NativeModules.ImagePickerManager.launchImageLibrary(
-      {...DEFAULT_OPTIONS, ...options},
-      (result: ImagePickerResponse) => {
-        if(callback) callback(result);
-        resolve(result);
-      },
-    );
-  })
-  
-}
+) =>
+  Platform.OS === 'web'
+    ? webImageLibrary(options, callback)
+    : nativeImageLibrary(options, callback);
