@@ -1522,11 +1522,11 @@
   integrity sha512-EEhsLsD6UsDM1yFhAvy0Cjr6VwmpMWqFBCb9w07wVugF7w9nfajxLuVmngTIpgS6svCnm6Vaw+MZhoDCKnOfsw==
 
 "@types/react-native@^0.66.4":
-  version "0.66.15"
-  resolved "https://registry.yarnpkg.com/@types/react-native/-/react-native-0.66.15.tgz#d332d82b04635adabbd8e1976f9547ce8662300b"
-  integrity sha512-qNK3LZhNpSd2Hdr0OFdvQ/VOb1qcjNhmw96LsOtxIN+1RtXHO/1dVzxYUlWnKMCtV+E5WSaWM703c9Q7gG9tyg==
+  version "0.66.21"
+  resolved "https://registry.yarnpkg.com/@types/react-native/-/react-native-0.66.21.tgz#0af38b44fb5a4afdc4ef6ecf065ef91ee5bc813f"
+  integrity sha512-O/PLXzTWZsNByotNKLxBWe/ePr/qV2km2pXflnMFkaot3KdfMl36E/0c5JVRMKCxxmDVvoazVHkqPuAvnkkgxA==
   dependencies:
-    "@types/react" "*"
+    "@types/react" "^17"
 
 "@types/react-test-renderer@^17.0.1":
   version "17.0.1"
