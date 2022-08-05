@@ -5,21 +5,16 @@ import {
   ImagePickerResponse,
   ErrorCode,
   Asset,
+  MediaType,
 } from '../types';
 
-const DEFAULT_OPTIONS: ImageLibraryOptions & CameraOptions = {
+const DEFAULT_OPTIONS: Pick<
+  ImageLibraryOptions & CameraOptions,
+  'mediaType' | 'includeBase64' | 'selectionLimit'
+> = {
   mediaType: 'photo',
-  videoQuality: 'high',
-  quality: 1,
-  maxWidth: 0,
-  maxHeight: 0,
   includeBase64: false,
-  cameraType: 'back',
   selectionLimit: 1,
-  saveToPhotos: false,
-  durationLimit: 0,
-  includeExtra: false,
-  presentationStyle: 'pageSheet',
 };
 
 export function camera(
@@ -36,68 +31,28 @@ export function camera(
 
     resolve(result);
   });
-
-  // @TODO: Might work but needs to be tested
-  // const input = document.createElement('input');
-  // input.style.display = 'none';
-  // input.setAttribute('type', 'file');
-  // input.setAttribute('accept', options.mediaType);
-  // input.setAttribute('id', 'whateverid');
-  // if (options.selectionLimit > 1) {
-  //   input.setAttribute('multiple', 'multiple');
-  // }
-
-  // input.setAttribute('capture', 'camera');
-
-  // document.body.appendChild(input);
-
-  // return new Promise(resolve => {
-  //   input.addEventListener('change', async () => {
-  //     if (input.files) {
-  //       if (options.selectionLimit <= 1) {
-  //         const img = await readFile(input.files[0], {
-  //           includeBase64: options.includeBase64
-  //         });
-
-  //         const result = { assets: [img] };
-
-  //         if (callback) callback(result);
-
-  //         resolve(result);
-  //       } else {
-  //         const imgs = await Promise.all(
-  //           Array.from(input.files).map(file =>
-  //             readFile(file, { includeBase64: options.includeBase64 })
-  //           )
-  //         );
-
-  //         const result = {
-  //           didCancel: false,
-  //           assets: imgs
-  //         };
-
-  //         if (callback) callback(result);
-
-  //         resolve(result);
-  //       }
-  //     }
-  //     document.body.removeChild(input);
-  //   });
-
-  //   const event = new MouseEvent('click');
-  //   input.dispatchEvent(event);
-  // });
 }
 
 export function imageLibrary(
   options: ImageLibraryOptions = DEFAULT_OPTIONS,
   callback?: Callback,
 ): Promise<ImagePickerResponse> {
+  // Only supporting 'photo' mediaType for now.
+  if (options.mediaType !== 'photo') {
+    const result = {
+      errorCode: 'others' as ErrorCode,
+      errorMessage: 'For now, only photo mediaType is supported for web',
+    };
+
+    if (callback) callback(result);
+
+    return Promise.resolve(result);
+  }
+
   const input = document.createElement('input');
   input.style.display = 'none';
   input.setAttribute('type', 'file');
-  input.setAttribute('accept', options.mediaType);
-  input.setAttribute('id', 'whateverid');
+  input.setAttribute('accept', getWebMediaType(options.mediaType));
 
   if (options.selectionLimit! > 1) {
     input.setAttribute('multiple', 'multiple');
@@ -191,4 +146,14 @@ function readFile(
 
     reader.readAsDataURL(targetFile);
   });
+}
+
+function getWebMediaType(mediaType: MediaType) {
+  const webMediaTypes = {
+    photo: 'image/*',
+    video: 'video/*',
+    mixed: 'image/*,video/*',
+  };
+
+  return webMediaTypes[mediaType] ?? webMediaTypes.photo;
 }

@@ -37,11 +37,11 @@ export default function App() {
 
         {response?.assets &&
           response?.assets.map(({uri}: {uri: string}) => (
-            <View key={uri} style={styles.image}>
+            <View key={uri} style={styles.imageContainer}>
               <Image
                 resizeMode="cover"
                 resizeMethod="scale"
-                style={{width: 200, height: 200}}
+                style={styles.image}
                 source={{uri: uri}}
               />
             </View>
@@ -61,10 +61,13 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     marginVertical: 8,
   },
-
-  image: {
+  imageContainer: {
     marginVertical: 24,
     alignItems: 'center',
+  },
+  image: {
+    width: 200,
+    height: 200,
   },
 });
 

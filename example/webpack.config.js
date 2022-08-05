@@ -1,5 +1,4 @@
 const path = require('path');
-const fs = require('fs');
 
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -7,13 +6,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const appDirectory = path.resolve(__dirname);
 const {presets} = require(`${appDirectory}/babel.config.js`);
 
-var includePaths = [
-  fs.realpathSync(__dirname + '/node_modules/react-native-image-picker/lib'),
-];
-
 const compileNodeModules = [
   // Add every react-native package that needs compiling
-  // 'react-native-image-picker',
   'react-native',
 ].map(moduleName => path.resolve(appDirectory, `node_modules/${moduleName}`));
 
@@ -60,20 +54,11 @@ module.exports = {
     extensions: ['.web.tsx', '.web.ts', '.tsx', '.ts', '.web.js', '.js'],
     alias: {
       'react-native$': 'react-native-web',
-      // 'react-native-image-picker$': '../',
     },
     symlinks: false,
   },
   module: {
-    rules: [
-      babelLoaderConfiguration,
-      imageLoaderConfiguration,
-      {
-        include: includePaths,
-        test: /\.ts|\.tsx$/,
-        use: 'ts-loader',
-      },
-    ],
+    rules: [babelLoaderConfiguration, imageLoaderConfiguration],
   },
   plugins: [
     new HtmlWebpackPlugin({
