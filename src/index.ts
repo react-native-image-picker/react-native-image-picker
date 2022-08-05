@@ -12,15 +12,17 @@ import {
 
 export * from './types';
 
-export const launchCamera = (options: CameraOptions, callback?: Callback) =>
-  Platform.OS === 'web'
+export function launchCamera(options: CameraOptions, callback?: Callback) {
+  return Platform.OS === 'web'
     ? webCamera(options, callback)
     : nativeCamera(options, callback);
+}
 
-export const launchImageLibrary = (
+export function launchImageLibrary(
   options: ImageLibraryOptions,
   callback?: Callback,
-) =>
-  Platform.OS === 'web'
+) {
+  return Platform.OS === 'web'
     ? webImageLibrary(options, callback)
     : nativeImageLibrary(options, callback);
+}

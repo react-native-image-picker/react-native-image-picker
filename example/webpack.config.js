@@ -11,8 +11,6 @@ const compileNodeModules = [
   'react-native',
 ].map(moduleName => path.resolve(appDirectory, `node_modules/${moduleName}`));
 
-console.log(path.resolve(appDirectory, `node_modules/`));
-
 const babelLoaderConfiguration = {
   test: /\.js$|tsx?$/,
   // Add every directory that needs to be compiled by Babel during the build.
