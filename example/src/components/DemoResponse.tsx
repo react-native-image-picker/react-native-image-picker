@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Text, View, StyleSheet, ViewStyle, TextStyle} from 'react-native';
+import {Text, StyleSheet, ViewStyle, TextStyle, ScrollView} from 'react-native';
 
 export function DemoResponse({children}: React.PropsWithChildren<{}>) {
   if (children == null) {
@@ -7,9 +7,9 @@ export function DemoResponse({children}: React.PropsWithChildren<{}>) {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.text}>{JSON.stringify(children, null, 2)}</Text>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -24,6 +24,7 @@ const styles = StyleSheet.create<Styles>({
     marginVertical: 8,
     padding: 8,
     borderRadius: 8,
+    maxHeight: 200,
   },
   text: {
     color: 'black',
