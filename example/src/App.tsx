@@ -89,8 +89,6 @@ const actions: Action[] = [
     title: 'Select Image',
     type: 'library',
     options: {
-      maxHeight: 200,
-      maxWidth: 200,
       selectionLimit: 0,
       mediaType: 'photo',
       includeBase64: false,

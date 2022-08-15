@@ -121,20 +121,32 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 -(NSMutableDictionary *)mapImageToAsset:(UIImage *)image data:(NSData *)data phAsset:(PHAsset * _Nullable)phAsset {
     NSString *fileType = [ImagePickerUtils getFileType:data];
     
-    if ((target == camera) && [self.options[@"saveToPhotos"] boolValue]) {
-        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
+    if (target == camera) {
+        if ([self.options[@"saveToPhotos"] boolValue]) {
+            UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
+        }
+        CFMutableDataRef imageData = CFDataCreateMutable(NULL, 0);
+        CGImageDestinationRef destination = CGImageDestinationCreateWithData(imageData, kUTTypeJPEG, 1, NULL);
+        CGImageDestinationAddImage(destination, image.CGImage, NULL);
+        CGImageDestinationFinalize(destination);
+        CFRelease(destination);
+        data = (__bridge NSData *)imageData;
     }
     
+    UIImage* newImage = image;
     if (![fileType isEqualToString:@"gif"]) {
-        image = [ImagePickerUtils resizeImage:image
+        newImage = [ImagePickerUtils resizeImage:image
                                      maxWidth:[self.options[@"maxWidth"] floatValue]
                                     maxHeight:[self.options[@"maxHeight"] floatValue]];
     }
 
-    if ([fileType isEqualToString:@"jpg"]) {
-        data = UIImageJPEGRepresentation(image, [self.options[@"quality"] floatValue]);
-    } else if ([fileType isEqualToString:@"png"]) {
-        data = UIImagePNGRepresentation(image);
+    float quality = [self.options[@"quality"] floatValue];
+    if (![image isEqual:newImage] || (quality >= 0 && quality < 1)) {
+        if ([fileType isEqualToString:@"jpg"]) {
+            data = UIImageJPEGRepresentation(newImage, quality);
+        } else if ([fileType isEqualToString:@"png"]) {
+            data = UIImagePNGRepresentation(newImage);
+        }
     }
     
     NSMutableDictionary *asset = [[NSMutableDictionary alloc] init];
@@ -159,8 +171,8 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     }
 
     asset[@"fileName"] = fileName;
-    asset[@"width"] = @(image.size.width);
-    asset[@"height"] = @(image.size.height);
+    asset[@"width"] = @(newImage.size.width);
+    asset[@"height"] = @(newImage.size.height);
     
     if(phAsset){
         asset[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
