@@ -93,7 +93,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | includeBase64  | OK  | OK      | OK | If true, creates base64 string of the image (Avoid using on large image files due to performance)                                         |                                                   |
 | includeExtra   | OK  | OK      | NO | If true, will include extra data which requires library permissions to be requested (i.e. exif data)                                      |
 | saveToPhotos   | OK  | OK      | NO |(Boolean) Only for launchCamera, saves the image/video file captured to public photo                                                      |
-| selectionLimit | OK  | OK      | OK |Default is `1`, use `0` to allow any number of files. Only iOS version >= 14 support `0` and also it supports providing any integer value |
+| selectionLimit | OK  | OK      | OK |Default is `1`, use `0` to allow any number of files. Only iOS version >= 14 & Android version >= 13 support `0` and also it supports providing any integer value |
 | presentationStyle | OK  | NO      | NO |Controls how the picker is presented. 'pageSheet', 'fullScreen', 'pageSheet', 'formSheet', 'popover', 'overFullScreen', 'overCurrentContext'. Default is 'currentContext' |
 
 ## The Response Object

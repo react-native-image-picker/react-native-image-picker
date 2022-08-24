@@ -127,26 +127,39 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         Intent libraryIntent;
         requestCode = REQUEST_LAUNCH_LIBRARY;
 
-        boolean isSingleSelect = this.options.selectionLimit == 1;
+        int selectionLimit = this.options.selectionLimit;
+        boolean isSingleSelect = selectionLimit == 1;
         boolean isPhoto = this.options.mediaType.equals(mediaTypePhoto);
         boolean isVideo = this.options.mediaType.equals(mediaTypeVideo);
 
-        if(isSingleSelect && (isPhoto || isVideo)) {
-            libraryIntent = new Intent(Intent.ACTION_PICK);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            if (isSingleSelect && (isPhoto || isVideo)) {
+                libraryIntent = new Intent(Intent.ACTION_PICK);
+            } else {
+                libraryIntent = new Intent(Intent.ACTION_GET_CONTENT);
+                libraryIntent.addCategory(Intent.CATEGORY_OPENABLE);
+            }
         } else {
-            libraryIntent = new Intent(Intent.ACTION_GET_CONTENT);
-            libraryIntent.addCategory(Intent.CATEGORY_OPENABLE);
+            libraryIntent = new Intent(MediaStore.ACTION_PICK_IMAGES);
         }
 
-        if(!isSingleSelect) {
-            libraryIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        if (!isSingleSelect) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                libraryIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+            } else {
+                if (selectionLimit != 1) {
+                    int maxNum = selectionLimit;
+                    if (selectionLimit == 0) maxNum = MediaStore.getPickImagesMaxLimit();
+                    libraryIntent.putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, maxNum);
+                }
+            }
         }
 
-        if(isPhoto) {
+        if (isPhoto) {
             libraryIntent.setType("image/*");
         } else if (isVideo) {
             libraryIntent.setType("video/*");
-        } else {
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             libraryIntent.setType("*/*");
             libraryIntent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "video/*"});
         }
