@@ -58,5 +58,14 @@
     "targets": [
       "typescript"
     ]
+  },
+  "codegenConfig": {
+    "libraries": [
+      {
+        "name": "RNImagePickerSpec",
+        "type": "modules",
+        "jsSrcsDir": "src"
+      }
+    ]
   }
 }
