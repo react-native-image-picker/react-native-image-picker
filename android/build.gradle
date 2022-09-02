@@ -1,13 +1,30 @@
+import groovy.json.JsonSlurper
+import java.nio.file.Paths
+
 apply plugin: 'com.android.library'
+
+if (isNewArchitectureEnabled()) {
+  apply plugin: 'com.facebook.react'
+}
 
 android {
     compileSdkVersion 33
+
+    // Used to override the NDK path/version on internal CI or by allowing
+    // users to customize the NDK path/version from their root project (e.g. for M1 support)
+    if (rootProject.hasProperty("ndkPath")) {
+        ndkPath rootProject.ext.ndkPath
+    }
+    if (rootProject.hasProperty("ndkVersion")) {
+        ndkVersion rootProject.ext.ndkVersion
+    }
 
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 33
         versionCode 1
         versionName "1.0"
+        buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
     }
 
     buildTypes {
@@ -16,10 +33,87 @@ android {
         }
     }
 
+    sourceSets {
+        main {
+        if (isNewArchitectureEnabled()) {
+            java.srcDirs += ["src/newarch",
+                            "${project.buildDir}/generated/source/codegen/java"]
+        } else {
+            java.srcDirs += ["src/oldarch"]
+        }
+        }
+    }
+}
+
+repositories {
+  maven {
+    // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
+    url "${rootDir}/../node_modules/react-native/android"
+  }
+  mavenCentral()
+  google()
 }
 
 dependencies {
-    implementation "com.facebook.react:react-native:+"
+    if (isNewArchitectureEnabled()) {
+        implementation project(":ReactAndroid")
+    } else {
+        implementation 'com.facebook.react:react-native:+'
+    }
     implementation "androidx.core:core:1.3.1"
     implementation "androidx.exifinterface:exifinterface:1.3.3"
+}
+
+if (isNewArchitectureEnabled()) {
+  react {
+    reactNativeDir = rootProject.file(findNodeModulePath(rootProject.rootDir, "react-native") ?: "../node_modules/react-native/")
+    jsRootDir = file("../src/")
+    codegenDir = rootProject.file(findNodeModulePath(rootProject.rootDir, "react-native-codegen") ?: "../node_modules/react-native-codegen/")
+    libraryName = "imagepicker"
+    codegenJavaPackageName = "com.imagepicker"
+  }
+
+  // Resolves "LOCAL_SRC_FILES points to a missing file, Check that libfb.so exists or that its path is correct".
+  tasks.whenTaskAdded { task ->
+    if (task.name.contains("configureCMakeDebug")) {
+      rootProject.getTasksByName("packageReactNdkDebugLibs", true).forEach {
+        task.dependsOn(it)
+      }
+    }
+    // We want to add a dependency for both configureCMakeRelease and configureCMakeRelWithDebInfo
+    if (task.name.contains("configureCMakeRel")) {
+      rootProject.getTasksByName("packageReactNdkReleaseLibs", true).forEach {
+        task.dependsOn(it)
+      }
+    }
+  }
+}
+
+def isNewArchitectureEnabled() {
+    // To opt-in for the New Architecture, you can either:
+    // - Set `newArchEnabled` to true inside the `gradle.properties` file
+    // - Invoke gradle with `-newArchEnabled=true`
+    // - Set an environment variable `ORG_GRADLE_PROJECT_newArchEnabled=true`
+    return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
+}
+
+static def findNodeModulePath(baseDir, packageName) {
+  def basePath = baseDir.toPath().normalize()
+  // Node's module resolution algorithm searches up to the root directory,
+  // after which the base path will be null
+  while (basePath) {
+    def candidatePath = Paths.get(basePath.toString(), "node_modules", packageName)
+    if (candidatePath.toFile().exists()) {
+      return candidatePath.toString()
+    }
+    basePath = basePath.getParent()
+  }
+  return null
+}
+
+def findNodeModulePath(packageName) {
+  // Don't start in the project dir, as its path ends with node_modules/react-native-mlkit-ocr/android
+  // we want to go two levels up, so we end up in the first_node modules and eventually
+  // search upwards if the package is not found there
+  return findNodeModulePath(projectDir.toPath().parent.parent.toFile(), packageName)
 }
