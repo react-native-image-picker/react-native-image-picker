@@ -190,17 +190,35 @@ public class Utils {
         try {
             int[] origDimens = getImageDimensions(uri, context);
 
+            String originalOrientation = getOrientation(uri, context);
+            int rotation = 0;
+            if(String.valueOf(ExifInterface.ORIENTATION_ROTATE_90).equals(originalOrientation)){
+                rotation = 90;
+            }else if(String.valueOf(ExifInterface.ORIENTATION_ROTATE_180).equals(originalOrientation)){
+                rotation = 180;
+            }else if(String.valueOf(ExifInterface.ORIENTATION_ROTATE_270).equals(originalOrientation)){
+                rotation = 270;
+            }
+
+            Consumer<int[]> swap = dimens -> {
+                int tmp = dimens[0];
+                dimens[0] = dimens[1];
+                dimens[1] = tmp;
+            };
+            if(rotation % 180 != 0) swap.accept(origDimens);
+
             if (!shouldResizeImage(origDimens[0], origDimens[1], options)) {
                 return uri;
             }
 
             int[] newDimens = getImageDimensBasedOnConstraints(origDimens[0], origDimens[1], options);
 
+            if(rotation % 180 != 0) swap.accept(newDimens);
+
             InputStream imageStream = context.getContentResolver().openInputStream(uri);
             String mimeType =  getMimeTypeFromFileUri(uri);
             Bitmap b = BitmapFactory.decodeStream(imageStream);
             b = Bitmap.createScaledBitmap(b, newDimens[0], newDimens[1], true);
-            String originalOrientation = getOrientation(uri, context);
 
             File file = createFile(context, getFileTypeFromMime(mimeType));
             OutputStream os = context.getContentResolver().openOutputStream(Uri.fromFile(file));
