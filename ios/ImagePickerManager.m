@@ -101,11 +101,16 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
                 self.callback(@[@{@"errorCode": errPermission}]);
                 return;
             }
-            [self showPickerViewController:picker];
         }];
-    } else {
-      [self showPickerViewController:picker];
+    } else if (target == camera) {
+        [self checkPermission:^(BOOL granted) {
+            if (!granted) {
+                self.callback(@[@{@"errorCode": errPermission}]);
+                return;
+            }
+        }]
     }
+    [self showPickerViewController:picker];
 }
 
 - (void) showPickerViewController:(UIViewController *)picker
