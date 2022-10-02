@@ -117,7 +117,7 @@ const actions: Action[] = [
     },
   },
   {
-    title: `Select Image or Video\n(mixed)`,
+    title: 'Select Image or Video\n(mixed)',
     type: 'library',
     options: {
       selectionLimit: 0,
