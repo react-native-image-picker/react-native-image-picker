@@ -118,19 +118,39 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
 #pragma mark - Helpers
 
+NSData* extractImageData(UIImage* image){
+    CFMutableDataRef imageData = CFDataCreateMutable(NULL, 0);
+    CGImageDestinationRef destination = CGImageDestinationCreateWithData(imageData, kUTTypeJPEG, 1, NULL);
+    
+    CFStringRef orientationKey[1];
+    CFTypeRef   orientationValue[1];
+    CGImagePropertyOrientation CGOrientation = CGImagePropertyOrientationForUIImageOrientation(image.imageOrientation);
+
+    orientationKey[0] = kCGImagePropertyOrientation;
+    orientationValue[0] = CFNumberCreate(NULL, kCFNumberIntType, &CGOrientation);
+
+    CFDictionaryRef imageProps = CFDictionaryCreate( NULL, (const void **)orientationKey, (const void **)orientationValue, 1,
+                    &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    
+    CGImageDestinationAddImage(destination, image.CGImage, imageProps);
+    
+    CGImageDestinationFinalize(destination);
+    
+    CFRelease(destination);
+    CFRelease(orientationValue[0]);
+    CFRelease(imageProps);
+    return (__bridge NSData *)imageData;
+}
+
+
+
 -(NSMutableDictionary *)mapImageToAsset:(UIImage *)image data:(NSData *)data phAsset:(PHAsset * _Nullable)phAsset {
     NSString *fileType = [ImagePickerUtils getFileType:data];
-    
     if (target == camera) {
         if ([self.options[@"saveToPhotos"] boolValue]) {
             UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
         }
-        CFMutableDataRef imageData = CFDataCreateMutable(NULL, 0);
-        CGImageDestinationRef destination = CGImageDestinationCreateWithData(imageData, kUTTypeJPEG, 1, NULL);
-        CGImageDestinationAddImage(destination, image.CGImage, NULL);
-        CGImageDestinationFinalize(destination);
-        CFRelease(destination);
-        data = (__bridge NSData *)imageData;
+        data = extractImageData(image);
     }
     
     UIImage* newImage = image;
@@ -181,6 +201,20 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     }
     
     return asset;
+}
+
+CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIImageOrientation uiOrientation) {
+    //code from here: https://developer.apple.com/documentation/imageio/cgimagepropertyorientation?language=objc
+    switch (uiOrientation) {
+        case UIImageOrientationUp: return kCGImagePropertyOrientationUp;
+        case UIImageOrientationDown: return kCGImagePropertyOrientationDown;
+        case UIImageOrientationLeft: return kCGImagePropertyOrientationLeft;
+        case UIImageOrientationRight: return kCGImagePropertyOrientationRight;
+        case UIImageOrientationUpMirrored: return kCGImagePropertyOrientationUpMirrored;
+        case UIImageOrientationDownMirrored: return kCGImagePropertyOrientationDownMirrored;
+        case UIImageOrientationLeftMirrored: return kCGImagePropertyOrientationLeftMirrored;
+        case UIImageOrientationRightMirrored: return kCGImagePropertyOrientationRightMirrored;
+    }
 }
 
 -(NSMutableDictionary *)mapVideoToAsset:(NSURL *)url phAsset:(PHAsset * _Nullable)phAsset error:(NSError **)error {
