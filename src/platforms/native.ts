@@ -27,6 +27,7 @@ export function camera(
   callback?: Callback,
 ): Promise<ImagePickerResponse> {
   return new Promise((resolve) => {
+    filterUndefinedProperties(options);
     NativeModules.ImagePickerManager.launchCamera(
       {...DEFAULT_OPTIONS, ...options},
       (result: ImagePickerResponse) => {
@@ -42,6 +43,7 @@ export function imageLibrary(
   callback?: Callback,
 ): Promise<ImagePickerResponse> {
   return new Promise((resolve) => {
+    filterUndefinedProperties(options);
     NativeModules.ImagePickerManager.launchImageLibrary(
       {...DEFAULT_OPTIONS, ...options},
       (result: ImagePickerResponse) => {
@@ -49,5 +51,13 @@ export function imageLibrary(
         resolve(result);
       },
     );
+  });
+}
+
+function filterUndefinedProperties(obj: any) {
+  Object.keys(obj).forEach(key => {
+    if (obj[key] === undefined) {
+      delete obj[key];
+    }
   });
 }

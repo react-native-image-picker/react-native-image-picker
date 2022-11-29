@@ -19,7 +19,17 @@ buildscript {
     }
 }
 
+def REACT_NATIVE_VERSION = new File(['node', '--print',"JSON.parse(require('fs').readFileSync(require.resolve('react-native/package.json'), 'utf-8')).version"].execute(null, rootDir).text.trim())
+
+
+
 allprojects {
+    configurations.all {
+        resolutionStrategy {
+            // Remove this override in future react-native versions, as a proper fix is included in react-native itself. https://github.com/facebook/react-native/issues/35210
+            force "com.facebook.react:react-native:" + REACT_NATIVE_VERSION
+        }
+    }
     repositories {
         mavenCentral()
         mavenLocal()
