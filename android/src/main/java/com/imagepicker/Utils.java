@@ -156,10 +156,20 @@ public class Utils {
 
     public static int[] getImageDimensions(Uri uri, Context reactContext) {
         try (InputStream inputStream = reactContext.getContentResolver().openInputStream(uri)) {
+
+            String orientation = getOrientation(uri,reactContext);
+
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
             BitmapFactory.decodeStream(inputStream, null, options);
-            return new int[]{options.outWidth, options.outHeight};
+
+            if (orientation.equals(String.valueOf(ExifInterface.ORIENTATION_ROTATE_90))
+                    || orientation.equals(String.valueOf(ExifInterface.ORIENTATION_ROTATE_270))) {
+                return new int[]{options.outHeight, options.outWidth};
+            }else {
+                return new int[]{options.outWidth, options.outHeight};
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
             return new int[]{0, 0};
