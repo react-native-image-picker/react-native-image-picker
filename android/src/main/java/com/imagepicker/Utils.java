@@ -162,9 +162,7 @@ public class Utils {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
             BitmapFactory.decodeStream(inputStream, null, options);
-
-            if (orientation.equals(String.valueOf(ExifInterface.ORIENTATION_ROTATE_90))
-                    || orientation.equals(String.valueOf(ExifInterface.ORIENTATION_ROTATE_270))) {
+            if (needToSwapDimension(orientation)) {
                 return new int[]{options.outHeight, options.outWidth};
             }else {
                 return new int[]{options.outWidth, options.outHeight};
@@ -178,7 +176,7 @@ public class Utils {
 
     static boolean hasPermission(final Activity activity) {
         final int writePermission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        return writePermission == PackageManager.PERMISSION_GRANTED ? true : false;
+        return writePermission == PackageManager.PERMISSION_GRANTED;
     }
 
     static String getBase64String(Uri uri, Context reactContext) {
@@ -199,6 +197,11 @@ public class Utils {
         }
     }
 
+    private static boolean needToSwapDimension(String orientation){
+        return orientation.equals(String.valueOf(ExifInterface.ORIENTATION_ROTATE_90))
+                || orientation.equals(String.valueOf(ExifInterface.ORIENTATION_ROTATE_270));
+    }
+
     // Resize image
     // When decoding a jpg to bitmap all exif meta data will be lost, so make sure to copy orientation exif to new file else image might have wrong orientations
     public static Uri resizeImage(Uri uri, Context context, Options options) {
@@ -214,9 +217,13 @@ public class Utils {
             try (InputStream imageStream = context.getContentResolver().openInputStream(uri)) {
                 String mimeType = getMimeType(uri, context);
                 Bitmap b = BitmapFactory.decodeStream(imageStream);
-
-                b = Bitmap.createScaledBitmap(b, newDimens[0], newDimens[1], true);
                 String originalOrientation = getOrientation(uri, context);
+
+                if (needToSwapDimension(originalOrientation)) {
+                    b = Bitmap.createScaledBitmap(b, newDimens[1], newDimens[0], true);
+                }else {
+                    b = Bitmap.createScaledBitmap(b, newDimens[0], newDimens[1], true);
+                }
 
                 File file = createFile(context, getFileTypeFromMime(mimeType));
 
