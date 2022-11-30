@@ -292,7 +292,7 @@ public class Utils {
             case "image/png": return "png";
             case "image/gif": return "gif";
         }
-        return "jpg";
+        return MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType);
     }
 
     static void deleteFile(Uri uri) {
