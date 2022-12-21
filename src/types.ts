@@ -1,7 +1,6 @@
 export type Callback = (response: ImagePickerResponse) => any;
 
-export interface ImageLibraryOptions {
-  selectionLimit?: number;
+export interface OptionsCommon {
   mediaType: MediaType;
   maxWidth?: number;
   maxHeight?: number;
@@ -19,8 +18,11 @@ export interface ImageLibraryOptions {
     | 'overCurrentContext';
 }
 
-export interface CameraOptions
-  extends Omit<ImageLibraryOptions, 'selectionLimit'> {
+export interface ImageLibraryOptions extends OptionsCommon {
+  selectionLimit?: number;
+}
+
+export interface CameraOptions extends OptionsCommon {
   durationLimit?: number;
   saveToPhotos?: boolean;
   cameraType?: CameraType;
