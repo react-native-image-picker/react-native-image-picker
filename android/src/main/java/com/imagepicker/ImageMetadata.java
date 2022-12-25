@@ -1,33 +1,81 @@
-package com.imagepicker;
+package com.reactnative.ivpusic.imagepicker;
 
-import android.content.Context;
-import android.net.Uri;
-import android.util.Log;
-import androidx.exifinterface.media.ExifInterface;
-import java.io.InputStream;
+import android.media.ExifInterface;
+import android.os.Build;
 
-public class ImageMetadata extends Metadata {
-  public ImageMetadata(Uri uri, Context context) {
-    try {
-      InputStream inputStream = context.getContentResolver().openInputStream(uri);
-      ExifInterface exif = new ExifInterface(inputStream);
-      String datetimeTag = exif.getAttribute(ExifInterface.TAG_DATETIME);
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeMap;
 
-      // Extract anymore metadata here...
-      if(datetimeTag != null) this.datetime = getDateTimeInUTC(datetimeTag, "yyyy:MM:dd HH:mm:ss");
-    } catch (Exception e) {
-      // This error does not bubble up to RN as we don't want failed datetime retrieval to prevent selection
-      Log.e("RNIP", "Could not load image metadata: " + e.getMessage());
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static android.media.ExifInterface.*;
+
+class ExifExtractor {
+
+    static WritableMap extract(String path) throws IOException {
+        WritableMap exifData = new WritableNativeMap();
+
+        List<String> attributes = getBasicAttributes();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            attributes.addAll(getLevel23Attributes());
+        }
+
+        ExifInterface exif = new ExifInterface(path);
+
+        try {
+            GeoDegree geoDegree = new GeoDegree(exif);
+            if (geoDegree.getLatitude() != null && geoDegree.getLongitude() != null) {
+                exifData.putDouble("Latitude", geoDegree.getLatitude());
+                exifData.putDouble("Longitude", geoDegree.getLongitude());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        for (String attribute : attributes) {
+            String value = exif.getAttribute(attribute);
+            exifData.putString(attribute, value);
+        }
+
+        return exifData;
     }
-  }
 
-  @Override
-  public String getDateTime() { return datetime; }
-  
-  // At the moment we are not using the ImageMetadata class to get width/height
-  // TODO: to use this class for extracting image width and height in the future
-  @Override
-  public int getWidth() { return 0; }
-  @Override
-  public int getHeight() { return 0; }
+    private static List<String> getBasicAttributes() {
+        return new ArrayList<>(Arrays.asList(
+                TAG_APERTURE,
+                TAG_DATETIME,
+                TAG_EXPOSURE_TIME,
+                TAG_FLASH,
+                TAG_FOCAL_LENGTH,
+                TAG_GPS_ALTITUDE,
+                TAG_GPS_ALTITUDE_REF,
+                TAG_GPS_DATESTAMP,
+                TAG_GPS_LATITUDE,
+                TAG_GPS_LATITUDE_REF,
+                TAG_GPS_LONGITUDE,
+                TAG_GPS_LONGITUDE_REF,
+                TAG_GPS_PROCESSING_METHOD,
+                TAG_GPS_TIMESTAMP,
+                TAG_IMAGE_LENGTH,
+                TAG_IMAGE_WIDTH,
+                TAG_ISO,
+                TAG_MAKE,
+                TAG_MODEL,
+                TAG_ORIENTATION,
+                TAG_WHITE_BALANCE
+        ));
+    }
+
+    private static List<String> getLevel23Attributes() {
+        return new ArrayList<>(Arrays.asList(
+                TAG_DATETIME_DIGITIZED,
+                TAG_SUBSEC_TIME,
+                TAG_SUBSEC_TIME_DIG,
+                TAG_SUBSEC_TIME_ORIG
+        ));
+    }
 }
