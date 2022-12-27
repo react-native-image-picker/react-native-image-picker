@@ -412,10 +412,12 @@ public class Utils {
         if(options.includeExtra) {
           // Add more extra data here ...            
           try {
-            WritableMap exifData = ImageMetadata.extract(origUri);
-            map.putString("exifData", exifData.toString());
-            map.putString("timestamp", exifData.getString("DateTime"));
-            map.putString("physicalPath", origUri);
+            if(origUri != "") {
+                WritableMap exifData = ImageMetadata.extract(origUri);
+                map.putString("exifData", exifData.toString());
+                map.putString("timestamp", exifData.getString("DateTime"));
+                map.putString("physicalPath", origUri);
+            }
           } catch (Exception e) {
             e.printStackTrace();
           }
@@ -459,9 +461,10 @@ public class Utils {
                 }
                 String origUri = "";
                 try {
-                origUri = RealPathUtil.getRealPathFromURI(context, fileUris.get(0));
+                origUri = RealPathUtil.getRealPathFromURI(context, fileUris.get(i));
                 } catch (Exception e) {
-                  origUri = "error + " + e.getMessage();
+                  origUri = null;
+                  e.printStackTrace();
                 }
                 uri = resizeImage(uri, context, options);
                 assets.pushMap(getImageResponseMap(uri, options, context, origUri));
