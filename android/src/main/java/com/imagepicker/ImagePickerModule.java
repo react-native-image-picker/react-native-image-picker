@@ -126,6 +126,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         int requestCode;
         Intent libraryIntent;
         requestCode = REQUEST_LAUNCH_LIBRARY;
+        
         int selectionLimit = this.options.selectionLimit;
         boolean isSingleSelect = this.options.selectionLimit == 1;
         boolean isPhoto = this.options.mediaType.equals(mediaTypePhoto);
