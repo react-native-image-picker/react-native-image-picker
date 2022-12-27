@@ -410,14 +410,12 @@ public class Utils {
         }
 
         if(options.includeExtra) {
-          // Add more extra data here ...
-          //file path
-            
+          // Add more extra data here ...            
           try {
-          WritableMap exifData = ImageMetadata.extract(origUri);
-          map.putString("exifData", exifData.toString());
-          map.putString("timestamp", exifData.getString("DateTime"));
-          map.putString("physicalPath", origUri);
+            WritableMap exifData = ImageMetadata.extract(origUri);
+            map.putString("exifData", exifData.toString());
+            map.putString("timestamp", exifData.getString("DateTime"));
+            map.putString("physicalPath", origUri);
           } catch (Exception e) {
             e.printStackTrace();
           }
