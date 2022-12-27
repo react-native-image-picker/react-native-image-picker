@@ -443,6 +443,7 @@ public class Utils {
 
         if(options.includeExtra) {
           // Add more extra data here ...
+          map.putString("timestamp", videoMetadata.getDateTime());
           map.putString("id", fileName);
         }
 
