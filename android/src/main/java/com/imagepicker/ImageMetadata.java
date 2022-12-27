@@ -1,4 +1,4 @@
-package com.reactnative.ivpusic.imagepicker;
+package com.imagepicker;
 
 import android.media.ExifInterface;
 import android.os.Build;
@@ -13,7 +13,7 @@ import java.util.List;
 
 import static android.media.ExifInterface.*;
 
-class ExifExtractor {
+class ImageMetadata {
 
     static WritableMap extract(String path) throws IOException {
         WritableMap exifData = new WritableNativeMap();
@@ -25,22 +25,12 @@ class ExifExtractor {
         }
 
         ExifInterface exif = new ExifInterface(path);
-
-        try {
-            GeoDegree geoDegree = new GeoDegree(exif);
-            if (geoDegree.getLatitude() != null && geoDegree.getLongitude() != null) {
-                exifData.putDouble("Latitude", geoDegree.getLatitude());
-                exifData.putDouble("Longitude", geoDegree.getLongitude());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+        
         for (String attribute : attributes) {
             String value = exif.getAttribute(attribute);
             exifData.putString(attribute, value);
         }
-
+        
         return exifData;
     }
 
