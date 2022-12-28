@@ -83,7 +83,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 
 | Option         | iOS | Android | Web | Description                                                                                                                         |
 | -------------- | --- | ------- | --- |------------------------------------------------------------------------------------------------------------------------------------ |
-| mediaType      | OK  | OK      | OK  | 'photo' or 'video' or 'mixed'(mixed supported only for launchImageLibrary, to pick an photo or video). Web only suppots 'photo' for now.                             |
+| mediaType      | OK  | OK      | OK  | 'photo' or 'video' or 'mixed'(launchCamera on Android does not support 'mixed'). Web only supports 'photo' for now.                             |
 | maxWidth       | OK  | OK      | NO | To resize the image                                                                                                                       |
 | maxHeight      | OK  | OK      | NO | To resize the image                                                                                                                       |
 | videoQuality   | OK  | OK      | NO | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android                                                                             |
