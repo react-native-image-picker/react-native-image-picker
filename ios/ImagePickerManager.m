@@ -4,6 +4,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import <Photos/Photos.h>
 #import <PhotosUI/PhotosUI.h>
+#import <SDWebImageWebPCoder/SDWebImageWebPCoder.h>
 
 @import MobileCoreServices;
 
@@ -166,6 +167,8 @@ NSData* extractImageData(UIImage* image){
             data = UIImageJPEGRepresentation(newImage, quality);
         } else if ([fileType isEqualToString:@"png"]) {
             data = UIImagePNGRepresentation(newImage);
+        } else if ([fileType isEqualToString:@"webp"]) {
+            data = [[SDImageWebPCoder sharedCoder] encodedDataWithImage:image format:SDImageFormatWebP options:nil];
         }
     }
     
@@ -489,7 +492,10 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         
         dispatch_group_enter(completionGroup);
 
-        if ([provider canLoadObjectOfClass:[UIImage class]]) {
+        NSString *identifier = provider.registeredTypeIdentifiers.firstObject;
+        BOOL isWebp = [identifier isEqualToString:@"org.webmproject.webp"];
+
+        if ([provider canLoadObjectOfClass:[UIImage class]] || isWebp) {
             NSString *identifier = provider.registeredTypeIdentifiers.firstObject;
             // Matches both com.apple.live-photo-bundle and com.apple.private.live-photo-bundle
             if ([identifier containsString:@"live-photo-bundle"]) {
