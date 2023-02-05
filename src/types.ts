@@ -40,6 +40,10 @@ export interface Asset {
   bitrate?: number;
   timestamp?: string;
   id?: string;
+  /**
+   * the origin filepath <b>when select image</b>.(android only)
+   */
+  originFilepath?: string
 }
 
 export interface ImagePickerResponse {

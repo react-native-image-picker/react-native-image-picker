@@ -107,19 +107,23 @@ The `callback` will be called with a response object, refer to [The Response Obj
 
 ## Asset Object
 
-| key       | iOS | Android | Web | Photo/Video | Requires Permissions | Description               |
-| --------- | --- | ------- | --- | ----------- | -------------------- | ------------------------- |
-| base64    | OK  | OK      | OK  | PHOTO ONLY  | NO                   | The base64 string of the image (photos only) |
-| uri       | OK  | OK      | OK  | BOTH        | NO                   | The file uri in app specific cache storage. Except when picking **video from Android gallery** where you will get read only content uri, to get file uri in this case copy the file to app specific storage using any react-native library. For web it uses the base64 as uri. |
-| width     | OK  | OK      | OK  | BOTH        | NO                   | Asset dimensions                |
-| height    | OK  | OK      | OK  | BOTH        | NO                   | Asset dimensions                |
-| fileSize  | OK  | OK      | NO  | BOTH        | NO                   | The file size                                 |
-| type      | OK  | OK      | NO  | BOTH        | NO                   | The file type                                 |
-| fileName  | OK  | OK      | NO  | BOTH        | NO                   | The file name                                 |
-| duration  | OK  | OK      | NO  | VIDEO ONLY  | NO                   | The selected video duration in seconds        |
-| bitrate   | --- | OK      | NO  | VIDEO ONLY  | NO                   | The average bitrate (in bits/sec) of the selected video, if available. (Android only) |
-| timestamp | OK  | OK      | NO  | BOTH        | YES                  | Timestamp of the asset. Only included if 'includeExtra' is true |
-| id        | OK  | OK      | NO  | BOTH        | YES                  | local identifier of the photo or video. On Android, this is the same as fileName |
+| key            | iOS    | Android | Web | Photo/Video | Requires Permissions | Description                                                                                                                                                                                                                                                                    |
+|----------------|--------|---------|-----|-------------|----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| base64         | OK     | OK      | OK  | PHOTO ONLY  | NO                   | The base64 string of the image (photos only)                                                                                                                                                                                                                                   |
+| uri            | OK     | OK      | OK  | BOTH        | NO                   | The file uri in app specific cache storage. Except when picking **video from Android gallery** where you will get read only content uri, to get file uri in this case copy the file to app specific storage using any react-native library. For web it uses the base64 as uri. |
+| width          | OK     | OK      | OK  | BOTH        | NO                   | Asset dimensions                                                                                                                                                                                                                                                               |
+| height         | OK     | OK      | OK  | BOTH        | NO                   | Asset dimensions                                                                                                                                                                                                                                                               |
+| fileSize       | OK     | OK      | NO  | BOTH        | NO                   | The file size                                                                                                                                                                                                                                                                  |
+| type           | OK     | OK      | NO  | BOTH        | NO                   | The file type                                                                                                                                                                                                                                                                  |
+| fileName       | OK     | OK      | NO  | BOTH        | NO                   | The file name                                                                                                                                                                                                                                                                  |
+| duration       | OK     | OK      | NO  | VIDEO ONLY  | NO                   | The selected video duration in seconds                                                                                                                                                                                                                                         |
+| bitrate        | ---    | OK      | NO  | VIDEO ONLY  | NO                   | The average bitrate (in bits/sec) of the selected video, if available. (Android only)                                                                                                                                                                                          |
+| timestamp      | OK     | OK      | NO  | BOTH        | YES                  | Timestamp of the asset. Only included if 'includeExtra' is true                                                                                                                                                                                                                |
+| id             | OK     | OK      | NO  | BOTH        | YES                  | local identifier of the photo or video. On Android, this is the same as fileName                                                                                                                                                                                               |
+| originFilepath | **NO** | OK      | NO  | BOTH        | YES                  | thr origin file path **when select image**                                                                                                                                                                                                                                     |
+
+**waring:** the `uri` is point at a temporary file! When you pick a same image twice, it will be two different `uri`, 
+the `fileName` is the temporary file's name.
 
 ## Note on file storage
 
