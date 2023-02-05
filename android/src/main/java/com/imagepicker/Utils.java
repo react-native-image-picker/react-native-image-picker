@@ -8,6 +8,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.camera2.CameraCharacteristics;
@@ -418,6 +419,14 @@ public class Utils {
         return map;
     }
 
+    static ReadableMap getImageResponseMap(Uri tempFileUri, String originFilePath, Options options, Context context) {
+        WritableMap imageResponseMap = (WritableMap) getImageResponseMap(tempFileUri, options, context);
+        if (originFilePath != null) {
+            imageResponseMap.putString("originFilepath", originFilePath);
+        }
+        return imageResponseMap;
+    }
+
     static ReadableMap getVideoResponseMap(Uri uri, Options options, Context context) {
         String fileName = uri.getLastPathSegment();
         WritableMap map = Arguments.createMap();
@@ -449,11 +458,15 @@ public class Utils {
 
             // Call getAppSpecificStorageUri in the if block to avoid copying unsupported files
             if (isImageType(uri, context)) {
+                String originPath;
                 if (uri.getScheme().contains("content")) {
+                    originPath = getImageFilepathFromContentProtocol(uri, context);
                     uri = getAppSpecificStorageUri(uri, context);
+                } else {
+                    originPath = uri.toString();
                 }
                 uri = resizeImage(uri, context, options);
-                assets.pushMap(getImageResponseMap(uri, options, context));
+                assets.pushMap(getImageResponseMap(uri, originPath, options, context));
             } else if (isVideoType(uri, context)) {
                 if (uri.getScheme().contains("content")) {
                     uri = getAppSpecificStorageUri(uri, context);
@@ -468,6 +481,28 @@ public class Utils {
         response.putArray("assets", assets);
 
         return response;
+    }
+
+    /**
+     * get the image filepath from the 'content' protocol.
+     * @param uri the uri.
+     * @param context the context.
+     * @return the filepath. return null when the file is not exist.
+     * <p>
+     * the return value may like this:
+     * <p>
+     * <code>/storage/emulated/0/Pictures/-4fae8f0985703cbe.jpg</code>
+     */
+    private static String getImageFilepathFromContentProtocol(Uri uri, Context context) {
+        String[] proj = { MediaStore.Images.Media.DATA };
+        try (Cursor cursor = context.getContentResolver().query(uri, proj, null, null, null)) {
+            int index = cursor.getColumnIndex(MediaStore.Images.Media.DATA);
+            if (index == -1) {
+                return null;
+            }
+            cursor.moveToFirst();
+            return cursor.getString(index);
+        }
     }
 
     static ReadableMap getErrorMap(String errCode, String errMsg) {
