@@ -120,10 +120,10 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | bitrate        | ---    | OK      | NO  | VIDEO ONLY  | NO                   | The average bitrate (in bits/sec) of the selected video, if available. (Android only)                                                                                                                                                                                          |
 | timestamp      | OK     | OK      | NO  | BOTH        | YES                  | Timestamp of the asset. Only included if 'includeExtra' is true                                                                                                                                                                                                                |
 | id             | OK     | OK      | NO  | BOTH        | YES                  | local identifier of the photo or video. On Android, this is the same as fileName                                                                                                                                                                                               |
-| originFilepath | **NO** | OK      | NO  | BOTH        | YES                  | thr origin file path **when select image**                                                                                                                                                                                                                                     |
+| originFilepath | **NO** | OK      | NO  | PHOTO ONLY   | YES                  | thr origin file path **when select image**                                                                                                                                                                                                                                     |
 
 **waring:** the `uri` is point at a temporary file! When you pick a same image twice, it will be two different `uri`, 
-the `fileName` is the temporary file's name.
+the `fileName` also to be the temporary file's name.
 
 ## Note on file storage
 
