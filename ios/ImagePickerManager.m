@@ -489,7 +489,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         
         dispatch_group_enter(completionGroup);
 
-        if ([provider canLoadObjectOfClass:[UIImage class]]) {
+        if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeImage]) {
             NSString *identifier = provider.registeredTypeIdentifiers.firstObject;
             // Matches both com.apple.live-photo-bundle and com.apple.private.live-photo-bundle
             if ([identifier containsString:@"live-photo-bundle"]) {
