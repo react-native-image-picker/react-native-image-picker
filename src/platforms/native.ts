@@ -22,6 +22,7 @@ const DEFAULT_OPTIONS: ImageLibraryOptions & CameraOptions = {
   presentationStyle: 'pageSheet',
 };
 
+// @ts-ignore We want to check whether __turboModuleProxy exitst, it may not
 const isTurboModuleEnabled = global.__turboModuleProxy != null;
 
 const nativeImagePicler = isTurboModuleEnabled ?
