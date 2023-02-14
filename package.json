@@ -60,12 +60,11 @@
     ]
   },
   "codegenConfig": {
-    "libraries": [
-      {
-        "name": "RNImagePickerSpec",
-        "type": "modules",
-        "jsSrcsDir": "src"
-      }
-    ]
+    "name": "RNImagePickerSpec",
+    "type": "modules",
+    "jsSrcsDir": "src",
+    "android": {
+      "javaPackageName": "com.imagepicker"
+    }
   }
 }
