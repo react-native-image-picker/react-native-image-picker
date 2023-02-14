@@ -7,7 +7,7 @@ A React Native module that allows you to select a photo/video from the device li
   <img src="https://img.shields.io/npm/v/react-native-image-picker" />
 </p>
 
-### Make sure you're reading the doc applicable to your version, for example if your using version 3.8.0 go to tag 3.8.0 and read those docs. This doc is always that of main branch.
+### Make sure you're reading the doc applicable to your version, for example if you're using version 3.8.0 go to tag 3.8.0 and read those docs. This doc is always that of main branch.
 
 ### Also read version release notes for any breaking changes especially if you're updating the major version.
 
