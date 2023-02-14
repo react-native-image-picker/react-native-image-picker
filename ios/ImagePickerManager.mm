@@ -509,6 +509,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         self.callback(@[response]);
     });
 }
-#endif
 
 @end
+
+#endif

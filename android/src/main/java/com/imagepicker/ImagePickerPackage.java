@@ -41,5 +41,4 @@ public class ImagePickerPackage extends TurboReactPackage {
             return moduleInfos;
         };
     }
-
 }
