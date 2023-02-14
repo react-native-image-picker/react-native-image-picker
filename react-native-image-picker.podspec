@@ -24,7 +24,7 @@ Pod::Spec.new do |s|
       'CLANG_CXX_LANGUAGE_STANDARD' => 'c++17'
     }
 
-    s.compiler_flags  = folly_compiler_flags + ' -DRN_FABRIC_ENABLED'
+    s.compiler_flags  = folly_compiler_flags + ' -DRN_FABRIC_ENABLED -fmodules -fcxx-modules'
 
     s.dependency "React"
     s.dependency "React-RCTFabric" # This is for fabric component
