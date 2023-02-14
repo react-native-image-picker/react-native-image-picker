@@ -35,12 +35,12 @@ android {
 
     sourceSets {
         main {
-        if (isNewArchitectureEnabled()) {
-            java.srcDirs += ["src/newarch",
-                            "${project.buildDir}/generated/source/codegen/java"]
-        } else {
-            java.srcDirs += ["src/oldarch"]
-        }
+          if (isNewArchitectureEnabled()) {
+              java.srcDirs += ["src/newarch",
+                              "${project.buildDir}/generated/source/codegen/java"]
+          } else {
+              java.srcDirs += ["src/oldarch"]
+          }
         }
     }
 }
@@ -55,38 +55,14 @@ repositories {
 }
 
 dependencies {
-    if (isNewArchitectureEnabled()) {
-        implementation project(":ReactAndroid")
+    if (isNewArchitectureEnabled() && getReactNativeMinorVersion() < 71) {
+      implementation project(":ReactAndroid")
     } else {
-        implementation 'com.facebook.react:react-native:+'
+      implementation 'com.facebook.react:react-native:+' // from node_modules
     }
+
     implementation "androidx.core:core:1.3.1"
     implementation "androidx.exifinterface:exifinterface:1.3.3"
-}
-
-if (isNewArchitectureEnabled()) {
-  react {
-    reactNativeDir = rootProject.file(findNodeModulePath(rootProject.rootDir, "react-native") ?: "../node_modules/react-native/")
-    jsRootDir = file("../src/")
-    codegenDir = rootProject.file(findNodeModulePath(rootProject.rootDir, "react-native-codegen") ?: "../node_modules/react-native-codegen/")
-    libraryName = "imagepicker"
-    codegenJavaPackageName = "com.imagepicker"
-  }
-
-  // Resolves "LOCAL_SRC_FILES points to a missing file, Check that libfb.so exists or that its path is correct".
-  tasks.whenTaskAdded { task ->
-    if (task.name.contains("configureCMakeDebug")) {
-      rootProject.getTasksByName("packageReactNdkDebugLibs", true).forEach {
-        task.dependsOn(it)
-      }
-    }
-    // We want to add a dependency for both configureCMakeRelease and configureCMakeRelWithDebInfo
-    if (task.name.contains("configureCMakeRel")) {
-      rootProject.getTasksByName("packageReactNdkReleaseLibs", true).forEach {
-        task.dependsOn(it)
-      }
-    }
-  }
 }
 
 def isNewArchitectureEnabled() {
@@ -116,4 +92,45 @@ def findNodeModulePath(packageName) {
   // we want to go two levels up, so we end up in the first_node modules and eventually
   // search upwards if the package is not found there
   return findNodeModulePath(projectDir.toPath().parent.parent.toFile(), packageName)
+}
+
+def safeExtGet(prop, fallback) {
+    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+}
+
+def resolveReactNativeDirectory() {
+    def reactNativeLocation = safeExtGet("REACT_NATIVE_NODE_MODULES_DIR", null)
+    if (reactNativeLocation != null) {
+        return file(reactNativeLocation)
+    }
+
+    // monorepo workaround
+    // react-native can be hoisted or in project's own node_modules
+    def reactNativeFromProjectNodeModules = file("${rootProject.projectDir}/../node_modules/react-native")
+    if (reactNativeFromProjectNodeModules.exists()) {
+        return reactNativeFromProjectNodeModules
+    }
+
+    def reactNativeFromNodeModulesWithImagePicker = file("${projectDir}/../../react-native")
+    if (reactNativeFromNodeModulesWithImagePicker.exists()) {
+        return reactNativeFromNodeModulesWithImagePicker
+    }
+
+    throw new Exception(
+            "[react-native-image-picker] Unable to resolve react-native location in " +
+                    "node_modules. You should add project extension property (in app/build.gradle) " +
+                    "`REACT_NATIVE_NODE_MODULES_DIR` with path to react-native."
+    )
+}
+
+def getReactNativeMinorVersion() {
+    def REACT_NATIVE_DIR = resolveReactNativeDirectory()
+
+    def reactProperties = new Properties()
+    file("$REACT_NATIVE_DIR/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
+
+    def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
+    def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.startsWith("0.0.0-") ? 1000 : REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
+
+    return REACT_NATIVE_MINOR_VERSION
 }
