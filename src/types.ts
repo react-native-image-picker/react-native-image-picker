@@ -15,7 +15,11 @@ export interface OptionsCommon {
     | 'formSheet'
     | 'popover'
     | 'overFullScreen'
-    | 'overCurrentContext';
+    | 'overCurrentContext'
+    assetRepresentationMode?:
+    | 'auto'
+    | 'current'
+    | 'compatible';
 }
 
 export interface ImageLibraryOptions extends OptionsCommon {

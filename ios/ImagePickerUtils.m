@@ -57,8 +57,17 @@
     } else {
         configuration = [[PHPickerConfiguration alloc] init];
     }
+
+    if ([[options objectForKey:@"assetRepresentationMode"] isEqualToString:@"current"]) {
+        configuration.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCurrent;
+    }
+    else if ([[options objectForKey:@"assetRepresentationMode"] isEqualToString:@"compatible"]) {
+        configuration.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCompatible;
+    }
+    else {
+       configuration.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeAutomatic;
+    }
     
-    configuration.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeAutomatic;
     configuration.selectionLimit = [options[@"selectionLimit"] integerValue];
 
     if ([options[@"mediaType"] isEqualToString:@"video"]) {
