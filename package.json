@@ -14,12 +14,6 @@
     "/lib"
   ],
   "author": "Johan du Toit (Johan-dutoit)",
-  "contributors": [
-    {
-      "name": "Raviraj",
-      "email": "ivarjar22@yahoo.com"
-    }
-  ],
   "homepage": "https://github.com/react-native-image-picker/react-native-image-picker",
   "license": "MIT",
   "scripts": {

@@ -1,26 +1,35 @@
-# React Native Image Picker
+# react-native-image-picker 🎆
 
 A React Native module that allows you to select a photo/video from the device library or camera.
 
-<p align="center">
-  <img src="https://img.shields.io/npm/dw/react-native-image-picker" />
-  <img src="https://img.shields.io/npm/v/react-native-image-picker" />
-</p>
+[![npm downloads](https://img.shields.io/npm/dw/react-native-image-picker)](https://img.shields.io/npm/dw/react-native-image-picker)
+[![npm package](https://img.shields.io/npm/v/react-native-image-picker?color=red)](https://img.shields.io/npm/v/react-native-image-picker?color=red)
+[![License](https://img.shields.io/github/license/react-native-image-picker/react-native-image-picker?color=blue)](https://github.com/react-native-image-picker/react-native-image-picker/blob/main/LICENSE.md)
 
-### Make sure you're reading the doc applicable to your version, for example if you're using version 3.8.0 go to tag 3.8.0 and read those docs. This doc is always that of main branch.
+## Installation
 
-### Also read version release notes for any breaking changes especially if you're updating the major version.
-
-# Install
-
-```
+```bash
 yarn add react-native-image-picker
+```
 
-# RN >= 0.60
-cd ios && pod install
+### New Architecture
 
-# RN < 0.60
-react-native link react-native-image-picker
+To take advantage of the new architecture run-
+
+#### iOS
+
+```bash
+RCT_NEW_ARCH_ENABLED=1 npx pod-install ios
+```
+
+#### Android
+
+Set `newArchEnabled` to true inside `android/gradle.properties`
+
+### Pre-Fabric (aka not using the new architecture)
+
+```bash
+npx pod-install ios
 ```
 
 ## Post-install Steps
@@ -41,7 +50,7 @@ No permissions required (`saveToPhotos` requires permission [check](#note-on-fil
 
 Note: This library does not require Manifest.permission.CAMERA, if your app declares as using this permission in manifest then you have to obtain the permission before using `launchCamera`.
 
-# API Reference
+## API Reference
 
 ## Methods
 
