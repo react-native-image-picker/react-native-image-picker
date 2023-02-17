@@ -47,8 +47,8 @@
   "devDependencies": {
     "@react-native-community/bob": "0.17.1",
     "@semantic-release/git": "9.0.0",
-    "@types/react": "16.9.54",
-    "@types/react-native": "0.63.30",
+    "@types/react": "18.0.28",
+    "@types/react-native": "0.71.3",
     "semantic-release": "17.3.0",
     "typescript": "4.1.5"
   },
@@ -58,5 +58,13 @@
     "targets": [
       "typescript"
     ]
+  },
+  "codegenConfig": {
+    "name": "RNImagePickerSpec",
+    "type": "modules",
+    "jsSrcsDir": "src",
+    "android": {
+      "javaPackageName": "com.imagepicker"
+    }
   }
 }

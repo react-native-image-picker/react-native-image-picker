@@ -22,12 +22,19 @@ const DEFAULT_OPTIONS: ImageLibraryOptions & CameraOptions = {
   presentationStyle: 'pageSheet',
 };
 
+// @ts-ignore We want to check whether __turboModuleProxy exitst, it may not
+const isTurboModuleEnabled = global.__turboModuleProxy != null;
+
+const nativeImagePicler = isTurboModuleEnabled ?
+  require("./NativeImagePicker").default :
+  NativeModules.ImagePicker;
+
 export function camera(
   options: CameraOptions,
   callback?: Callback,
 ): Promise<ImagePickerResponse> {
   return new Promise((resolve) => {
-    NativeModules.ImagePickerManager.launchCamera(
+    nativeImagePicler.launchCamera(
       {...DEFAULT_OPTIONS, ...options},
       (result: ImagePickerResponse) => {
         if (callback) callback(result);
@@ -42,7 +49,7 @@ export function imageLibrary(
   callback?: Callback,
 ): Promise<ImagePickerResponse> {
   return new Promise((resolve) => {
-    NativeModules.ImagePickerManager.launchImageLibrary(
+    nativeImagePicler.launchImageLibrary(
       {...DEFAULT_OPTIONS, ...options},
       (result: ImagePickerResponse) => {
         if (callback) callback(result);

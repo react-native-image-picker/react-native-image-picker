@@ -40,7 +40,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static com.imagepicker.ImagePickerModule.*;
+import static com.imagepicker.ImagePickerModuleImpl.*;
 
 public class Utils {
     public static String fileNamePrefix = "rn_image_picker_lib_temp_";
