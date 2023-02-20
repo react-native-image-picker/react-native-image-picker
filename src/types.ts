@@ -26,6 +26,7 @@ export interface CameraOptions extends OptionsCommon {
   durationLimit?: number;
   saveToPhotos?: boolean;
   cameraType?: CameraType;
+  avoidMirrorSelfieIOS?: boolean;
 }
 
 export interface Asset {
