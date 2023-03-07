@@ -40,7 +40,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static com.imagepicker.ImagePickerModule.*;
+import static com.imagepicker.ImagePickerModuleImpl.*;
 
 public class Utils {
     public static String fileNamePrefix = "rn_image_picker_lib_temp_";
@@ -292,7 +292,7 @@ public class Utils {
             case "image/png": return "png";
             case "image/gif": return "gif";
         }
-        return "jpg";
+        return MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType);
     }
 
     static void deleteFile(Uri uri) {
@@ -440,6 +440,7 @@ public class Utils {
         for(int i = 0; i < fileUris.size(); ++i) {
             Uri uri = fileUris.get(i);
 
+            // Call getAppSpecificStorageUri in the if block to avoid copying unsupported files
             if (isImageType(uri, context)) {
                 if (uri.getScheme().contains("content")) {
                     uri = getAppSpecificStorageUri(uri, context);
@@ -447,6 +448,9 @@ public class Utils {
                 uri = resizeImage(uri, context, options);
                 assets.pushMap(getImageResponseMap(uri, options, context));
             } else if (isVideoType(uri, context)) {
+                if (uri.getScheme().contains("content")) {
+                    uri = getAppSpecificStorageUri(uri, context);
+                }
                 assets.pushMap(getVideoResponseMap(uri, options, context));
             } else {
                 throw new RuntimeException("Unsupported file type");

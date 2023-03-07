@@ -33,12 +33,12 @@ export default function App() {
         <DemoResponse>{response}</DemoResponse>
 
         {response?.assets &&
-          response?.assets.map(({uri}) => (
-            <View key={uri} style={styles.image}>
+          response?.assets.map(({uri}: {uri: string}) => (
+            <View key={uri} style={styles.imageContainer}>
               <Image
                 resizeMode="cover"
                 resizeMethod="scale"
-                style={{width: 200, height: 200}}
+                style={styles.image}
                 source={{uri: uri}}
               />
             </View>
@@ -58,10 +58,13 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     marginVertical: 8,
   },
-
-  image: {
+  imageContainer: {
     marginVertical: 24,
     alignItems: 'center',
+  },
+  image: {
+    width: 200,
+    height: 200,
   },
 });
 
@@ -85,8 +88,6 @@ const actions: Action[] = [
     title: 'Select Image',
     type: 'library',
     options: {
-      maxHeight: 200,
-      maxWidth: 200,
       selectionLimit: 0,
       mediaType: 'photo',
       includeBase64: false,
@@ -109,7 +110,7 @@ const actions: Action[] = [
     },
   },
   {
-    title: `Select Image or Video\n(mixed)`,
+    title: 'Select Image or Video\n(mixed)',
     type: 'library',
     options: {
       selectionLimit: 0,

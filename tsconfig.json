@@ -2,14 +2,15 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "CommonJS",
-    "lib": ["ES6"],
+    "lib": ["ES6", "DOM"],
     "allowJs": true,
     "jsx": "react-native",
     "isolatedModules": true,
     "strict": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
   "exclude": [
     "example",

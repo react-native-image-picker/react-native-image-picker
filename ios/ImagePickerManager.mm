@@ -34,7 +34,7 @@ RNImagePickerTarget target;
 
 BOOL photoSelected = NO;
 
-RCT_EXPORT_MODULE();
+RCT_EXPORT_MODULE(ImagePicker);
 
 RCT_EXPORT_METHOD(launchCamera:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
 {
@@ -53,6 +53,16 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         [self launchImagePicker:options callback:callback];
     });
 }
+
+// We won't compile this code when we build for the old architecture.
+#ifdef RCT_NEW_ARCH_ENABLED
+
+- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
+    (const facebook::react::ObjCTurboModule::InitParams &)params
+{
+    return std::make_shared<facebook::react::NativeImagePickerSpecJSI>(params);
+}
+#endif
 
 - (void)launchImagePicker:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback
 {
@@ -109,15 +119,50 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
 #pragma mark - Helpers
 
+NSData* extractImageData(UIImage* image){
+    CFMutableDataRef imageData = CFDataCreateMutable(NULL, 0);
+    CGImageDestinationRef destination = CGImageDestinationCreateWithData(imageData, kUTTypeJPEG, 1, NULL);
+    
+    CFStringRef orientationKey[1];
+    CFTypeRef   orientationValue[1];
+    CGImagePropertyOrientation CGOrientation = CGImagePropertyOrientationForUIImageOrientation(image.imageOrientation);
+
+    orientationKey[0] = kCGImagePropertyOrientation;
+    orientationValue[0] = CFNumberCreate(NULL, kCFNumberIntType, &CGOrientation);
+
+    CFDictionaryRef imageProps = CFDictionaryCreate( NULL, (const void **)orientationKey, (const void **)orientationValue, 1,
+                    &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    
+    CGImageDestinationAddImage(destination, image.CGImage, imageProps);
+    
+    CGImageDestinationFinalize(destination);
+    
+    CFRelease(destination);
+    CFRelease(orientationValue[0]);
+    CFRelease(imageProps);
+    return (__bridge NSData *)imageData;
+}
+
 -(NSMutableDictionary *)mapImageToAsset:(UIImage *)image phAsset:(PHAsset *)phAsset {
-    if ((target == camera) && [self.options[@"saveToPhotos"] boolValue]) {
-        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
+    NSString *fileType = [ImagePickerUtils getFileType:data];
+    if (target == camera) {
+        if ([self.options[@"saveToPhotos"] boolValue]) {
+            UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
+        }
+        data = extractImageData(image);
+    }
+    UIImage* newImage = image;
+    if (![fileType isEqualToString:@"gif"]) {
+        newImage = [ImagePickerUtils resizeImage:image
+                                     maxWidth:[self.options[@"maxWidth"] floatValue]
+                                    maxHeight:[self.options[@"maxHeight"] floatValue]];
     }
 
-    NSData *data = UIImageJPEGRepresentation(image, [self.options[@"quality"] floatValue]);
+    float quality = [self.options[@"quality"] floatValue];
+    NSData *data = UIImageJPEGRepresentation(image, quality);
     
     NSMutableDictionary *asset = [[NSMutableDictionary alloc] init];
-    NSString *fileName = [self getImageFileName:@"jpeg"];
+    NSString *fileName = [self getImageFileName:fileType];
     NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
     [data writeToFile:path atomically:YES];
 
@@ -135,7 +180,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
         asset[@"fileSize"] = fileSizeValue;
     }
 
-    asset[@"type"] = [@"image/" stringByAppendingString:@"jpeg"];
+    asset[@"type"] = [@"image/" stringByAppendingString:fileType];
     asset[@"fileName"] = fileName;
     asset[@"width"] = @(image.size.width);
     asset[@"height"] = @(image.size.height);
@@ -143,6 +188,20 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     asset[@"id"] = phAsset.localIdentifier;
     
     return asset;
+}
+
+CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIImageOrientation uiOrientation) {
+    //code from here: https://developer.apple.com/documentation/imageio/cgimagepropertyorientation?language=objc
+    switch (uiOrientation) {
+        case UIImageOrientationUp: return kCGImagePropertyOrientationUp;
+        case UIImageOrientationDown: return kCGImagePropertyOrientationDown;
+        case UIImageOrientationLeft: return kCGImagePropertyOrientationLeft;
+        case UIImageOrientationRight: return kCGImagePropertyOrientationRight;
+        case UIImageOrientationUpMirrored: return kCGImagePropertyOrientationUpMirrored;
+        case UIImageOrientationDownMirrored: return kCGImagePropertyOrientationDownMirrored;
+        case UIImageOrientationLeftMirrored: return kCGImagePropertyOrientationLeftMirrored;
+        case UIImageOrientationRightMirrored: return kCGImagePropertyOrientationRightMirrored;
+    }
 }
 
 -(NSMutableDictionary *)mapVideoToAsset:(NSURL *)url phAsset:(PHAsset * _Nullable)phAsset error:(NSError **)error {

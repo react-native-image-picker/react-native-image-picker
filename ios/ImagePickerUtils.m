@@ -54,7 +54,7 @@
     PHPhotoLibrary *photoLibrary = [PHPhotoLibrary sharedPhotoLibrary];
     configuration = [[PHPickerConfiguration alloc] initWithPhotoLibrary:photoLibrary];
     
-    configuration.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCurrent;
+    configuration.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeAutomatic;
     configuration.selectionLimit = [options[@"selectionLimit"] integerValue];
 
     if ([options[@"mediaType"] isEqualToString:@"video"]) {
