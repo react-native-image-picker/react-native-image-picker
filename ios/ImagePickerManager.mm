@@ -144,7 +144,10 @@ NSData* extractImageData(UIImage* image){
 }
 
 -(NSMutableDictionary *)mapImageToAsset:(UIImage *)image phAsset:(PHAsset *)phAsset {
+    float quality = [self.options[@"quality"] floatValue];
+    NSData *data = UIImageJPEGRepresentation(image, quality);
     NSString *fileType = [ImagePickerUtils getFileType:data];
+    
     if (target == camera) {
         if ([self.options[@"saveToPhotos"] boolValue]) {
             UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
@@ -157,9 +160,6 @@ NSData* extractImageData(UIImage* image){
                                      maxWidth:[self.options[@"maxWidth"] floatValue]
                                     maxHeight:[self.options[@"maxHeight"] floatValue]];
     }
-
-    float quality = [self.options[@"quality"] floatValue];
-    NSData *data = UIImageJPEGRepresentation(image, quality);
     
     NSMutableDictionary *asset = [[NSMutableDictionary alloc] init];
     NSString *fileName = [self getImageFileName:fileType];
