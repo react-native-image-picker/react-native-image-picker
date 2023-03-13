@@ -1,13 +1,13 @@
 import * as React from 'react';
 import {
-  StyleSheet,
-  SafeAreaView,
-  View,
   Image,
-  ScrollView,
   Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  View,
 } from 'react-native';
-import {DemoTitle, DemoButton, DemoResponse} from './components';
+import {DemoButton, DemoResponse, DemoTitle} from './components';
 
 import * as ImagePicker from 'react-native-image-picker';
 
@@ -120,6 +120,7 @@ const actions: Action[] = [
     options: {
       selectionLimit: 0,
       mediaType: 'video',
+      formatAsMp4: true,
       includeExtra,
     },
   },

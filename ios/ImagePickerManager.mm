@@ -258,24 +258,60 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
           }
         }
     }
-
-    NSMutableDictionary *asset = [[NSMutableDictionary alloc] init];
-    CGSize dimentions = [ImagePickerUtils getVideoDimensionsFromUrl:videoDestinationURL];
-    asset[@"fileName"] = fileName;
-    asset[@"duration"] = [NSNumber numberWithDouble:CMTimeGetSeconds([AVAsset assetWithURL:videoDestinationURL].duration)];
-    asset[@"uri"] = videoDestinationURL.absoluteString;
-    asset[@"type"] = [ImagePickerUtils getFileTypeFromUrl:videoDestinationURL];
-    asset[@"fileSize"] = [ImagePickerUtils getFileSizeFromUrl:videoDestinationURL];
-    asset[@"width"] = @(dimentions.width);
-    asset[@"height"] = @(dimentions.height);
-
-    if(phAsset){
-        asset[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
-        asset[@"id"] = phAsset.localIdentifier;
-        // Add more extra data here ...
+    
+    NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
+    response[@"fileName"] = fileName;
+    
+    if([self.options[@"formatAsMp4"] boolValue]) {
+        NSURL *parentURL = [videoDestinationURL URLByDeletingLastPathComponent];
+        NSString *path = [[parentURL.path stringByAppendingString:@"/"] stringByAppendingString:[[NSUUID UUID] UUIDString]];
+        path = [path stringByAppendingString:@".mp4"];
+        NSURL *outputURL = [NSURL fileURLWithPath:path];
+        
+        [[NSFileManager defaultManager] removeItemAtURL:outputURL error:nil];
+        AVURLAsset *asset = [AVURLAsset URLAssetWithURL:videoDestinationURL options:nil];
+        AVAssetExportSession *exportSession = [[AVAssetExportSession alloc] initWithAsset:asset presetName:AVAssetExportPresetMediumQuality];
+        
+        exportSession.outputURL = outputURL;
+        exportSession.outputFileType = AVFileTypeMPEG4;
+        exportSession.shouldOptimizeForNetworkUse = YES;
+        
+        dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+        
+        dispatch_async(dispatch_get_main_queue(), ^(void) {
+            [exportSession exportAsynchronouslyWithCompletionHandler:^(void) {
+                if (exportSession.status == AVAssetExportSessionStatusCompleted) {
+                    CGSize dimentions = [ImagePickerUtils getVideoDimensionsFromUrl:outputURL];
+                    response[@"duration"] = [NSNumber numberWithDouble:CMTimeGetSeconds([AVAsset assetWithURL:outputURL].duration)];
+                    response[@"uri"] = outputURL.absoluteString;
+                    response[@"type"] = [ImagePickerUtils getFileTypeFromUrl:outputURL];
+                    response[@"fileSize"] = [ImagePickerUtils getFileSizeFromUrl:outputURL];
+                    response[@"width"] = @(dimentions.width);
+                    response[@"height"] = @(dimentions.height);
+                    dispatch_semaphore_signal(sem);
+                }
+            }];
+        });
+        
+        dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+    } else {
+        CGSize dimentions = [ImagePickerUtils getVideoDimensionsFromUrl:videoDestinationURL];
+        
+        response[@"duration"] = [NSNumber numberWithDouble:CMTimeGetSeconds([AVAsset assetWithURL:videoDestinationURL].duration)];
+        response[@"uri"] = videoDestinationURL.absoluteString;
+        response[@"type"] = [ImagePickerUtils getFileTypeFromUrl:videoDestinationURL];
+        response[@"fileSize"] = [ImagePickerUtils getFileSizeFromUrl:videoDestinationURL];
+        response[@"width"] = @(dimentions.width);
+        response[@"height"] = @(dimentions.height);
+        
+        if(phAsset){
+            response[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
+            response[@"id"] = phAsset.localIdentifier;
+            // Add more extra data here ...
+        }
     }
 
-    return asset;
+    return response;
 }
 
 - (NSString *) getDateTimeInUTC:(NSDate *)date {
