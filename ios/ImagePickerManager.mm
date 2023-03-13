@@ -270,7 +270,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         
         [[NSFileManager defaultManager] removeItemAtURL:outputURL error:nil];
         AVURLAsset *asset = [AVURLAsset URLAssetWithURL:videoDestinationURL options:nil];
-        AVAssetExportSession *exportSession = [[AVAssetExportSession alloc] initWithAsset:asset presetName:AVAssetExportPresetMediumQuality];
+        AVAssetExportSession *exportSession = [[AVAssetExportSession alloc] initWithAsset:asset presetName:AVAssetExportPresetHighestQuality];
         
         exportSession.outputURL = outputURL;
         exportSession.outputFileType = AVFileTypeMPEG4;
@@ -288,6 +288,8 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
                     response[@"fileSize"] = [ImagePickerUtils getFileSizeFromUrl:outputURL];
                     response[@"width"] = @(dimentions.width);
                     response[@"height"] = @(dimentions.height);
+                    dispatch_semaphore_signal(sem);
+                } else if (exportSession.status == AVAssetExportSessionStatusFailed || exportSession.status == AVAssetExportSessionStatusCancelled) {
                     dispatch_semaphore_signal(sem);
                 }
             }];

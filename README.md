@@ -90,22 +90,21 @@ The `callback` will be called with a response object, refer to [The Response Obj
 
 ## Options
 
-| Option         | iOS | Android | Web | Description                                                                                                                         |
-| -------------- | --- | ------- | --- |------------------------------------------------------------------------------------------------------------------------------------ |
-| mediaType      | OK  | OK      | OK  | 'photo' or 'video' or 'mixed'(launchCamera on Android does not support 'mixed'). Web only supports 'photo' for now.                             |
-| maxWidth       | OK  | OK      | NO | To resize the image                                                                                                                       |
-| maxHeight      | OK  | OK      | NO | To resize the image                                                                                                                       |
-| videoQuality   | OK  | OK      | NO | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android                                                                             |
-| durationLimit  | OK  | OK      | NO | Video max duration in seconds                                                                                                             |
-| quality        | OK  | OK      | NO | 0 to 1, photos                                                                                                                            |
-| cameraType     | OK  | OK      | NO | 'back' or 'front'. May not be supported in few android devices                                                                            |
-| includeBase64  | OK  | OK      | OK | If true, creates base64 string of the image (Avoid using on large image files due to performance)                                         |                                                   |
-| includeExtra   | OK  | OK      | NO | If true, will include extra data which requires library permissions to be requested (i.e. exif data)                                      |
-| saveToPhotos   | OK  | OK      | NO |(Boolean) Only for launchCamera, saves the image/video file captured to public photo                                                      |
-| selectionLimit | OK  | OK      | OK |Default is `1`, use `0` to allow any number of files. Only iOS version >= 14 & Android version >= 13 support `0` and also it supports providing any integer value |
-| presentationStyle | OK  | NO      | NO |Controls how the picker is presented. 'pageSheet', 'fullScreen', 'pageSheet', 'formSheet', 'popover', 'overFullScreen', 'overCurrentContext'. Default is 'currentContext' |
-| formatAsMp4| OK | NO | NO | Converts the selected video to MP4. iOS Only. |
-
+| Option            | iOS | Android | Web | Description                                                                                                                                                               |
+| ----------------- | --- | ------- | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
+| mediaType         | OK  | OK      | OK  | 'photo' or 'video' or 'mixed'(launchCamera on Android does not support 'mixed'). Web only supports 'photo' for now.                                                       |
+| maxWidth          | OK  | OK      | NO  | To resize the image                                                                                                                                                       |
+| maxHeight         | OK  | OK      | NO  | To resize the image                                                                                                                                                       |
+| videoQuality      | OK  | OK      | NO  | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android                                                                                                             |
+| durationLimit     | OK  | OK      | NO  | Video max duration in seconds                                                                                                                                             |
+| quality           | OK  | OK      | NO  | 0 to 1, photos                                                                                                                                                            |
+| cameraType        | OK  | OK      | NO  | 'back' or 'front'. May not be supported in few android devices                                                                                                            |
+| includeBase64     | OK  | OK      | OK  | If true, creates base64 string of the image (Avoid using on large image files due to performance)                                                                         |     |
+| includeExtra      | OK  | OK      | NO  | If true, will include extra data which requires library permissions to be requested (i.e. exif data)                                                                      |
+| saveToPhotos      | OK  | OK      | NO  | (Boolean) Only for launchCamera, saves the image/video file captured to public photo                                                                                      |
+| selectionLimit    | OK  | OK      | OK  | Default is `1`, use `0` to allow any number of files. Only iOS version >= 14 & Android version >= 13 support `0` and also it supports providing any integer value         |
+| presentationStyle | OK  | NO      | NO  | Controls how the picker is presented. 'pageSheet', 'fullScreen', 'pageSheet', 'formSheet', 'popover', 'overFullScreen', 'overCurrentContext'. Default is 'currentContext' |
+| formatAsMp4       | OK  | NO      | NO  | Converts the selected video to MP4. iOS Only.                                                                                                                             |
 
 ## The Response Object
 
@@ -118,19 +117,19 @@ The `callback` will be called with a response object, refer to [The Response Obj
 
 ## Asset Object
 
-| key       | iOS | Android | Web | Photo/Video | Requires Permissions | Description               |
-| --------- | --- | ------- | --- | ----------- | -------------------- | ------------------------- |
-| base64    | OK  | OK      | OK  | PHOTO ONLY  | NO                   | The base64 string of the image (photos only) |
+| key       | iOS | Android | Web | Photo/Video | Requires Permissions | Description                                                                                                                                                                                                                                                                    |
+| --------- | --- | ------- | --- | ----------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| base64    | OK  | OK      | OK  | PHOTO ONLY  | NO                   | The base64 string of the image (photos only)                                                                                                                                                                                                                                   |
 | uri       | OK  | OK      | OK  | BOTH        | NO                   | The file uri in app specific cache storage. Except when picking **video from Android gallery** where you will get read only content uri, to get file uri in this case copy the file to app specific storage using any react-native library. For web it uses the base64 as uri. |
-| width     | OK  | OK      | OK  | BOTH        | NO                   | Asset dimensions                |
-| height    | OK  | OK      | OK  | BOTH        | NO                   | Asset dimensions                |
-| fileSize  | OK  | OK      | NO  | BOTH        | NO                   | The file size                                 |
-| type      | OK  | OK      | NO  | BOTH        | NO                   | The file type                                 |
-| fileName  | OK  | OK      | NO  | BOTH        | NO                   | The file name                                 |
-| duration  | OK  | OK      | NO  | VIDEO ONLY  | NO                   | The selected video duration in seconds        |
-| bitrate   | --- | OK      | NO  | VIDEO ONLY  | NO                   | The average bitrate (in bits/sec) of the selected video, if available. (Android only) |
-| timestamp | OK  | OK      | NO  | BOTH        | YES                  | Timestamp of the asset. Only included if 'includeExtra' is true |
-| id        | OK  | OK      | NO  | BOTH        | YES                  | local identifier of the photo or video. On Android, this is the same as fileName |
+| width     | OK  | OK      | OK  | BOTH        | NO                   | Asset dimensions                                                                                                                                                                                                                                                               |
+| height    | OK  | OK      | OK  | BOTH        | NO                   | Asset dimensions                                                                                                                                                                                                                                                               |
+| fileSize  | OK  | OK      | NO  | BOTH        | NO                   | The file size                                                                                                                                                                                                                                                                  |
+| type      | OK  | OK      | NO  | BOTH        | NO                   | The file type                                                                                                                                                                                                                                                                  |
+| fileName  | OK  | OK      | NO  | BOTH        | NO                   | The file name                                                                                                                                                                                                                                                                  |
+| duration  | OK  | OK      | NO  | VIDEO ONLY  | NO                   | The selected video duration in seconds                                                                                                                                                                                                                                         |
+| bitrate   | --- | OK      | NO  | VIDEO ONLY  | NO                   | The average bitrate (in bits/sec) of the selected video, if available. (Android only)                                                                                                                                                                                          |
+| timestamp | OK  | OK      | NO  | BOTH        | YES                  | Timestamp of the asset. Only included if 'includeExtra' is true                                                                                                                                                                                                                |
+| id        | OK  | OK      | NO  | BOTH        | YES                  | local identifier of the photo or video. On Android, this is the same as fileName                                                                                                                                                                                               |
 
 ## Note on file storage
 
