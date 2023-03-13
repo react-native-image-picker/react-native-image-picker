@@ -7,7 +7,6 @@ export interface OptionsCommon {
   quality?: PhotoQuality;
   videoQuality?: AndroidVideoOptions | iOSVideoOptions;
   includeBase64?: boolean;
-  includeExtra?: boolean;
   presentationStyle?:
     | 'currentContext'
     | 'fullScreen'

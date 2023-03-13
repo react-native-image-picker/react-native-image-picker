@@ -34,7 +34,7 @@ RNImagePickerTarget target;
 
 BOOL photoSelected = NO;
 
-RCT_EXPORT_MODULE(ImagePicker)
+RCT_EXPORT_MODULE(ImagePicker);
 
 RCT_EXPORT_METHOD(launchCamera:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
 {
@@ -83,19 +83,14 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             picker.delegate = self;
             picker.modalPresentationStyle = [RCTConvert UIModalPresentationStyle:options[@"presentationStyle"]];
             picker.presentationController.delegate = self;
-
-            if([self.options[@"includeExtra"] boolValue]) {
                 
-                [self checkPhotosPermissions:^(BOOL granted) {
-                    if (!granted) {
-                        self.callback(@[@{@"errorCode": errPermission}]);
-                        return;
-                    }
-                    [self showPickerViewController:picker];
-                }];
-            } else {
+            [self checkPhotosPermissions:^(BOOL granted) {
+                if (!granted) {
+                    self.callback(@[@{@"errorCode": errPermission}]);
+                    return;
+                }
                 [self showPickerViewController:picker];
-            }
+            }];
             
             return;
         }
@@ -105,17 +100,13 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     [ImagePickerUtils setupPickerFromOptions:picker options:self.options target:target];
     picker.delegate = self;
     
-    if([self.options[@"includeExtra"] boolValue]) {
-        [self checkPhotosPermissions:^(BOOL granted) {
-            if (!granted) {
-                self.callback(@[@{@"errorCode": errPermission}]);
-                return;
-            }
-            [self showPickerViewController:picker];
-        }];
-    } else {
-      [self showPickerViewController:picker];
-    }
+    [self checkPhotosPermissions:^(BOOL granted) {
+        if (!granted) {
+            self.callback(@[@{@"errorCode": errPermission}]);
+            return;
+        }
+        [self showPickerViewController:picker];
+    }];
 }
 
 - (void) showPickerViewController:(UIViewController *)picker
@@ -152,36 +143,25 @@ NSData* extractImageData(UIImage* image){
     return (__bridge NSData *)imageData;
 }
 
-
-
--(NSMutableDictionary *)mapImageToAsset:(UIImage *)image data:(NSData *)data phAsset:(PHAsset * _Nullable)phAsset {
+-(NSMutableDictionary *)mapImageToAsset:(UIImage *)image phAsset:(PHAsset *)phAsset {
+    float quality = [self.options[@"quality"] floatValue];
+    NSData *data = UIImageJPEGRepresentation(image, quality);
     NSString *fileType = [ImagePickerUtils getFileType:data];
+    
     if (target == camera) {
         if ([self.options[@"saveToPhotos"] boolValue]) {
             UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
         }
         data = extractImageData(image);
     }
-    
     UIImage* newImage = image;
     if (![fileType isEqualToString:@"gif"]) {
         newImage = [ImagePickerUtils resizeImage:image
                                      maxWidth:[self.options[@"maxWidth"] floatValue]
                                     maxHeight:[self.options[@"maxHeight"] floatValue]];
     }
-
-    float quality = [self.options[@"quality"] floatValue];
-    if (![image isEqual:newImage] || (quality >= 0 && quality < 1)) {
-        if ([fileType isEqualToString:@"jpg"]) {
-            data = UIImageJPEGRepresentation(newImage, quality);
-        } else if ([fileType isEqualToString:@"png"]) {
-            data = UIImagePNGRepresentation(newImage);
-        }
-    }
     
     NSMutableDictionary *asset = [[NSMutableDictionary alloc] init];
-    asset[@"type"] = [@"image/" stringByAppendingString:fileType];
-
     NSString *fileName = [self getImageFileName:fileType];
     NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
     [data writeToFile:path atomically:YES];
@@ -200,15 +180,12 @@ NSData* extractImageData(UIImage* image){
         asset[@"fileSize"] = fileSizeValue;
     }
 
+    asset[@"type"] = [@"image/" stringByAppendingString:fileType];
     asset[@"fileName"] = fileName;
-    asset[@"width"] = @(newImage.size.width);
-    asset[@"height"] = @(newImage.size.height);
-    
-    if(phAsset){
-        asset[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
-        asset[@"id"] = phAsset.localIdentifier;
-        // Add more extra data here ...
-    }
+    asset[@"width"] = @(image.size.width);
+    asset[@"height"] = @(image.size.height);
+    asset[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
+    asset[@"id"] = phAsset.localIdentifier;
     
     return asset;
 }
@@ -268,12 +245,9 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
     asset[@"fileSize"] = [ImagePickerUtils getFileSizeFromUrl:videoDestinationURL];
     asset[@"width"] = @(dimentions.width);
     asset[@"height"] = @(dimentions.height);
-
-    if(phAsset){
-        asset[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
-        asset[@"id"] = phAsset.localIdentifier;
-        // Add more extra data here ...
-    }
+    asset[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
+    asset[@"id"] = phAsset.localIdentifier;
+    // Add more extra data here ...
 
     return asset;
 }
@@ -403,22 +377,17 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 {
     dispatch_block_t dismissCompletionBlock = ^{
         NSMutableArray<NSDictionary *> *assets = [[NSMutableArray alloc] initWithCapacity:1];
-        PHAsset *asset = nil;
+        PHAsset *asset = [ImagePickerUtils fetchPHAssetOnIOS13:info];
 
         if (photoSelected == YES) {
            return;
         }
         photoSelected = YES;
 
-        // If include extra, we fetch the PHAsset, this required library permissions
-        if([self.options[@"includeExtra"] boolValue]) {
-          asset = [ImagePickerUtils fetchPHAssetOnIOS13:info];
-        }
-
         if ([info[UIImagePickerControllerMediaType] isEqualToString:(NSString *) kUTTypeImage]) {
             UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
             
-            [assets addObject:[self mapImageToAsset:image data:[NSData dataWithContentsOfURL:[ImagePickerManager getNSURLFromInfo:info]] phAsset:asset]];
+            [assets addObject:[self mapImageToAsset:image phAsset:asset]];
         } else {
             NSError *error;
             NSDictionary *videoAsset = [self mapVideoToAsset:info[UIImagePickerControllerMediaURL] phAsset:asset error:&error];
@@ -483,55 +452,50 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
     dispatch_group_t completionGroup = dispatch_group_create();
     NSMutableArray<NSDictionary *> *assets = [[NSMutableArray alloc] initWithCapacity:results.count];
-    for (int i = 0; i < results.count; i++) {
-        [assets addObject:(NSDictionary *)[NSNull null]];
-    }
 
-    [results enumerateObjectsUsingBlock:^(PHPickerResult *result, NSUInteger index, BOOL *stop) {
-        PHAsset *asset = nil;
+    for (PHPickerResult *result in results) {
         NSItemProvider *provider = result.itemProvider;
-
-        // If include extra, we fetch the PHAsset, this required library permissions
-        if([self.options[@"includeExtra"] boolValue] && result.assetIdentifier != nil) {
-            PHFetchResult* fetchResult = [PHAsset fetchAssetsWithLocalIdentifiers:@[result.assetIdentifier] options:nil];
-            asset = fetchResult.firstObject;
-        }
+        PHFetchResult* fetchResult = [PHAsset fetchAssetsWithLocalIdentifiers:@[result.assetIdentifier] options:nil];
+        PHAsset *asset = fetchResult.firstObject;
         
         dispatch_group_enter(completionGroup);
 
-        if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeImage]) {
-            NSString *identifier = provider.registeredTypeIdentifiers.firstObject;
-            // Matches both com.apple.live-photo-bundle and com.apple.private.live-photo-bundle
-            if ([identifier containsString:@"live-photo-bundle"]) {
-                // Handle live photos
-                identifier = @"public.jpeg";
-            }
+        if(asset.mediaType == PHAssetMediaTypeImage) {
+            PHImageRequestOptions *requestOptions = [[PHImageRequestOptions alloc] init];
+            requestOptions.synchronous = YES;
+            requestOptions.networkAccessAllowed = YES;
+            requestOptions.version = PHImageRequestOptionsVersionCurrent;
+            requestOptions.deliveryMode = PHImageRequestOptionsDeliveryModeOpportunistic;
+            requestOptions.resizeMode = PHImageRequestOptionsResizeModeExact;
 
-            [provider loadFileRepresentationForTypeIdentifier:identifier completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
-                NSData *data = [[NSData alloc] initWithContentsOfURL:url];
-                UIImage *image = [[UIImage alloc] initWithData:data];
-                
-                assets[index] = [self mapImageToAsset:image data:data phAsset:asset];
-                dispatch_group_leave(completionGroup);
-            }];
-        } else if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeMovie]) {
+            float maxWidth = [self.options[@"maxWidth"] floatValue];
+            float maxHeight = [self.options[@"maxHeight"] floatValue];
+            CGSize targetSize = CGSizeMake(maxWidth, maxHeight);
+
+            [[PHImageManager defaultManager] requestImageForAsset:asset     targetSize:targetSize contentMode:PHImageContentModeDefault     options:requestOptions resultHandler:^(UIImage * _Nullable result,     NSDictionary * _Nullable info) {
+                   NSMutableDictionary *imageAsset = [self mapImageToAsset:result phAsset:asset];
+                   [assets addObject:imageAsset];
+           
+                   dispatch_group_leave(completionGroup);
+             }];
+        } else if(asset.mediaType == PHAssetMediaTypeVideo) {
             [provider loadFileRepresentationForTypeIdentifier:(NSString *)kUTTypeMovie completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
-                NSDictionary *mappedAsset = [self mapVideoToAsset:url phAsset:asset error:nil];
-                if (nil != mappedAsset) {
-                    assets[index] = mappedAsset;
-                }
+                [assets addObject:[self mapVideoToAsset:url phAsset:asset error:nil]];
                 dispatch_group_leave(completionGroup);
             }];
-        } else {
-            // The provider didn't have an item matching photo or video (fails on M1 Mac Simulator)
-            dispatch_group_leave(completionGroup);
-        }
-    }];
+        } else if(asset.mediaType == PHAssetMediaTypeAudio) {
+             // We don't handle Audio files with this library
+             dispatch_group_leave(completionGroup);
+         } else {
+             dispatch_group_leave(completionGroup);
+         }
+
+    }
 
     dispatch_group_notify(completionGroup, dispatch_get_main_queue(), ^{
-        //  mapVideoToAsset can fail and return nil, leaving asset NSNull.
+        //  mapVideoToAsset can fail and return nil.
         for (NSDictionary *asset in assets) {
-            if ([asset isEqual:[NSNull null]]) {
+            if (nil == asset) {
                 self.callback(@[@{@"errorCode": errOthers}]);
                 return;
             }
@@ -545,5 +509,4 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 }
 
 @end
-
 #endif

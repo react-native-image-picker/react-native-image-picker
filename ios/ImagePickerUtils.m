@@ -51,12 +51,8 @@
 #if __has_include(<PhotosUI/PHPicker.h>)
     PHPickerConfiguration *configuration;
     
-    if(options[@"includeExtra"]) {
-        PHPhotoLibrary *photoLibrary = [PHPhotoLibrary sharedPhotoLibrary];
-        configuration = [[PHPickerConfiguration alloc] initWithPhotoLibrary:photoLibrary];
-    } else {
-        configuration = [[PHPickerConfiguration alloc] init];
-    }
+    PHPhotoLibrary *photoLibrary = [PHPhotoLibrary sharedPhotoLibrary];
+    configuration = [[PHPickerConfiguration alloc] initWithPhotoLibrary:photoLibrary];
     
     configuration.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeAutomatic;
     configuration.selectionLimit = [options[@"selectionLimit"] integerValue];

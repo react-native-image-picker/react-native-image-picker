@@ -404,15 +404,11 @@ public class Utils {
         map.putInt("width", dimensions[0]);
         map.putInt("height", dimensions[1]);
         map.putString("type", getMimeType(uri, context));
+        map.putString("timestamp", imageMetadata.getDateTime());
+        map.putString("id", fileName);
 
         if (options.includeBase64) {
             map.putString("base64", getBase64String(uri, context));
-        }
-
-        if(options.includeExtra) {
-          // Add more extra data here ...
-          map.putString("timestamp", imageMetadata.getDateTime());
-          map.putString("id", fileName);
         }
 
         return map;
@@ -431,12 +427,9 @@ public class Utils {
         map.putString("type", getMimeType(uri, context));
         map.putInt("width", videoMetadata.getWidth());
         map.putInt("height", videoMetadata.getHeight());
-
-        if(options.includeExtra) {
-          // Add more extra data here ...
-          map.putString("timestamp", videoMetadata.getDateTime());
-          map.putString("id", fileName);
-        }
+        map.putString("timestamp", videoMetadata.getDateTime());
+        map.putString("id", fileName);
+        // Add more extra data here ...
 
         return map;
     }

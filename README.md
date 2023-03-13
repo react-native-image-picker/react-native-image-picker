@@ -100,7 +100,6 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | quality        | OK  | OK      | NO | 0 to 1, photos                                                                                                                            |
 | cameraType     | OK  | OK      | NO | 'back' or 'front'. May not be supported in few android devices                                                                            |
 | includeBase64  | OK  | OK      | OK | If true, creates base64 string of the image (Avoid using on large image files due to performance)                                         |                                                   |
-| includeExtra   | OK  | OK      | NO | If true, will include extra data which requires library permissions to be requested (i.e. exif data)                                      |
 | saveToPhotos   | OK  | OK      | NO |(Boolean) Only for launchCamera, saves the image/video file captured to public photo                                                      |
 | selectionLimit | OK  | OK      | OK |Default is `1`, use `0` to allow any number of files. Only iOS version >= 14 & Android version >= 13 support `0` and also it supports providing any integer value |
 | presentationStyle | OK  | NO      | NO |Controls how the picker is presented. 'pageSheet', 'fullScreen', 'pageSheet', 'formSheet', 'popover', 'overFullScreen', 'overCurrentContext'. Default is 'currentContext' |
@@ -127,7 +126,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | fileName  | OK  | OK      | NO  | BOTH        | NO                   | The file name                                 |
 | duration  | OK  | OK      | NO  | VIDEO ONLY  | NO                   | The selected video duration in seconds        |
 | bitrate   | --- | OK      | NO  | VIDEO ONLY  | NO                   | The average bitrate (in bits/sec) of the selected video, if available. (Android only) |
-| timestamp | OK  | OK      | NO  | BOTH        | YES                  | Timestamp of the asset. Only included if 'includeExtra' is true |
+| timestamp | OK  | OK      | NO  | BOTH        | YES                  | Timestamp of the asset. |
 | id        | OK  | OK      | NO  | BOTH        | YES                  | local identifier of the photo or video. On Android, this is the same as fileName |
 
 ## Note on file storage
