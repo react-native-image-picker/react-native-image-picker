@@ -1,5 +1,12 @@
 import * as React from 'react';
-import {StyleSheet, SafeAreaView, View, Image, ScrollView} from 'react-native';
+import {
+  StyleSheet,
+  SafeAreaView,
+  View,
+  Image,
+  ScrollView,
+  Platform,
+} from 'react-native';
 import {DemoTitle, DemoButton, DemoResponse} from './components';
 
 import * as ImagePicker from 'react-native-image-picker';
@@ -126,3 +133,16 @@ const actions: Action[] = [
     },
   },
 ];
+
+if (Platform.OS === 'ios') {
+  actions.push({
+    title: 'Take Image or Video\n(mixed)',
+    type: 'capture',
+    options: {
+      saveToPhotos: true,
+      mediaType: 'mixed',
+      includeExtra,
+      presentationStyle: 'fullScreen',
+    },
+  });
+}
