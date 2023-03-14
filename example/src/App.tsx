@@ -110,6 +110,7 @@ const actions: Action[] = [
     type: 'capture',
     options: {
       saveToPhotos: true,
+      formatAsMp4: true,
       mediaType: 'video',
       includeExtra,
     },

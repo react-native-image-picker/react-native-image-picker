@@ -260,7 +260,6 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
     }
     
     NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
-    response[@"fileName"] = fileName;
     
     if([self.options[@"formatAsMp4"] boolValue]) {
         NSURL *parentURL = [videoDestinationURL URLByDeletingLastPathComponent];
@@ -270,7 +269,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         
         [[NSFileManager defaultManager] removeItemAtURL:outputURL error:nil];
         AVURLAsset *asset = [AVURLAsset URLAssetWithURL:videoDestinationURL options:nil];
-        AVAssetExportSession *exportSession = [[AVAssetExportSession alloc] initWithAsset:asset presetName:AVAssetExportPresetHighestQuality];
+        AVAssetExportSession *exportSession = [[AVAssetExportSession alloc] initWithAsset:asset presetName:AVAssetExportPresetPassthrough];
         
         exportSession.outputURL = outputURL;
         exportSession.outputFileType = AVFileTypeMPEG4;
@@ -278,27 +277,28 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         
         dispatch_semaphore_t sem = dispatch_semaphore_create(0);
         
-        dispatch_async(dispatch_get_main_queue(), ^(void) {
-            [exportSession exportAsynchronouslyWithCompletionHandler:^(void) {
-                if (exportSession.status == AVAssetExportSessionStatusCompleted) {
-                    CGSize dimentions = [ImagePickerUtils getVideoDimensionsFromUrl:outputURL];
-                    response[@"duration"] = [NSNumber numberWithDouble:CMTimeGetSeconds([AVAsset assetWithURL:outputURL].duration)];
-                    response[@"uri"] = outputURL.absoluteString;
-                    response[@"type"] = [ImagePickerUtils getFileTypeFromUrl:outputURL];
-                    response[@"fileSize"] = [ImagePickerUtils getFileSizeFromUrl:outputURL];
-                    response[@"width"] = @(dimentions.width);
-                    response[@"height"] = @(dimentions.height);
-                    dispatch_semaphore_signal(sem);
-                } else if (exportSession.status == AVAssetExportSessionStatusFailed || exportSession.status == AVAssetExportSessionStatusCancelled) {
-                    dispatch_semaphore_signal(sem);
-                }
-            }];
-        });
+        [exportSession exportAsynchronouslyWithCompletionHandler:^(void) {
+            if (exportSession.status == AVAssetExportSessionStatusCompleted) {
+                CGSize dimentions = [ImagePickerUtils getVideoDimensionsFromUrl:outputURL];
+                response[@"fileName"] = [outputURL lastPathComponent];
+                response[@"duration"] = [NSNumber numberWithDouble:CMTimeGetSeconds([AVAsset assetWithURL:outputURL].duration)];
+                response[@"uri"] = outputURL.absoluteString;
+                response[@"type"] = [ImagePickerUtils getFileTypeFromUrl:outputURL];
+                response[@"fileSize"] = [ImagePickerUtils getFileSizeFromUrl:outputURL];
+                response[@"width"] = @(dimentions.width);
+                response[@"height"] = @(dimentions.height);
+                
+                dispatch_semaphore_signal(sem);
+            } else if (exportSession.status == AVAssetExportSessionStatusFailed || exportSession.status == AVAssetExportSessionStatusCancelled) {
+                dispatch_semaphore_signal(sem);
+            }
+        }];
+
         
         dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
     } else {
         CGSize dimentions = [ImagePickerUtils getVideoDimensionsFromUrl:videoDestinationURL];
-        
+        response[@"fileName"] = fileName;
         response[@"duration"] = [NSNumber numberWithDouble:CMTimeGetSeconds([AVAsset assetWithURL:videoDestinationURL].duration)];
         response[@"uri"] = videoDestinationURL.absoluteString;
         response[@"type"] = [ImagePickerUtils getFileTypeFromUrl:videoDestinationURL];
