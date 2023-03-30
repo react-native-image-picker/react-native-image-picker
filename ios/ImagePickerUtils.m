@@ -39,7 +39,7 @@
         picker.mediaTypes = @[(NSString *)kUTTypeMovie];
     } else if ([options[@"mediaType"] isEqualToString:@"photo"]) {
         picker.mediaTypes = @[(NSString *)kUTTypeImage];
-    } else if ((target == library) && ([options[@"mediaType"] isEqualToString:@"mixed"])) {
+    } else if ([options[@"mediaType"] isEqualToString:@"mixed"]) {
         picker.mediaTypes = @[(NSString *)kUTTypeImage, (NSString *)kUTTypeMovie];
     }
 

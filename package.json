@@ -1,6 +1,6 @@
 {
   "name": "react-native-image-picker",
-  "version": "5.0.2",
+  "version": "5.3.1",
   "description": "A React Native module that allows you to use native UI to select media from the device library or directly from the camera",
   "react-native": "src/index.ts",
   "main": "src/index.ts",
@@ -14,12 +14,6 @@
     "/lib"
   ],
   "author": "Johan du Toit (Johan-dutoit)",
-  "contributors": [
-    {
-      "name": "Raviraj",
-      "email": "ivarjar22@yahoo.com"
-    }
-  ],
   "homepage": "https://github.com/react-native-image-picker/react-native-image-picker",
   "license": "MIT",
   "scripts": {
@@ -47,8 +41,8 @@
   "devDependencies": {
     "@react-native-community/bob": "0.17.1",
     "@semantic-release/git": "9.0.0",
-    "@types/react": "16.9.54",
-    "@types/react-native": "0.63.30",
+    "@types/react": "18.0.28",
+    "@types/react-native": "0.71.3",
     "semantic-release": "17.3.0",
     "typescript": "4.1.5"
   },
@@ -58,5 +52,13 @@
     "targets": [
       "typescript"
     ]
+  },
+  "codegenConfig": {
+    "name": "RNImagePickerSpec",
+    "type": "modules",
+    "jsSrcsDir": "src",
+    "android": {
+      "javaPackageName": "com.imagepicker"
+    }
   }
 }

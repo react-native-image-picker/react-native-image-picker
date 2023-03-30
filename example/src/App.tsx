@@ -1,6 +1,13 @@
 import * as React from 'react';
-import {StyleSheet, SafeAreaView, View, Image, ScrollView} from 'react-native';
-import {DemoTitle, DemoButton, DemoResponse} from './components';
+import {
+  Image,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
+import {DemoButton, DemoResponse, DemoTitle} from './components';
 
 import * as ImagePicker from 'react-native-image-picker';
 
@@ -103,6 +110,7 @@ const actions: Action[] = [
     type: 'capture',
     options: {
       saveToPhotos: true,
+      formatAsMp4: true,
       mediaType: 'video',
       includeExtra,
     },
@@ -113,11 +121,12 @@ const actions: Action[] = [
     options: {
       selectionLimit: 0,
       mediaType: 'video',
+      formatAsMp4: true,
       includeExtra,
     },
   },
   {
-    title: `Select Image or Video\n(mixed)`,
+    title: 'Select Image or Video\n(mixed)',
     type: 'library',
     options: {
       selectionLimit: 0,
@@ -126,3 +135,16 @@ const actions: Action[] = [
     },
   },
 ];
+
+if (Platform.OS === 'ios') {
+  actions.push({
+    title: 'Take Image or Video\n(mixed)',
+    type: 'capture',
+    options: {
+      saveToPhotos: true,
+      mediaType: 'mixed',
+      includeExtra,
+      presentationStyle: 'fullScreen',
+    },
+  });
+}
