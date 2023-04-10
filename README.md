@@ -92,7 +92,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 
 | Option            | iOS | Android | Web | Description                                                                                                                                                               |
 | ----------------- | --- | ------- | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| mediaType         | OK  | OK      | OK  | 'photo' or 'video' or 'mixed'(launchCamera on Android does not support 'mixed'). Web only supports 'photo' for now.                                                       |
+| mediaType         | OK  | OK      | OK  | 'photo' or 'video' or 'mixed'(launchCamera on Android does not support 'mixed'). Web only supports 'photo' with `launchCamera` for now.                                   |
 | maxWidth          | OK  | OK      | NO  | To resize the image                                                                                                                                                       |
 | maxHeight         | OK  | OK      | NO  | To resize the image                                                                                                                                                       |
 | videoQuality      | OK  | OK      | NO  | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android                                                                                                             |
@@ -135,7 +135,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 
 Image/video captured via camera will be stored in temporary folder so will be deleted any time, so don't expect it to persist. Use `saveToPhotos: true` (default is false) to save the file in the public photos. `saveToPhotos` requires WRITE_EXTERNAL_STORAGE permission on Android 28 and below (You have to obtain the permission, the library does not).
 
-For web this doesn't work.
+For web, this doesn't work.
 
 ## ErrorCode
 
