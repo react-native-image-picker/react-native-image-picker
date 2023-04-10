@@ -37,18 +37,6 @@ export function imageLibrary(
   options: ImageLibraryOptions = DEFAULT_OPTIONS,
   callback?: Callback,
 ): Promise<ImagePickerResponse> {
-  // Only supporting 'photo' mediaType for now.
-  if (options.mediaType !== 'photo') {
-    const result = {
-      errorCode: 'others' as ErrorCode,
-      errorMessage: 'For now, only photo mediaType is supported for web',
-    };
-
-    if (callback) callback(result);
-
-    return Promise.resolve(result);
-  }
-
   const input = document.createElement('input');
   input.style.display = 'none';
   input.setAttribute('type', 'file');

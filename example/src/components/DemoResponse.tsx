@@ -1,7 +1,12 @@
 import * as React from 'react';
 import {Text, StyleSheet, ViewStyle, TextStyle, ScrollView} from 'react-native';
+import type {ImagePickerResponse} from 'react-native-image-picker';
 
-export function DemoResponse({children}: React.PropsWithChildren<{}>) {
+interface Props {
+  children: ImagePickerResponse | null;
+}
+
+export function DemoResponse({children}: Props) {
   if (children == null) {
     return null;
   }
