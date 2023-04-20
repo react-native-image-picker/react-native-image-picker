@@ -8,6 +8,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.camera2.CameraCharacteristics;
@@ -15,6 +16,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.util.Base64;
 import android.webkit.MimeTypeMap;
 
@@ -118,6 +120,21 @@ public class Utils {
         }
         ContentResolver contentResolver = context.getContentResolver();
         String fileType = getFileTypeFromMime(contentResolver.getType(sharedStorageUri));
+
+        if (fileType == null) {
+            Cursor cursor =
+                    contentResolver.query(sharedStorageUri, null, null, null, null);
+            if (cursor.moveToFirst()) {
+                int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                String fileName = cursor.getString(nameIndex);
+                int lastDotIndex = fileName.lastIndexOf('.');
+
+                if (lastDotIndex != -1) {
+                    fileType = fileName.substring(lastDotIndex + 1);
+                }
+            }
+        }
+
         Uri toUri =  Uri.fromFile(createFile(context, fileType));
         copyUri(sharedStorageUri, toUri, contentResolver);
         return toUri;
