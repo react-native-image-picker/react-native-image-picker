@@ -24,9 +24,9 @@ RCT_NEW_ARCH_ENABLED=1 npx pod-install ios
 
 #### Android
 
-Set `newArchEnabled` to true inside `android/gradle.properties`
+Set `newArchEnabled` to `true` inside `android/gradle.properties`
 
-### Pre-Fabric (aka not using the new architecture)
+### Pre-Fabric (AKA not using the new architecture)
 
 ```bash
 npx pod-install ios
@@ -36,19 +36,19 @@ npx pod-install ios
 
 ### iOS
 
-Add the appropriate keys to your Info.plist,
+Add the appropriate keys to your `Info.plist` depending on your requirement:
 
-If you are allowing user to select image/video from photos, add `NSPhotoLibraryUsageDescription`.
-
-If you are allowing user to capture image add `NSCameraUsageDescription` key also.
-
-If you are allowing user to capture video add `NSCameraUsageDescription` add `NSMicrophoneUsageDescription` key also.
+| Requirement                    | Key                                                 |
+| ------------------------------ | --------------------------------------------------- |
+| Select image/video from photos | NSPhotoLibraryUsageDescription                      |
+| Capture Image                  | NSCameraUsageDescription                            |
+| Capture Video                  | NSCameraUsageDescription & NSCameraUsageDescription |
 
 ### Android
 
 No permissions required (`saveToPhotos` requires permission [check](#note-on-file-storage)).
 
-Note: This library does not require Manifest.permission.CAMERA, if your app declares as using this permission in manifest then you have to obtain the permission before using `launchCamera`.
+Note: This library does not require `Manifest.permission.CAMERA`, if your app declares as using this permission in manifest then you have to obtain the permission before using `launchCamera`.
 
 ## API Reference
 
@@ -97,14 +97,14 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | maxHeight         | OK  | OK      | NO  | To resize the image                                                                                                                                                       |
 | videoQuality      | OK  | OK      | NO  | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android                                                                                                             |
 | durationLimit     | OK  | OK      | NO  | Video max duration in seconds                                                                                                                                             |
-| quality           | OK  | OK      | NO  | 0 to 1, photos                                                                                                                                                            |
-| cameraType        | OK  | OK      | NO  | 'back' or 'front'. May not be supported in few android devices                                                                                                            |
-| includeBase64     | OK  | OK      | OK  | If true, creates base64 string of the image (Avoid using on large image files due to performance)                                                                         |
-| includeExtra      | OK  | OK      | NO  | If true, will include extra data which requires library permissions to be requested (i.e. exif data)                                                                      |
-| saveToPhotos      | OK  | OK      | NO  | (Boolean) Only for launchCamera, saves the image/video file captured to public photo                                                                                      |
-| selectionLimit    | OK  | OK      | OK  | Default is `1`, use `0` to allow any number of files. Only iOS version >= 14 & Android version >= 13 support `0` and also it supports providing any integer value         |
-| presentationStyle | OK  | NO      | NO  | Controls how the picker is presented. 'pageSheet', 'fullScreen', 'pageSheet', 'formSheet', 'popover', 'overFullScreen', 'overCurrentContext'. Default is 'currentContext' |
-| formatAsMp4       | OK  | NO      | NO  | Converts the selected video to MP4. iOS Only.                                                                                                                             |
+| quality           | OK  | OK      | NO  | 0 to 1, photos                                                                                                                                                             |
+| cameraType        | OK  | OK      | NO  | 'back' or 'front' (May not be supported in few android devices)                                                                                                           |
+| includeBase64     | OK  | OK      | OK  | If `true`, creates base64 string of the image (Avoid using on large image files due to performance)                                                                       |
+| includeExtra      | OK  | OK      | NO  | If `true`, will include extra data which requires library permissions to be requested (i.e. exif data)                                                                     |
+| saveToPhotos      | OK  | OK      | NO  | (Boolean) Only for launchCamera, saves the image/video file captured to public photo                                                                                       |
+| selectionLimit    | OK  | OK      | OK  | Default is `1`. Supports providing any integer value. Use `0` to allow any number of files supported on iOS version >= 14 & Android version >= 13                          |
+| presentationStyle | OK  | NO      | NO  | Controls how the picker is presented. 'currentContext', 'pageSheet', 'fullScreen', 'formSheet', 'popover', 'overFullScreen', 'overCurrentContext'. Default is 'currentContext' |
+| formatAsMp4       | OK  | NO      | NO  | Converts the selected video to MP4 (iOS Only).                                                                                                                             |
 
 ## The Response Object
 
@@ -133,17 +133,17 @@ The `callback` will be called with a response object, refer to [The Response Obj
 
 ## Note on file storage
 
-Image/video captured via camera will be stored in temporary folder so will be deleted any time, so don't expect it to persist. Use `saveToPhotos: true` (default is false) to save the file in the public photos. `saveToPhotos` requires WRITE_EXTERNAL_STORAGE permission on Android 28 and below (You have to obtain the permission, the library does not).
+Image/video captured via camera will be stored in temporary folder allowing it to be deleted any time, so don't expect it to persist. Use `saveToPhotos: true` (default is `false`) to save the file in the public photos. `saveToPhotos` requires `WRITE_EXTERNAL_STORAGE` permission on Android 28 and below (The permission has to obtained by the App manually as the library does not handle that).
 
-For web this doesn't work.
+For web, this doesn't work.
 
 ## ErrorCode
 
 | Code               | Description                                       |
 | ------------------ | ------------------------------------------------- |
-| camera_unavailable | camera not available on device                    |
+| camera_unavailable | Camera not available on device                    |
 | permission         | Permission not satisfied                          |
-| others             | other errors (check errorMessage for description) |
+| others             | Other errors (check errorMessage for description) |
 
 ## License
 
