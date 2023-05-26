@@ -105,6 +105,8 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | selectionLimit    | OK  | OK      | OK  | Default is `1`, use `0` to allow any number of files. Only iOS version >= 14 & Android version >= 13 support `0` and also it supports providing any integer value         |
 | presentationStyle | OK  | NO      | NO  | Controls how the picker is presented. 'pageSheet', 'fullScreen', 'pageSheet', 'formSheet', 'popover', 'overFullScreen', 'overCurrentContext'. Default is 'currentContext' |
 | formatAsMp4       | OK  | NO      | NO  | Converts the selected video to MP4. iOS Only.                                                                                                                             |
+| assetRepresentationMode | OK  | NO      | NO | A mode that determines which representation to use if an asset contains more than one. Possible values: 'auto', 'current', 'compatible'. Default is 'auto'           |
+|
 
 ## The Response Object
 
