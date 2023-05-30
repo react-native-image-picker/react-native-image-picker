@@ -262,7 +262,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
     
     NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
     
-    if([self.options[@"formatAsMp4"] boolValue] && ![fileExtension isEqualToString:@"mp4"])  ) {
+    if([self.options[@"formatAsMp4"] boolValue] && ![fileExtension isEqualToString:@"mp4"]) {
         NSURL *parentURL = [videoDestinationURL URLByDeletingLastPathComponent];
         NSString *path = [[parentURL.path stringByAppendingString:@"/"] stringByAppendingString:[[NSUUID UUID] UUIDString]];
         path = [path stringByAppendingString:@".mp4"];
