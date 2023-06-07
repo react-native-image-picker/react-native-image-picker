@@ -3,15 +3,10 @@ package com.imagepicker;
 import static java.lang.Integer.parseInt;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.util.Log;
 
-import androidx.annotation.Nullable;
-
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
 import java.io.IOException;
 
 public class VideoMetadata extends Metadata {
@@ -21,7 +16,6 @@ public class VideoMetadata extends Metadata {
   public VideoMetadata(Uri uri, Context context) {
     MediaMetadataRetriever metadataRetriever = new MediaMetadataRetriever();
     metadataRetriever.setDataSource(context, uri);
-    Bitmap bitmap = getBitmap(uri, context, metadataRetriever);
 
     String duration = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
     String bitrate = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE);
@@ -38,9 +32,20 @@ public class VideoMetadata extends Metadata {
       this.datetime = getDateTimeInUTC(datetimeToFormat, "yyyyMMdd HHmmss");
     }
 
-    if(bitmap != null) {
-      this.width = bitmap.getWidth();
-      this.height = bitmap.getHeight();
+    String width = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
+    String height = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
+
+    if(height != null && width != null) {
+      String rotation = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION);
+      int rotationI = rotation == null ? 0 : Integer.parseInt(rotation);
+
+      if(rotationI == 90 || rotationI == 270) {
+        this.width = Integer.parseInt(height);
+        this.height = Integer.parseInt(width);
+      } else {
+        this.width = Integer.parseInt(width);
+        this.height = Integer.parseInt(height);
+      }
     }
 
     try {
@@ -62,19 +67,4 @@ public class VideoMetadata extends Metadata {
   public int getWidth() { return width; }
   @Override
   public int getHeight() { return height; }
-
-  private @Nullable
-  Bitmap getBitmap(Uri uri, Context context, MediaMetadataRetriever retriever) {
-    try {
-      FileDescriptor fileDescriptor = context.getContentResolver().openFileDescriptor(uri, "r").getFileDescriptor();
-      FileInputStream inputStream = new FileInputStream(fileDescriptor);
-      retriever.setDataSource(inputStream.getFD());
-      return retriever.getFrameAtTime();
-    } catch (IOException | RuntimeException e) {
-      // These errors do not bubble up to RN as we don't want failed width/height retrieval to prevent selection.
-      Log.e("RNIP", "Could not retrieve width and height from video: " + e.getMessage());
-    }
-
-    return null;
-  }
 }
