@@ -95,9 +95,8 @@ public class Utils {
     }
 
     public static void copyUri(Uri fromUri, Uri toUri, ContentResolver resolver) {
-        try {
-            OutputStream os = resolver.openOutputStream(toUri);
-            InputStream is = resolver.openInputStream(fromUri);
+        try(OutputStream os = resolver.openOutputStream(toUri);
+            InputStream is = resolver.openInputStream(fromUri)) {
 
             byte[] buffer = new byte[8192];
             int bytesRead;
@@ -105,7 +104,6 @@ public class Utils {
             while ((bytesRead = is.read(buffer)) != -1) {
                 os.write(buffer, 0, bytesRead);
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -141,18 +139,15 @@ public class Utils {
     }
 
     public static int[] getImageDimensions(Uri uri, Context reactContext) {
-        InputStream inputStream;
-        try {
-            inputStream = reactContext.getContentResolver().openInputStream(uri);
-        } catch (FileNotFoundException e) {
+        try(InputStream inputStream = reactContext.getContentResolver().openInputStream(uri)) {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeStream(inputStream,null, options);
+            return new int[]{options.outWidth, options.outHeight};
+        } catch (IOException e) {
             e.printStackTrace();
             return new int[]{0, 0};
         }
-
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeStream(inputStream,null, options);
-        return new int[]{options.outWidth, options.outHeight};
     }
 
     static boolean hasPermission(final Activity activity) {
@@ -161,27 +156,21 @@ public class Utils {
     }
 
     static String getBase64String(Uri uri, Context reactContext) {
-        InputStream inputStream;
-        try {
-            inputStream = reactContext.getContentResolver().openInputStream(uri);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return null;
-        }
+        try(InputStream inputStream = reactContext.getContentResolver().openInputStream(uri);
+            ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            byte[] bytes;
+            byte[] buffer = new byte[8192];
+            int bytesRead;
 
-        byte[] bytes;
-        byte[] buffer = new byte[8192];
-        int bytesRead;
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        try {
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 output.write(buffer, 0, bytesRead);
             }
+            bytes = output.toByteArray();
+            return Base64.encodeToString(bytes, Base64.NO_WRAP);
         } catch (IOException e) {
             e.printStackTrace();
+            return null;
         }
-        bytes = output.toByteArray();
-        return Base64.encodeToString(bytes, Base64.NO_WRAP);
     }
 
     // Resize image
@@ -196,20 +185,25 @@ public class Utils {
 
             int[] newDimens = getImageDimensBasedOnConstraints(origDimens[0], origDimens[1], options);
 
-            InputStream imageStream = context.getContentResolver().openInputStream(uri);
-            String mimeType =  getMimeTypeFromFileUri(uri);
-            Bitmap b = BitmapFactory.decodeStream(imageStream);
-            b = Bitmap.createScaledBitmap(b, newDimens[0], newDimens[1], true);
-            String originalOrientation = getOrientation(uri, context);
+            try(InputStream imageStream = context.getContentResolver().openInputStream(uri)) {
+                String mimeType =  getMimeTypeFromFileUri(uri);
+                Bitmap b = BitmapFactory.decodeStream(imageStream);
 
-            File file = createFile(context, getFileTypeFromMime(mimeType));
-            OutputStream os = context.getContentResolver().openOutputStream(Uri.fromFile(file));
-            b.compress(getBitmapCompressFormat(mimeType), options.quality, os);
-            setOrientation(file, originalOrientation, context);
+                b = Bitmap.createScaledBitmap(b, newDimens[0], newDimens[1], true);
+                String originalOrientation = getOrientation(uri, context);
 
-            deleteFile(uri);
+                File file = createFile(context, getFileTypeFromMime(mimeType));
 
-            return Uri.fromFile(file);
+                try(OutputStream os = context.getContentResolver().openOutputStream(Uri.fromFile(file))) {
+                    b.compress(getBitmapCompressFormat(mimeType), options.quality, os);
+                }
+
+                setOrientation(file, originalOrientation, context);
+
+                deleteFile(uri);
+
+                return Uri.fromFile(file);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -254,8 +248,7 @@ public class Utils {
     }
 
     static double getFileSize(Uri uri, Context context) {
-        try {
-            ParcelFileDescriptor f = context.getContentResolver().openFileDescriptor(uri, "r");
+        try(ParcelFileDescriptor f = context.getContentResolver().openFileDescriptor(uri, "r")) {
             return f.getStatSize();
         } catch (Exception e) {
             e.printStackTrace();
