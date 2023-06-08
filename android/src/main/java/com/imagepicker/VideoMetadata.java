@@ -9,12 +9,26 @@ import android.util.Log;
 
 import java.io.IOException;
 
+// MetadataRetriever only implements AutoCloseable starting with Android API 29
+// So let's use our own wrapper for it
+// See https://stackoverflow.com/a/74808462/1377358
+class CustomMediaMetadataRetriever extends MediaMetadataRetriever implements AutoCloseable {
+   public CustomMediaMetadataRetriever() {
+      super();
+   }
+
+   @Override
+   public void close() throws IOException {
+      release();
+   }
+}
+
 public class VideoMetadata extends Metadata {
   private int duration;
   private int bitrate;
 
   public VideoMetadata(Uri uri, Context context) {
-    try(MediaMetadataRetriever metadataRetriever = new MediaMetadataRetriever()) {
+    try(CustomMediaMetadataRetriever metadataRetriever = new CustomMediaMetadataRetriever()) {
       metadataRetriever.setDataSource(context, uri);
 
       String duration = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
@@ -47,8 +61,6 @@ public class VideoMetadata extends Metadata {
           this.height = Integer.parseInt(height);
         }
       }
-
-      metadataRetriever.release();
     } catch (IOException e) {
       e.printStackTrace();
     }
