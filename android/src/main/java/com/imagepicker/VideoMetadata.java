@@ -48,11 +48,9 @@ public class VideoMetadata extends Metadata {
       }
     }
 
-    try {
+  
       metadataRetriever.release();
-    } catch (IOException e) {
-      Log.e("VideoMetadata", "IO error releasing metadataRetriever", e);
-    }
+     
   }
 
   public int getBitrate() {

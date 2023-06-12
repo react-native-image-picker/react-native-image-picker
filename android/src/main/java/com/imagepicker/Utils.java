@@ -1,5 +1,9 @@
 package com.imagepicker;
 
+import static com.imagepicker.ImagePickerModuleImpl.REQUEST_LAUNCH_IMAGE_CAPTURE;
+import static com.imagepicker.ImagePickerModuleImpl.REQUEST_LAUNCH_LIBRARY;
+import static com.imagepicker.ImagePickerModuleImpl.REQUEST_LAUNCH_VIDEO_CAPTURE;
+
 import android.Manifest;
 import android.app.Activity;
 import android.content.ClipData;
@@ -39,8 +43,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-
-import static com.imagepicker.ImagePickerModuleImpl.*;
 
 public class Utils {
     public static String fileNamePrefix = "rn_image_picker_lib_temp_";
@@ -391,9 +393,9 @@ public class Utils {
         return fileUris;
     }
 
-    static ReadableMap getImageResponseMap(Uri uri, Options options, Context context) {
+    static ReadableMap getImageResponseMap(Uri uri, Options options, Context context, String origUri) {
         String fileName = uri.getLastPathSegment();
-        ImageMetadata imageMetadata = new ImageMetadata(uri, context);
+        ImageMetadata imageMetadata = new ImageMetadata();
         int[] dimensions = getImageDimensions(uri, context);
 
         WritableMap map = Arguments.createMap();
@@ -411,7 +413,16 @@ public class Utils {
 
         if(options.includeExtra) {
           // Add more extra data here ...
-          map.putString("timestamp", imageMetadata.getDateTime());
+            try {
+                if(origUri != "") {
+                    WritableMap exifData = ImageMetadata.extract(origUri);
+                    map.putString("exifData", exifData.toString());
+                    map.putString("timestamp", exifData.getString("DateTime"));
+                    map.putString("physicalPath", origUri);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
           map.putString("id", fileName);
         }
 
@@ -451,9 +462,18 @@ public class Utils {
             if (isImageType(uri, context)) {
                 if (uri.getScheme().contains("content")) {
                     uri = getAppSpecificStorageUri(uri, context);
+
                 }
+                String origUri = "";
+                try {
+                    origUri = RealPathUtil.getRealPathFromURI(context, fileUris.get(i));
+                } catch (Exception e) {
+                    origUri = null;
+                    e.printStackTrace();
+                }
+
                 uri = resizeImage(uri, context, options);
-                assets.pushMap(getImageResponseMap(uri, options, context));
+                assets.pushMap(getImageResponseMap(uri, options, context,origUri));
             } else if (isVideoType(uri, context)) {
                 if (uri.getScheme().contains("content")) {
                     uri = getAppSpecificStorageUri(uri, context);
