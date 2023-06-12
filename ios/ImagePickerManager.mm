@@ -231,6 +231,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
     NSString *fileName = [url lastPathComponent];
     NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
     NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
+    NSString *fileExtension = [fileName pathExtension];
 
     if ((target == camera) && [self.options[@"saveToPhotos"] boolValue]) {
         UISaveVideoAtPathToSavedPhotosAlbum(url.path, nil, nil, nil);
@@ -261,7 +262,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
     
     NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
     
-    if([self.options[@"formatAsMp4"] boolValue]) {
+    if([self.options[@"formatAsMp4"] boolValue] && ![fileExtension isEqualToString:@"mp4"]) {
         NSURL *parentURL = [videoDestinationURL URLByDeletingLastPathComponent];
         NSString *path = [[parentURL.path stringByAppendingString:@"/"] stringByAppendingString:[[NSUUID UUID] UUIDString]];
         path = [path stringByAppendingString:@".mp4"];
