@@ -18,6 +18,8 @@ import com.facebook.react.module.annotations.ReactModule;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.imagepicker.Utils.*;
 
@@ -164,13 +166,17 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
     }
 
     void onAssetsObtained(List<Uri> fileUris) {
-        try {
-            callback.invoke(getResponseMap(fileUris, options, reactContext));
-        } catch (RuntimeException exception) {
-            callback.invoke(getErrorMap(errOthers, exception.getMessage()));
-        } finally {
-            callback = null;
-        }
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
+        executor.submit(() -> {
+            try {
+                callback.invoke(getResponseMap(fileUris, options, reactContext));
+            } catch (RuntimeException exception) {
+                callback.invoke(getErrorMap(errOthers, exception.getMessage()));
+            } finally {
+                callback = null;
+            }
+        });
     }
 
     @Override
