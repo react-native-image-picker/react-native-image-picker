@@ -157,6 +157,10 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
             libraryIntent = pickMultipleVisualMedia.createIntent(this.reactContext.getApplicationContext(), mediaRequest);
         }
 
+        if(this.options.restrictMimeTypes.length > 0) {
+            libraryIntent.putExtra(Intent.EXTRA_MIME_TYPES, this.options.restrictMimeTypes);
+        }
+
         try {
             currentActivity.startActivityForResult(libraryIntent, requestCode);
         } catch (ActivityNotFoundException e) {

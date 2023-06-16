@@ -18,10 +18,13 @@ public class Options {
     int durationLimit;
     Boolean useFrontCamera = false;
     String mediaType;
-
+    String[] restrictMimeTypes;
 
     Options(ReadableMap options) {
         mediaType = options.getString("mediaType");
+        restrictMimeTypes = options.getArray("restrictMimeTypes").toArrayList().stream()
+                                .map(Object::toString)
+                                .toArray(size -> new String[size]);
         selectionLimit = options.getInt("selectionLimit");
         includeBase64 = options.getBoolean("includeBase64");
         includeExtra = options.getBoolean("includeExtra");

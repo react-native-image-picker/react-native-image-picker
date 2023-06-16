@@ -7,7 +7,7 @@ export function DemoResponse({children}: React.PropsWithChildren<{}>) {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} nestedScrollEnabled>
       <Text style={styles.text}>{JSON.stringify(children, null, 2)}</Text>
     </ScrollView>
   );
