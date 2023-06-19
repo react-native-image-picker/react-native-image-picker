@@ -1,13 +1,12 @@
 import * as React from 'react';
 import {
-  Image,
   Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
-import {DemoButton, DemoResponse, DemoTitle} from './components';
+import {Asset, DemoButton, DemoResponse, DemoTitle} from './components';
 
 import * as ImagePicker from 'react-native-image-picker';
 
@@ -15,15 +14,19 @@ import * as ImagePicker from 'react-native-image-picker';
 const includeExtra = true;
 
 export default function App() {
-  const [response, setResponse] = React.useState<any>(null);
+  const [response, setResponse] =
+    React.useState<ImagePicker.ImagePickerResponse | null>(null);
 
-  const onButtonPress = React.useCallback((type, options) => {
-    if (type === 'capture') {
-      ImagePicker.launchCamera(options, setResponse);
-    } else {
-      ImagePicker.launchImageLibrary(options, setResponse);
-    }
-  }, []);
+  const onButtonPress = React.useCallback(
+    (type: Action['type'], options: Action['options']) => {
+      if (type === 'capture') {
+        ImagePicker.launchCamera(options, setResponse);
+      } else {
+        ImagePicker.launchImageLibrary(options, setResponse);
+      }
+    },
+    [],
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -43,15 +46,8 @@ export default function App() {
         <DemoResponse>{response}</DemoResponse>
 
         {response?.assets &&
-          response?.assets.map(({uri}: {uri: string}) => (
-            <View key={uri} style={styles.imageContainer}>
-              <Image
-                resizeMode="cover"
-                resizeMethod="scale"
-                style={styles.image}
-                source={{uri: uri}}
-              />
-            </View>
+          response?.assets.map(asset => (
+            <Asset asset={asset} key={asset.uri} />
           ))}
       </ScrollView>
     </SafeAreaView>
