@@ -8,6 +8,7 @@ if (isNewArchitectureEnabled()) {
 }
 
 android {
+    namespace = "com.imagepicker"
     compileSdkVersion 33
 
     // Used to override the NDK path/version on internal CI or by allowing
