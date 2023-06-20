@@ -60,5 +60,8 @@
     "android": {
       "javaPackageName": "com.imagepicker"
     }
+  },
+  "engines": {
+    "node": "16"
   }
 }
