@@ -1,7 +1,7 @@
 defaults: &defaults
   working_directory: ~/code
   docker:
-    - image: cimg/node:16.0.0
+    - image: cimg/node:18.0.0
 
 version: 2
 jobs:
