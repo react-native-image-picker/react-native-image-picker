@@ -16,15 +16,13 @@ export interface OptionsCommon {
     | 'formSheet'
     | 'popover'
     | 'overFullScreen'
-    | 'overCurrentContext'
-    assetRepresentationMode?:
-    | 'auto'
-    | 'current'
-    | 'compatible';
+    | 'overCurrentContext';
+  assetRepresentationMode?: 'auto' | 'current' | 'compatible';
 }
 
 export interface ImageLibraryOptions extends OptionsCommon {
   selectionLimit?: number;
+  restrictMimeTypes?: string[];
 }
 
 export interface CameraOptions extends OptionsCommon {

@@ -125,26 +125,28 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
         boolean isPhoto = this.options.mediaType.equals(mediaTypePhoto);
         boolean isVideo = this.options.mediaType.equals(mediaTypeVideo);
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        boolean usePhotoPicker = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU;
+
+        if (usePhotoPicker) {
+            libraryIntent = new Intent(MediaStore.ACTION_PICK_IMAGES);
+        } else {
             if (isSingleSelect && (isPhoto || isVideo)) {
                 libraryIntent = new Intent(Intent.ACTION_PICK);
             } else {
                 libraryIntent = new Intent(Intent.ACTION_GET_CONTENT);
                 libraryIntent.addCategory(Intent.CATEGORY_OPENABLE);
             }
-        } else {
-            libraryIntent = new Intent(MediaStore.ACTION_PICK_IMAGES);
         }
 
         if (!isSingleSelect) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                libraryIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-            } else {
+            if (usePhotoPicker) {
                 if (selectionLimit != 1) {
                     int maxNum = selectionLimit;
                     if (selectionLimit == 0) maxNum = MediaStore.getPickImagesMaxLimit();
                     libraryIntent.putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, maxNum);
                 }
+            } else {
+                libraryIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             }
         }
 
@@ -152,8 +154,13 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
             libraryIntent.setType("image/*");
         } else if (isVideo) {
             libraryIntent.setType("video/*");
-        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        } else if (!usePhotoPicker) {
             libraryIntent.setType("*/*");
+        }
+
+        if(this.options.restrictMimeTypes.length > 0) {
+            libraryIntent.putExtra(Intent.EXTRA_MIME_TYPES, this.options.restrictMimeTypes);
+        } else if(!usePhotoPicker) {
             libraryIntent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "video/*"});
         }
 
