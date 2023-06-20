@@ -2,6 +2,7 @@ name: Main CI
 
 on:
   pull_request:
+  push:
     branches:
       - main
 
@@ -30,6 +31,9 @@ jobs:
           yarn prepare
 
       - name: Publish to NPM
-        if: ${{ github.event.pull_request.merged == true }}
+        if: github.repository == 'react-native-image-picker/react-native-image-picker' && github.ref == 'refs/heads/main'
         run: |
           yarn ci:publish
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
