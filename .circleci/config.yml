@@ -1,7 +1,7 @@
 defaults: &defaults
   working_directory: ~/code
   docker:
-    - image: circleci/node:12.9.1-browsers
+    - image: circleci/node:16
 
 version: 2
 jobs:
