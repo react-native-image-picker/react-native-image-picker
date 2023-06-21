@@ -3,50 +3,66 @@ package com.imagepicker;
 import static java.lang.Integer.parseInt;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.util.Log;
 
-import androidx.annotation.Nullable;
-
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
 import java.io.IOException;
+
+// MetadataRetriever only implements AutoCloseable starting with Android API 29
+// So let's use our own wrapper for it
+// See https://stackoverflow.com/a/74808462/1377358
+class CustomMediaMetadataRetriever extends MediaMetadataRetriever implements AutoCloseable {
+   public CustomMediaMetadataRetriever() {
+      super();
+   }
+
+   @Override
+   public void close() throws IOException {
+      release();
+   }
+}
 
 public class VideoMetadata extends Metadata {
   private int duration;
   private int bitrate;
 
   public VideoMetadata(Uri uri, Context context) {
-    MediaMetadataRetriever metadataRetriever = new MediaMetadataRetriever();
-    metadataRetriever.setDataSource(context, uri);
-    Bitmap bitmap = getBitmap(uri, context, metadataRetriever);
+    try(CustomMediaMetadataRetriever metadataRetriever = new CustomMediaMetadataRetriever()) {
+      metadataRetriever.setDataSource(context, uri);
 
-    String duration = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-    String bitrate = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE);
-    String datetime = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DATE);
+      String duration = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+      String bitrate = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE);
+      String datetime = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DATE);
 
-    // Extract anymore metadata here...
-    if(duration != null) this.duration = Math.round(Float.parseFloat(duration)) / 1000;
-    if(bitrate != null) this.bitrate = parseInt(bitrate);
+      // Extract anymore metadata here...
+      if(duration != null) this.duration = Math.round(Float.parseFloat(duration)) / 1000;
+      if(bitrate != null) this.bitrate = parseInt(bitrate);
 
-    if(datetime != null) {
-      // METADATA_KEY_DATE gives us the following format: "20211214T102646.000Z"
-      // This format is very hard to parse, so we convert it to "20211214 102646" ("yyyyMMdd HHmmss")
-      String datetimeToFormat = datetime.substring(0, datetime.indexOf(".")).replace("T", " ");
-      this.datetime = getDateTimeInUTC(datetimeToFormat, "yyyyMMdd HHmmss");
-    }
+      if(datetime != null) {
+        // METADATA_KEY_DATE gives us the following format: "20211214T102646.000Z"
+        // This format is very hard to parse, so we convert it to "20211214 102646" ("yyyyMMdd HHmmss")
+        String datetimeToFormat = datetime.substring(0, datetime.indexOf(".")).replace("T", " ");
+        this.datetime = getDateTimeInUTC(datetimeToFormat, "yyyyMMdd HHmmss");
+      }
 
-    if(bitmap != null) {
-      this.width = bitmap.getWidth();
-      this.height = bitmap.getHeight();
-    }
+      String width = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
+      String height = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
 
-    try {
-      metadataRetriever.release();
+      if(height != null && width != null) {
+        String rotation = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION);
+        int rotationI = rotation == null ? 0 : Integer.parseInt(rotation);
+
+        if(rotationI == 90 || rotationI == 270) {
+          this.width = Integer.parseInt(height);
+          this.height = Integer.parseInt(width);
+        } else {
+          this.width = Integer.parseInt(width);
+          this.height = Integer.parseInt(height);
+        }
+      }
     } catch (IOException e) {
-      Log.e("VideoMetadata", "IO error releasing metadataRetriever", e);
+      e.printStackTrace();
     }
   }
 
@@ -62,19 +78,4 @@ public class VideoMetadata extends Metadata {
   public int getWidth() { return width; }
   @Override
   public int getHeight() { return height; }
-
-  private @Nullable
-  Bitmap getBitmap(Uri uri, Context context, MediaMetadataRetriever retriever) {
-    try {
-      FileDescriptor fileDescriptor = context.getContentResolver().openFileDescriptor(uri, "r").getFileDescriptor();
-      FileInputStream inputStream = new FileInputStream(fileDescriptor);
-      retriever.setDataSource(inputStream.getFD());
-      return retriever.getFrameAtTime();
-    } catch (IOException | RuntimeException e) {
-      // These errors do not bubble up to RN as we don't want failed width/height retrieval to prevent selection.
-      Log.e("RNIP", "Could not retrieve width and height from video: " + e.getMessage());
-    }
-
-    return null;
-  }
 }

@@ -90,21 +90,23 @@ The `callback` will be called with a response object, refer to [The Response Obj
 
 ## Options
 
-| Option            | iOS | Android | Web | Description                                                                                                                                                               |
-| ----------------- | --- | ------- | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| mediaType         | OK  | OK      | OK  | 'photo' or 'video' or 'mixed'(launchCamera on Android does not support 'mixed'). Web only supports 'photo' for now.                                                       |
-| maxWidth          | OK  | OK      | NO  | To resize the image                                                                                                                                                       |
-| maxHeight         | OK  | OK      | NO  | To resize the image                                                                                                                                                       |
-| videoQuality      | OK  | OK      | NO  | 'low', 'medium', or 'high' on iOS, 'low' or 'high' on Android                                                                                                             |
-| durationLimit     | OK  | OK      | NO  | Video max duration in seconds                                                                                                                                             |
-| quality           | OK  | OK      | NO  | 0 to 1, photos                                                                                                                                                             |
-| cameraType        | OK  | OK      | NO  | 'back' or 'front' (May not be supported in few android devices)                                                                                                           |
-| includeBase64     | OK  | OK      | OK  | If `true`, creates base64 string of the image (Avoid using on large image files due to performance)                                                                       |
-| includeExtra      | OK  | OK      | NO  | If `true`, will include extra data which requires library permissions to be requested (i.e. exif data)                                                                     |
-| saveToPhotos      | OK  | OK      | NO  | (Boolean) Only for launchCamera, saves the image/video file captured to public photo                                                                                       |
-| selectionLimit    | OK  | OK      | OK  | Default is `1`. Supports providing any integer value. Use `0` to allow any number of files supported on iOS version >= 14 & Android version >= 13                          |
-| presentationStyle | OK  | NO      | NO  | Controls how the picker is presented. 'currentContext', 'pageSheet', 'fullScreen', 'formSheet', 'popover', 'overFullScreen', 'overCurrentContext'. Default is 'currentContext' |
-| formatAsMp4       | OK  | NO      | NO  | Converts the selected video to MP4 (iOS Only).                                                                                                                             |
+| Option                  | iOS | Android | Web | Description                                                                                                                                                                     |
+| ----------------------- | --- | ------- | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| mediaType               | OK  | OK      | OK  | `photo` or `video` or `mixed`(`launchCamera` on Android does not support 'mixed'). Web only supports 'photo' for now.                                                           |
+| maxWidth                | OK  | OK      | NO  | To resize the image.                                                                                                                                                            |
+| maxHeight               | OK  | OK      | NO  | To resize the image.                                                                                                                                                            |
+| videoQuality            | OK  | OK      | NO  | `low`, `medium`, or `high` on iOS, `low` or `high` on Android.                                                                                                                  |
+| durationLimit           | OK  | OK      | NO  | Video max duration (in seconds).                                                                                                                                                |
+| quality                 | OK  | OK      | NO  | 0 to 1, photos.                                                                                                                                                                 |
+| cameraType              | OK  | OK      | NO  | 'back' or 'front' (May not be supported in few android devices).                                                                                                                |
+| includeBase64           | OK  | OK      | OK  | If `true`, creates base64 string of the image (Avoid using on large image files due to performance).                                                                            |
+| includeExtra            | OK  | OK      | NO  | If `true`, will include extra data which requires library permissions to be requested (i.e. exif data).                                                                         |
+| saveToPhotos            | OK  | OK      | NO  | (Boolean) Only for `launchCamera`, saves the image/video file captured to public photo.                                                                                         |
+| selectionLimit          | OK  | OK      | OK  | Supports providing any integer value. Use `0` to allow any number of files on iOS version >= 14 & Android version >= 13. Default is `1`.                                        |
+| presentationStyle       | OK  | NO      | NO  | Controls how the picker is presented. `currentContext`, `pageSheet`, `fullScreen`, `formSheet`, `popover`, `overFullScreen`, `overCurrentContext`. Default is `currentContext`. |
+| formatAsMp4             | OK  | NO      | NO  | Converts the selected video to MP4 (iOS Only).                                                                                                                                  |
+| assetRepresentationMode | OK  | NO      | NO  | A mode that determines which representation to use if an asset contains more than one. Possible values: 'auto', 'current', 'compatible'. Default is 'auto'.                     |
+
 
 ## The Response Object
 
