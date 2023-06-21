@@ -1,9 +1,9 @@
 import {NativeModules} from 'react-native';
 
 import {
+  Callback,
   CameraOptions,
   ImageLibraryOptions,
-  Callback,
   ImagePickerResponse,
 } from '../types';
 
@@ -26,16 +26,16 @@ const DEFAULT_OPTIONS: ImageLibraryOptions & CameraOptions = {
 // @ts-ignore We want to check whether __turboModuleProxy exitst, it may not
 const isTurboModuleEnabled = global.__turboModuleProxy != null;
 
-const nativeImagePicler = isTurboModuleEnabled ?
-  require("./NativeImagePicker").default :
-  NativeModules.ImagePicker;
+const nativeImagePicker = isTurboModuleEnabled
+  ? require('./NativeImagePicker').default
+  : NativeModules.ImagePicker;
 
 export function camera(
   options: CameraOptions,
   callback?: Callback,
 ): Promise<ImagePickerResponse> {
   return new Promise((resolve) => {
-    nativeImagePicler.launchCamera(
+    nativeImagePicker.launchCamera(
       {...DEFAULT_OPTIONS, ...options},
       (result: ImagePickerResponse) => {
         if (callback) callback(result);
@@ -50,12 +50,21 @@ export function imageLibrary(
   callback?: Callback,
 ): Promise<ImagePickerResponse> {
   return new Promise((resolve) => {
-    nativeImagePicler.launchImageLibrary(
+    nativeImagePicker.launchImageLibrary(
       {...DEFAULT_OPTIONS, ...options},
       (result: ImagePickerResponse) => {
         if (callback) callback(result);
         resolve(result);
       },
     );
+  });
+}
+
+export function updatePickerAccess(callback?: () => void): Promise<void> {
+  return new Promise((resolve) => {
+    nativeImagePicker.updatePickerAccess(() => {
+      if (callback) callback();
+      resolve();
+    });
   });
 }

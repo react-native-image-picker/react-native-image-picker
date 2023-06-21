@@ -54,6 +54,12 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     });
 }
 
+RCT_EXPORT_METHOD(updatePickerAccess:(RCTResponseSenderBlock)callback)
+{
+    photoSelected = NO;
+    [self showLimitedPickerViewController:callback];
+}
+
 // We won't compile this code when we build for the old architecture.
 #ifdef RCT_NEW_ARCH_ENABLED
 
@@ -116,6 +122,24 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     } else {
       [self showPickerViewController:picker];
     }
+}
+
+- (void) showLimitedPickerViewController:(RCTResponseSenderBlock)callback {
+   
+    #if __has_include(<PhotosUI/PHPicker.h>)
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (@available(iOS 15, *)) {
+                UIViewController *root = RCTPresentedViewController();
+                [[PHPhotoLibrary sharedPhotoLibrary] presentLimitedLibraryPickerFromViewController:root completionHandler:^(NSArray<NSString *>* s) {
+                    if (photoSelected == YES) {
+                        return;
+                    }
+                    photoSelected = YES;
+                    callback(@[]);
+                }];
+            }
+        });
+    #endif
 }
 
 - (void) showPickerViewController:(UIViewController *)picker

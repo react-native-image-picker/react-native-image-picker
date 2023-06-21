@@ -25,10 +25,19 @@ export default function App() {
     }
   }, []);
 
+  const onUpdateLimitedPhotoAccess = React.useCallback(() => {
+    ImagePicker.updatePickerAccess(() => {
+      console.log('done');
+    });
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <DemoTitle>🌄 React Native Image Picker</DemoTitle>
       <ScrollView>
+        <DemoButton onPress={onUpdateLimitedPhotoAccess}>
+          Update limited photo access
+        </DemoButton>
         <View style={styles.buttonContainer}>
           {actions.map(({title, type, options}) => {
             return (

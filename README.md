@@ -58,7 +58,7 @@ Note: This library does not require `Manifest.permission.CAMERA`, if your app de
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 ```
 
-### `launchCamera()`
+### `launchCamera`
 
 Launch camera to take photo or video.
 
@@ -87,6 +87,23 @@ const result = await launchImageLibrary(options?);
 See [Options](#options) for further information on `options`.
 
 The `callback` will be called with a response object, refer to [The Response Object](#the-response-object).
+
+### updatePickerAccess
+
+```js
+updatePickerAccess(callback)
+
+// You can also use as a promise without 'callback':
+await updatePickerAccess();
+```
+
+#### iOS
+
+Since iOS 14, users have the ability to select which photos apps have access to.  If the user has selected this option, the system will present a dialog for the user to updated the selected photos.  You can disable this option by setting the `PHPhotoLibraryPreventAutomaticLimitedAccessAlert` key to `YES` in your `Info.plist`.
+
+#### Other (Android, Web)
+
+Safe to call.  No-op.
 
 ## Options
 
