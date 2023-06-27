@@ -155,6 +155,9 @@ NSData* extractImageData(UIImage* image){
 
 
 -(NSMutableDictionary *)mapImageToAsset:(UIImage *)image data:(NSData *)data phAsset:(PHAsset * _Nullable)phAsset {
+    CGImageSourceRef imageSource = CGImageSourceCreateWithData((__bridge CFDataRef) data, NULL);
+    NSMutableDictionary *imageMetadata = [(NSDictionary *) CFBridgingRelease(CGImageSourceCopyPropertiesAtIndex(imageSource, 0, NULL)) mutableCopy];    
+
     NSString *fileType = [ImagePickerUtils getFileType:data];
     if (target == camera) {
         if ([self.options[@"saveToPhotos"] boolValue]) {
@@ -184,6 +187,9 @@ NSData* extractImageData(UIImage* image){
 
     NSString *fileName = [self getImageFileName:fileType];
     NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
+    
+    data = [self writeMetadataIntoImageData:data metadata:imageMetadata];
+    
     [data writeToFile:path atomically:YES];
 
     if ([self.options[@"includeBase64"] boolValue]) {
@@ -211,6 +217,38 @@ NSData* extractImageData(UIImage* image){
     }
     
     return asset;
+}
+
+-(NSData *)writeMetadataIntoImageData:(NSData *)imageData metadata:(NSMutableDictionary *)metadata {
+    // create an imagesourceref
+    CGImageSourceRef source = CGImageSourceCreateWithData((__bridge CFDataRef) imageData, NULL);
+
+    // this is the type of image (e.g., public.jpeg)
+    CFStringRef UTI = CGImageSourceGetType(source);
+
+    // create a new data object and write the new image into it
+    NSMutableData *dest_data = [NSMutableData data];
+    CGImageDestinationRef destination = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)dest_data, UTI, 1, NULL);
+    if (!destination) {
+    }
+    // add the image contained in the image source to the destination, overidding the old metadata with our modified metadata
+    CGImageDestinationAddImageFromSource(destination, source, 0, (__bridge CFDictionaryRef) metadata);
+    BOOL success = NO;
+    success = CGImageDestinationFinalize(destination);
+    if (!success) {
+    }
+    if (destination) {
+        CFRelease(destination);
+    }
+    if(source){
+        CFRelease(source);
+    }
+    return [dest_data copy];
+}
+static dispatch_time_t getDispatchTimeFromSeconds(float seconds) {
+    long long milliseconds = seconds * 1000.0;
+    dispatch_time_t waitTime = dispatch_time( DISPATCH_TIME_NOW, 1000000LL * milliseconds );
+    return waitTime;
 }
 
 CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIImageOrientation uiOrientation) {
