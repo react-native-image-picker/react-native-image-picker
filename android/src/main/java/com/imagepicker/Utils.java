@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.ImageDecoder;
 import android.hardware.camera2.CameraCharacteristics;
 import android.net.Uri;
 import android.os.Build;
@@ -40,7 +41,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static com.imagepicker.ImagePickerModuleImpl.*;
+import static com.imagepicker.ImagePickerModule.*;
 
 public class Utils {
     public static String fileNamePrefix = "rn_image_picker_lib_temp_";
@@ -117,6 +118,7 @@ public class Utils {
             return null;
         }
         ContentResolver contentResolver = context.getContentResolver();
+
         String fileType = getFileTypeFromMime(contentResolver.getType(sharedStorageUri));
         Uri toUri =  Uri.fromFile(createFile(context, fileType));
         copyUri(sharedStorageUri, toUri, contentResolver);
@@ -189,6 +191,7 @@ public class Utils {
     public static Uri resizeImage(Uri uri, Context context, Options options) {
         try {
             int[] origDimens = getImageDimensions(uri, context);
+            String mimeType =  getMimeTypeFromFileUri(uri);
 
             if (!shouldResizeImage(origDimens[0], origDimens[1], options)) {
                 return uri;
@@ -197,7 +200,6 @@ public class Utils {
             int[] newDimens = getImageDimensBasedOnConstraints(origDimens[0], origDimens[1], options);
 
             InputStream imageStream = context.getContentResolver().openInputStream(uri);
-            String mimeType =  getMimeTypeFromFileUri(uri);
             Bitmap b = BitmapFactory.decodeStream(imageStream);
             b = Bitmap.createScaledBitmap(b, newDimens[0], newDimens[1], true);
             String originalOrientation = getOrientation(uri, context);
@@ -215,6 +217,57 @@ public class Utils {
             e.printStackTrace();
             return uri; // cannot resize the image, return the original uri
         }
+    }
+
+    public static Uri convertImage(Uri uri, Context context) {
+      String mimeType = getMimeTypeFromFileUri(uri);
+
+      // List of mime types that are problematic or unsupported on some platforms.
+      List<String> typesToConvert = Arrays.asList(
+        "image/heic",
+        "image/heif",
+        "image/avif",
+        "image/webp",
+        "image/tiff",
+        "image/x-raw",
+        "image/bmp"
+      );
+
+      if (!typesToConvert.contains(mimeType)) {
+        return uri; // If the image type isn't in our list, return the original uri.
+      }
+
+      try {
+        if (Build.VERSION.SDK_INT >= 29) {
+          // Use ImageDecoder for API 29 and above
+          ImageDecoder.Source source = ImageDecoder.createSource(context.getContentResolver(), uri);
+          Bitmap imageBitmap = ImageDecoder.decodeBitmap(source);
+          File jpegFile = createFile(context, "jpeg");
+          try (OutputStream os = context.getContentResolver().openOutputStream(Uri.fromFile(jpegFile))) {
+            imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, os);
+          }
+          return Uri.fromFile(jpegFile);
+        } else {
+          // Use BitmapFactory for API levels below 29
+          InputStream is = context.getContentResolver().openInputStream(uri);
+          Bitmap imageBitmap = BitmapFactory.decodeStream(is);
+          if (is != null) {
+            is.close();
+          }
+
+          File jpegFile = createFile(context, "jpeg");
+          try (OutputStream os = context.getContentResolver().openOutputStream(Uri.fromFile(jpegFile))) {
+            imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, os);
+          }
+
+          deleteFile(uri); // Delete original file
+
+          return Uri.fromFile(jpegFile);
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+        return uri; // If conversion fails, return the original uri.
+      }
     }
 
     static String getOrientation(Uri uri, Context context) throws IOException {
@@ -284,15 +337,91 @@ public class Utils {
     }
 
     static String getFileTypeFromMime(String mimeType) {
-        if (mimeType == null) {
-            return "jpg";
-        }
-        switch (mimeType) {
-            case "image/jpeg": return "jpg";
-            case "image/png": return "png";
-            case "image/gif": return "gif";
-        }
-        return MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType);
+      if (mimeType == null) {
+        return "unknown";
+      }
+      switch (mimeType) {
+        // Standard Image Formats
+        case "image/jpeg": return "jpg";
+        case "image/png": return "png";
+        case "image/gif": return "gif";
+        case "image/bmp": return "bmp";
+        case "image/webp": return "webp";
+        case "image/tiff": return "tif"; // TIFF has multiple extensions: tif, tiff
+        case "image/x-icon": return "ico";
+
+        // Vector & Compound Formats
+        case "image/svg+xml": return "svg";
+        case "image/vnd.adobe.photoshop": return "psd";
+        case "image/x-xcf": return "xcf"; // GIMP image format
+
+        // High-Efficiency Image Formats
+        case "image/heif": return "heif"; // Both heif and heic are valid extensions
+        case "image/heic": return "heic";
+        case "image/avif": return "avif";
+
+        // Other / Less Common Formats
+        case "image/vnd.microsoft.icon": return "ico";
+        case "image/vnd.wap.wbmp": return "wbmp";
+        case "image/x-xbitmap": return "xbm";
+        case "image/x-portable-pixmap": return "ppm";
+        case "image/x-portable-graymap": return "pgm";
+        case "image/x-portable-bitmap": return "pbm";
+        case "image/x-pcx": return "pcx";
+        case "image/jp2": return "jp2"; // JPEG 2000
+        case "image/vnd.djvu": return "djvu";
+
+        // Raw Image Formats (used by digital cameras)
+        case "image/x-canon-cr2": return "cr2";
+        case "image/x-canon-crw": return "crw";
+        case "image/x-nikon-nef": return "nef";
+        case "image/x-sony-arw": return "arw";
+        case "image/x-panasonic-rw2": return "rw2";
+        case "image/x-fuji-raf": return "raf";
+        case "image/x-adobe-dng": return "dng"; // Adobe DNG
+        case "image/x-epson-erf": return "erf"; // Epson ERF
+        case "image/x-kodak-dcr": return "dcr"; // Kodak DCR
+        case "image/x-kodak-k25": return "k25";
+        case "image/x-kodak-kdc": return "kdc";
+        case "image/x-minolta-mrw": return "mrw"; // Minolta MRW
+        case "image/x-olympus-orf": return "orf"; // Olympus ORF
+        case "image/x-pentax-pef": return "pef"; // Pentax PEF
+        case "image/x-samsung-srw": return "srw"; // Samsung SRW
+
+        // Other / Less Common Formats
+        case "image/x-3fr": return "3fr"; // Hasselblad raw images
+        case "image/x-freehand": return "fh"; // Multiple extensions like fh, fhc, fh4, fh5, fh7
+        case "image/x-jng": return "jng"; // JPEG Network Graphics
+        case "image/x-mrsid-image": return "sid";
+        case "image/x-tga": return "tga"; // TARGA images
+        case "image/x-photoshop": return "psd";
+        case "image/x-cmu-raster": return "ras";
+        case "image/x-cmx": return "cmx"; // Corel metafile exchange images
+        case "image/openraster": return "ora"; // OpenRaster format
+        case "image/sun-raster": return "sun"; // Sun raster format
+        case "image/vnd.fpx": return "fpx"; // FlashPix
+        case "image/vnd.net-fpx": return "npx";
+        case "image/x-rgb": return "rgb";
+        case "image/x-portable-anymap": return "pnm";
+        case "image/x-xpixmap": return "xpm";
+        case "image/x-xwindowdump": return "xwd";
+        case "image/kgi": return "kgi";
+        case "image/x-iff": return "iff";
+        case "image/vnd.zbrush.pcx": return "pcx";
+        case "image/x-skencil": return "sk"; // Skencil/Sketch/sK1
+        case "image/vnd.dwg": return "dwg"; // AutoCAD
+        case "image/vnd.dxf": return "dxf";
+        case "image/vnd.fastbidsheet": return "fbs";
+        case "image/vnd.fst": return "fst";
+        case "image/vnd.rlg": return "rlg";
+        case "image/vnd.xiff": return "xif";
+        case "image/x-3ds": return "3ds";
+        case "image/x-dwg": return "dwg";
+        case "image/x-emf": return "emf";
+        case "image/x-wmf": return "wmf";
+
+        default: return "unknown";
+      }
     }
 
     static void deleteFile(Uri uri) {
@@ -445,11 +574,12 @@ public class Utils {
                 if (uri.getScheme().contains("content")) {
                     uri = getAppSpecificStorageUri(uri, context);
                 }
+                uri = convertImage(uri, context);
                 uri = resizeImage(uri, context, options);
                 assets.pushMap(getImageResponseMap(uri, options, context));
             } else if (isVideoType(uri, context)) {
                 if (uri.getScheme().contains("content")) {
-                    uri = getAppSpecificStorageUri(uri, context);
+                  uri = getAppSpecificStorageUri(uri, context);
                 }
                 assets.pushMap(getVideoResponseMap(uri, options, context));
             } else {
