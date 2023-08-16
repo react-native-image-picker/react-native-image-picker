@@ -384,7 +384,7 @@ public class Utils {
         return fileUris;
     }
 
-    static ReadableMap getImageResponseMap(Uri uri, Options options, Context context) {
+    static WritableMap getImageResponseMap(Uri uri, Options options, Context context) {
         String fileName = uri.getLastPathSegment();
         ImageMetadata imageMetadata = new ImageMetadata(uri, context);
         int[] dimensions = getImageDimensions(uri, context);
@@ -403,15 +403,15 @@ public class Utils {
         }
 
         if(options.includeExtra) {
-          // Add more extra data here ...
-          map.putString("timestamp", imageMetadata.getDateTime());
-          map.putString("id", fileName);
+            // Add more extra data here ...
+            map.putString("timestamp", imageMetadata.getDateTime());
+            map.putString("id", fileName);
         }
 
         return map;
     }
 
-    static ReadableMap getVideoResponseMap(Uri uri, Options options, Context context) {
+    static WritableMap getVideoResponseMap(Uri uri, Options options, Context context) {
         String fileName = uri.getLastPathSegment();
         WritableMap map = Arguments.createMap();
         VideoMetadata videoMetadata = new VideoMetadata(uri, context);
@@ -426,15 +426,15 @@ public class Utils {
         map.putInt("height", videoMetadata.getHeight());
 
         if(options.includeExtra) {
-          // Add more extra data here ...
-          map.putString("timestamp", videoMetadata.getDateTime());
-          map.putString("id", fileName);
+            // Add more extra data here ...
+            map.putString("timestamp", videoMetadata.getDateTime());
+            map.putString("id", fileName);
         }
 
         return map;
     }
 
-    static ReadableMap getResponseMap(List<Uri> fileUris, Options options, Context context) throws RuntimeException {
+    static WritableMap getResponseMap(List<Uri> fileUris, Options options, Context context) throws RuntimeException {
         WritableArray assets = Arguments.createArray();
 
         for(int i = 0; i < fileUris.size(); ++i) {
