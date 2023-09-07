@@ -1,6 +1,7 @@
 package com.imagepicker;
 
 import com.facebook.react.bridge.ReadableMap;
+
 import android.text.TextUtils;
 
 public class Options {
@@ -24,7 +25,7 @@ public class Options {
         includeExtra = options.getBoolean("includeExtra");
 
         String videoQualityString = options.getString("videoQuality");
-        if(!TextUtils.isEmpty(videoQualityString) && !videoQualityString.toLowerCase().equals("high")) {
+        if (!TextUtils.isEmpty(videoQualityString) && !videoQualityString.toLowerCase().equals("high")) {
             videoQuality = 0;
         }
 

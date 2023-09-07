@@ -1,6 +1,7 @@
 package com.imagepicker;
 
 import androidx.annotation.Nullable;
+
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.module.model.ReactModuleInfo;
@@ -37,7 +38,7 @@ public class ImagePickerPackage extends TurboReactPackage {
                             true, // hasConstants
                             false, // isCxxModule
                             isTurboModule // isTurboModule
-            ));
+                    ));
             return moduleInfos;
         };
     }
