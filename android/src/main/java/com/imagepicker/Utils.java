@@ -203,7 +203,7 @@ public class Utils {
             int[] newDimens = getImageDimensBasedOnConstraints(origDimens[0], origDimens[1], options);
 
             try(InputStream imageStream = context.getContentResolver().openInputStream(uri)) {
-                String mimeType =  getMimeTypeFromFileUri(uri);
+                String mimeType =  getMimeType(uri, context);
                 Bitmap b = BitmapFactory.decodeStream(imageStream);
 
                 b = Bitmap.createScaledBitmap(b, newDimens[0], newDimens[1], true);
@@ -309,9 +309,6 @@ public class Utils {
         new File(uri.getPath()).delete();
     }
 
-    static String getMimeTypeFromFileUri(Uri uri) {
-        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(uri.toString()));
-    }
 
     // Since library users can have many modules in their project, we should respond to onActivityResult only for our request.
     static boolean isValidRequestCode(int requestCode) {
@@ -375,13 +372,39 @@ public class Utils {
       return false;
     }
 
-    static @Nullable String getMimeType(Uri uri, Context context) {
-      if (uri.getScheme().equals("file")) {
-        return getMimeTypeFromFileUri(uri);
-      }
+    static String getMimeType(Uri uri, Context context) {
+        if (uri.getScheme().equals("file")) {
+            return MimeTypeMap.getSingleton().getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(uri.toString()));
+        } else if (uri.getScheme().equals("content")) {
+            ContentResolver contentResolver = context.getContentResolver();
+            String contentResolverMimeType = contentResolver.getType(uri);
 
-      ContentResolver contentResolver = context.getContentResolver();
-      return contentResolver.getType(uri);
+            if (contentResolverMimeType.isBlank()) {
+                return getMimeTypeFromCursor(contentResolver, uri);
+            } else {
+                return contentResolverMimeType;
+            }
+        }
+
+        return "Unknown";
+    }
+
+    static @Nullable String getMimeTypeFromCursor(ContentResolver contentResolver, Uri uri) {
+        Cursor cursor = contentResolver.query(uri, null, null, null, null);
+        String fileType = "Unknown";
+        try {
+            if (cursor.moveToFirst()) {
+                int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                String fileName = cursor.getString(nameIndex);
+                int lastDotIndex = fileName.lastIndexOf('.');
+                if (lastDotIndex != -1) {
+                    fileType = fileName.substring(lastDotIndex + 1);
+                }
+            }
+        } finally {
+            cursor.close();
+        }
+        return fileType;
     }
 
     static List<Uri> collectUrisFromData(Intent data) {
@@ -410,7 +433,6 @@ public class Utils {
         map.putString("uri", uri.toString());
         map.putDouble("fileSize", getFileSize(uri, context));
         map.putString("fileName", fileName);
-        map.putString("type", getMimeTypeFromFileUri(uri));
         map.putInt("width", dimensions[0]);
         map.putInt("height", dimensions[1]);
         map.putString("type", getMimeType(uri, context));
