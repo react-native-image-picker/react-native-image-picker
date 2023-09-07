@@ -192,12 +192,12 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
                 deleteFile(fileUri);
             }
             try {
-              callback.invoke(getCancelMap());
-              return;
+                callback.invoke(getCancelMap());
+                return;
             } catch (RuntimeException exception) {
-              callback.invoke(getErrorMap(errOthers, exception.getMessage()));
+                callback.invoke(getErrorMap(errOthers, exception.getMessage()));
             } finally {
-              callback = null;
+                callback = null;
             }
         }
 
@@ -225,5 +225,6 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
     }
 
     @Override
-    public void onNewIntent(Intent intent) { }
+    public void onNewIntent(Intent intent) {
+    }
 }

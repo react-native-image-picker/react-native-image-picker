@@ -58,7 +58,7 @@ public class Utils {
 
     public static File createFile(Context reactContext, String fileType) {
         try {
-            String filename = fileNamePrefix  + UUID.randomUUID() + "." + fileType;
+            String filename = fileNamePrefix + UUID.randomUUID() + "." + fileType;
 
             // getCacheDir will auto-clean according to android docs
             File fileDir = reactContext.getCacheDir();
@@ -97,8 +97,8 @@ public class Utils {
     }
 
     public static void copyUri(Uri fromUri, Uri toUri, ContentResolver resolver) {
-        try(OutputStream os = resolver.openOutputStream(toUri);
-            InputStream is = resolver.openInputStream(fromUri)) {
+        try (OutputStream os = resolver.openOutputStream(toUri);
+             InputStream is = resolver.openInputStream(fromUri)) {
 
             byte[] buffer = new byte[8192];
             int bytesRead;
@@ -133,7 +133,7 @@ public class Utils {
             }
         }
 
-        Uri toUri =  Uri.fromFile(createFile(context, fileType));
+        Uri toUri = Uri.fromFile(createFile(context, fileType));
         copyUri(sharedStorageUri, toUri, contentResolver);
         return toUri;
     }
@@ -156,10 +156,10 @@ public class Utils {
     }
 
     public static int[] getImageDimensions(Uri uri, Context reactContext) {
-        try(InputStream inputStream = reactContext.getContentResolver().openInputStream(uri)) {
+        try (InputStream inputStream = reactContext.getContentResolver().openInputStream(uri)) {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
-            BitmapFactory.decodeStream(inputStream,null, options);
+            BitmapFactory.decodeStream(inputStream, null, options);
             return new int[]{options.outWidth, options.outHeight};
         } catch (IOException e) {
             e.printStackTrace();
@@ -173,8 +173,8 @@ public class Utils {
     }
 
     static String getBase64String(Uri uri, Context reactContext) {
-        try(InputStream inputStream = reactContext.getContentResolver().openInputStream(uri);
-            ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+        try (InputStream inputStream = reactContext.getContentResolver().openInputStream(uri);
+             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             byte[] bytes;
             byte[] buffer = new byte[8192];
             int bytesRead;
@@ -202,8 +202,8 @@ public class Utils {
 
             int[] newDimens = getImageDimensBasedOnConstraints(origDimens[0], origDimens[1], options);
 
-            try(InputStream imageStream = context.getContentResolver().openInputStream(uri)) {
-                String mimeType =  getMimeType(uri, context);
+            try (InputStream imageStream = context.getContentResolver().openInputStream(uri)) {
+                String mimeType = getMimeType(uri, context);
                 Bitmap b = BitmapFactory.decodeStream(imageStream);
 
                 b = Bitmap.createScaledBitmap(b, newDimens[0], newDimens[1], true);
@@ -211,7 +211,7 @@ public class Utils {
 
                 File file = createFile(context, getFileTypeFromMime(mimeType));
 
-                try(OutputStream os = context.getContentResolver().openOutputStream(Uri.fromFile(file))) {
+                try (OutputStream os = context.getContentResolver().openOutputStream(Uri.fromFile(file))) {
                     b.compress(getBitmapCompressFormat(mimeType), options.quality, os);
                 }
 
@@ -265,7 +265,7 @@ public class Utils {
     }
 
     static double getFileSize(Uri uri, Context context) {
-        try(ParcelFileDescriptor f = context.getContentResolver().openFileDescriptor(uri, "r")) {
+        try (ParcelFileDescriptor f = context.getContentResolver().openFileDescriptor(uri, "r")) {
             return f.getStatSize();
         } catch (Exception e) {
             e.printStackTrace();
@@ -287,8 +287,10 @@ public class Utils {
 
     static Bitmap.CompressFormat getBitmapCompressFormat(String mimeType) {
         switch (mimeType) {
-            case "image/jpeg": return Bitmap.CompressFormat.JPEG;
-            case "image/png": return Bitmap.CompressFormat.PNG;
+            case "image/jpeg":
+                return Bitmap.CompressFormat.JPEG;
+            case "image/png":
+                return Bitmap.CompressFormat.PNG;
         }
         return Bitmap.CompressFormat.JPEG;
     }
@@ -298,9 +300,12 @@ public class Utils {
             return "jpg";
         }
         switch (mimeType) {
-            case "image/jpeg": return "jpg";
-            case "image/png": return "png";
-            case "image/gif": return "gif";
+            case "image/jpeg":
+                return "jpg";
+            case "image/png":
+                return "png";
+            case "image/gif":
+                return "gif";
         }
         return MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType);
     }
@@ -315,8 +320,10 @@ public class Utils {
         switch (requestCode) {
             case REQUEST_LAUNCH_IMAGE_CAPTURE:
             case REQUEST_LAUNCH_VIDEO_CAPTURE:
-            case REQUEST_LAUNCH_LIBRARY: return true;
-            default: return false;
+            case REQUEST_LAUNCH_LIBRARY:
+                return true;
+            default:
+                return false;
         }
     }
 
@@ -324,13 +331,13 @@ public class Utils {
     // https://issuetracker.google.com/issues/37063818
     public static boolean isCameraPermissionFulfilled(Context context, Activity activity) {
         try {
-             String[] declaredPermissions = context.getPackageManager()
-                     .getPackageInfo(context.getPackageName(), PackageManager.GET_PERMISSIONS)
-                     .requestedPermissions;
+            String[] declaredPermissions = context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), PackageManager.GET_PERMISSIONS)
+                    .requestedPermissions;
 
-             if (declaredPermissions == null) {
-                 return true;
-             }
+            if (declaredPermissions == null) {
+                return true;
+            }
 
             if (Arrays.asList(declaredPermissions).contains(Manifest.permission.CAMERA)
                     && ActivityCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
@@ -346,30 +353,30 @@ public class Utils {
     }
 
     static boolean isImageType(Uri uri, Context context) {
-      return Utils.isContentType("image/", uri, context);
+        return Utils.isContentType("image/", uri, context);
     }
 
     static boolean isVideoType(Uri uri, Context context) {
         return Utils.isContentType("video/", uri, context);
     }
 
-  /**
-   * Verifies the content typs of a file URI. A helper function
-   * for isVideoType and isImageType
-   *
-   * @param contentMimeType - "video/" or "image/"
-   * @param uri - file uri
-   * @param context - react context
-   * @return a boolean to determine if file is of specified content type i.e. image or video
-   */
+    /**
+     * Verifies the content typs of a file URI. A helper function
+     * for isVideoType and isImageType
+     *
+     * @param contentMimeType - "video/" or "image/"
+     * @param uri             - file uri
+     * @param context         - react context
+     * @return a boolean to determine if file is of specified content type i.e. image or video
+     */
     static boolean isContentType(String contentMimeType, Uri uri, Context context) {
-      final String mimeType = getMimeType(uri, context);
+        final String mimeType = getMimeType(uri, context);
 
-      if(mimeType != null) {
-        return mimeType.contains(contentMimeType);
-      }
+        if (mimeType != null) {
+            return mimeType.contains(contentMimeType);
+        }
 
-      return false;
+        return false;
     }
 
     static String getMimeType(Uri uri, Context context) {
@@ -441,10 +448,10 @@ public class Utils {
             map.putString("base64", getBase64String(uri, context));
         }
 
-        if(options.includeExtra) {
-          // Add more extra data here ...
-          map.putString("timestamp", imageMetadata.getDateTime());
-          map.putString("id", fileName);
+        if (options.includeExtra) {
+            // Add more extra data here ...
+            map.putString("timestamp", imageMetadata.getDateTime());
+            map.putString("id", fileName);
         }
 
         return map;
@@ -464,10 +471,10 @@ public class Utils {
         map.putInt("width", videoMetadata.getWidth());
         map.putInt("height", videoMetadata.getHeight());
 
-        if(options.includeExtra) {
-          // Add more extra data here ...
-          map.putString("timestamp", videoMetadata.getDateTime());
-          map.putString("id", fileName);
+        if (options.includeExtra) {
+            // Add more extra data here ...
+            map.putString("timestamp", videoMetadata.getDateTime());
+            map.putString("id", fileName);
         }
 
         return map;
@@ -476,7 +483,7 @@ public class Utils {
     static ReadableMap getResponseMap(List<Uri> fileUris, Options options, Context context) throws RuntimeException {
         WritableArray assets = Arguments.createArray();
 
-        for(int i = 0; i < fileUris.size(); ++i) {
+        for (int i = 0; i < fileUris.size(); ++i) {
             Uri uri = fileUris.get(i);
 
             // Call getAppSpecificStorageUri in the if block to avoid copying unsupported files
