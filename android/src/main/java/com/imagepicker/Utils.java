@@ -32,7 +32,6 @@ import com.facebook.react.bridge.WritableMap;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -387,7 +386,7 @@ public class Utils {
             String contentResolverMimeType = contentResolver.getType(uri);
 
             if (contentResolverMimeType.isBlank()) {
-                return getMimeTypeFromCursor(contentResolver, uri);
+                return getMimeTypeForContent(uri, context);
             } else {
                 return contentResolverMimeType;
             }
@@ -396,22 +395,65 @@ public class Utils {
         return "Unknown";
     }
 
-    static @Nullable String getMimeTypeFromCursor(ContentResolver contentResolver, Uri uri) {
-        Cursor cursor = contentResolver.query(uri, null, null, null, null);
+    static @Nullable String getMimeTypeForContent(Uri uri, Context context) {
+        String fileName = getFileNameForContent(uri, context);
         String fileType = "Unknown";
+
+        int lastDotIndex = fileName.lastIndexOf('.');
+        if (lastDotIndex != -1) {
+            fileType = fileName.substring(lastDotIndex + 1);
+        }
+        return fileType;
+    }
+
+    static String getFileName(Uri uri, Context context) {
+        if (uri.getScheme().equals("file")) {
+            return uri.getLastPathSegment();
+        } else if (uri.getScheme().equals("content")) {
+            return getFileNameForContent(uri, context);
+        }
+
+        return "Unknown";
+    }
+
+    static String getOriginalFilePath(Uri uri, Context context) {
+        String originPath;
+        if (uri.getScheme().contains("content")) {
+            originPath = getFilePathFromContent(uri, context);
+            uri = getAppSpecificStorageUri(uri, context);
+        } else {
+            originPath = uri.toString();
+        }
+
+        return originPath;
+    }
+
+    private static String getFilePathFromContent(Uri uri, Context context) {
+        String[] proj = {MediaStore.Images.Media.DATA};
+        try (Cursor cursor = context.getContentResolver().query(uri, proj, null, null, null)) {
+            int index = cursor.getColumnIndex(MediaStore.Images.Media.DATA);
+            if (index == -1) {
+                return null;
+            }
+            cursor.moveToFirst();
+            return cursor.getString(index);
+        }
+    }
+
+    private static String getFileNameForContent(Uri uri, Context context) {
+        ContentResolver contentResolver = context.getContentResolver();
+        Cursor cursor = contentResolver.query(uri, null, null, null, null);
+
+        String fileName = uri.getLastPathSegment();
         try {
             if (cursor.moveToFirst()) {
                 int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-                String fileName = cursor.getString(nameIndex);
-                int lastDotIndex = fileName.lastIndexOf('.');
-                if (lastDotIndex != -1) {
-                    fileType = fileName.substring(lastDotIndex + 1);
-                }
+                fileName = cursor.getString(nameIndex);
             }
         } finally {
             cursor.close();
         }
-        return fileType;
+        return fileName;
     }
 
     static List<Uri> collectUrisFromData(Intent data) {
@@ -431,21 +473,24 @@ public class Utils {
         return fileUris;
     }
 
-    static ReadableMap getImageResponseMap(Uri uri, Options options, Context context) {
-        String fileName = uri.getLastPathSegment();
-        ImageMetadata imageMetadata = new ImageMetadata(uri, context);
-        int[] dimensions = getImageDimensions(uri, context);
+    static ReadableMap getImageResponseMap(Uri uri, Uri appSpecificUri, Options options, Context context) {
+        ImageMetadata imageMetadata = new ImageMetadata(appSpecificUri, context);
+        int[] dimensions = getImageDimensions(appSpecificUri, context);
+
+        String fileName = getFileName(uri, context);
+        String originalPath = getOriginalFilePath(uri, context);
 
         WritableMap map = Arguments.createMap();
-        map.putString("uri", uri.toString());
-        map.putDouble("fileSize", getFileSize(uri, context));
+        map.putString("uri", appSpecificUri.toString());
+        map.putDouble("fileSize", getFileSize(appSpecificUri, context));
         map.putString("fileName", fileName);
         map.putInt("width", dimensions[0]);
         map.putInt("height", dimensions[1]);
-        map.putString("type", getMimeType(uri, context));
+        map.putString("type", getMimeType(appSpecificUri, context));
+        map.putString("originalPath", originalPath);
 
         if (options.includeBase64) {
-            map.putString("base64", getBase64String(uri, context));
+            map.putString("base64", getBase64String(appSpecificUri, context));
         }
 
         if (options.includeExtra) {
@@ -457,19 +502,22 @@ public class Utils {
         return map;
     }
 
-    static ReadableMap getVideoResponseMap(Uri uri, Options options, Context context) {
-        String fileName = uri.getLastPathSegment();
+    static ReadableMap getVideoResponseMap(Uri uri, Uri appSpecificUri,Options options, Context context) {
         WritableMap map = Arguments.createMap();
-        VideoMetadata videoMetadata = new VideoMetadata(uri, context);
+        VideoMetadata videoMetadata = new VideoMetadata(appSpecificUri, context);
 
-        map.putString("uri", uri.toString());
-        map.putDouble("fileSize", getFileSize(uri, context));
+        String fileName = getFileName(uri, context);
+        String originalPath = getOriginalFilePath(uri, context);
+
+        map.putString("uri", appSpecificUri.toString());
+        map.putDouble("fileSize", getFileSize(appSpecificUri, context));
         map.putInt("duration", videoMetadata.getDuration());
         map.putInt("bitrate", videoMetadata.getBitrate());
         map.putString("fileName", fileName);
-        map.putString("type", getMimeType(uri, context));
+        map.putString("type", getMimeType(appSpecificUri, context));
         map.putInt("width", videoMetadata.getWidth());
         map.putInt("height", videoMetadata.getHeight());
+        map.putString("originalPath", originalPath);
 
         if (options.includeExtra) {
             // Add more extra data here ...
@@ -486,18 +534,20 @@ public class Utils {
         for (int i = 0; i < fileUris.size(); ++i) {
             Uri uri = fileUris.get(i);
 
+            Uri appSpecificUrl = uri;
+            if (uri.getScheme().contains("content")) {
+                appSpecificUrl = getAppSpecificStorageUri(uri, context);
+            }
+
             // Call getAppSpecificStorageUri in the if block to avoid copying unsupported files
             if (isImageType(uri, context)) {
-                if (uri.getScheme().contains("content")) {
-                    uri = getAppSpecificStorageUri(uri, context);
-                }
-                uri = resizeImage(uri, context, options);
-                assets.pushMap(getImageResponseMap(uri, options, context));
+                appSpecificUrl = resizeImage(appSpecificUrl, context, options);
+                assets.pushMap(getImageResponseMap(uri, appSpecificUrl, options, context));
             } else if (isVideoType(uri, context)) {
                 if (uri.getScheme().contains("content")) {
-                    uri = getAppSpecificStorageUri(uri, context);
+                    appSpecificUrl = getAppSpecificStorageUri(uri, context);
                 }
-                assets.pushMap(getVideoResponseMap(uri, options, context));
+                assets.pushMap(getVideoResponseMap(uri, appSpecificUrl, options, context));
             } else {
                 throw new RuntimeException("Unsupported file type");
             }
