@@ -42,9 +42,12 @@ public class VideoMetadata extends Metadata {
       this.width = bitmap.getWidth();
       this.height = bitmap.getHeight();
     }
-
-  
+    
+    try {
       metadataRetriever.release();
+    } catch (IOException e) {
+      Log.e("VideoMetadata", "IO error releasing metadataRetriever", e);
+    }
      
   }
 
