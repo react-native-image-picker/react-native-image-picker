@@ -139,8 +139,7 @@ public class Utils {
     }
 
     public static boolean isCameraAvailable(Context reactContext) {
-        return reactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)
-                || reactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
+        return reactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
     }
 
     // Opening front camera is not officially supported in android, the below hack is obtained from various online sources
@@ -339,12 +338,8 @@ public class Utils {
                 return true;
             }
 
-            if (Arrays.asList(declaredPermissions).contains(Manifest.permission.CAMERA)
-                    && ActivityCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                return false;
-            }
-
-            return true;
+            return !Arrays.asList(declaredPermissions).contains(Manifest.permission.CAMERA)
+                    || ActivityCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
 
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
