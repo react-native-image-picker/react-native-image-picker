@@ -54,6 +54,7 @@ public class Utils {
     public static String mediaTypeVideo = "video";
 
     public static String cameraPermissionDescription = "This library does not require Manifest.permission.CAMERA, if you add this permission in manifest then you have to obtain the same.";
+    public static String archivePermissionDescription = "To save an image in the photo library the write permission is need";
 
     public static File createFile(Context reactContext, String fileType) {
         try {
@@ -166,7 +167,7 @@ public class Utils {
         }
     }
 
-    static boolean hasPermission(final Activity activity) {
+    static boolean hasWriteExternalStoragePermission(final Activity activity) {
         final int writePermission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         return writePermission == PackageManager.PERMISSION_GRANTED ? true : false;
     }
