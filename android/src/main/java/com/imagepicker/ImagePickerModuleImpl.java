@@ -137,11 +137,9 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                 libraryIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             } else {
-                if (selectionLimit != 1) {
-                    int maxNum = selectionLimit;
-                    if (selectionLimit == 0) maxNum = MediaStore.getPickImagesMaxLimit();
-                    libraryIntent.putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, maxNum);
-                }
+                int maxNum = selectionLimit;
+                if (selectionLimit == 0) maxNum = MediaStore.getPickImagesMaxLimit();
+                libraryIntent.putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, maxNum);
             }
         }
 
