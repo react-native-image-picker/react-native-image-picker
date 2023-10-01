@@ -125,11 +125,11 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
         boolean isPhoto = this.options.mediaType.equals(mediaTypePhoto);
         boolean isVideo = this.options.mediaType.equals(mediaTypeVideo);
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        if (this.options.forceOldAndroidPhotoPicker || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             if (isSingleSelect && (isPhoto || isVideo)) {
                 libraryIntent = new Intent(Intent.ACTION_PICK);
             } else {
-                libraryIntent = new Intent(Intent.ACTION_GET_CONTENT);
+                libraryIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                 libraryIntent.addCategory(Intent.CATEGORY_OPENABLE);
             }
         } else {
@@ -140,7 +140,7 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                 libraryIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             } else {
-                if (selectionLimit != 1) {
+                if ((selectionLimit != 1) && (!libraryIntent.getAction().equals(Intent.ACTION_GET_CONTENT)))  {
                     int maxNum = selectionLimit;
                     if (selectionLimit == 0) maxNum = MediaStore.getPickImagesMaxLimit();
                     libraryIntent.putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, maxNum);

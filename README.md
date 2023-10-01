@@ -91,7 +91,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 ## Options
 
 | Option                  | iOS | Android | Web | Description                                                                                                                                                                     |
-| ----------------------- | --- | ------- | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ----------------------- |-----|---------| --- |---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | mediaType               | OK  | OK      | OK  | `photo` or `video` or `mixed`(`launchCamera` on Android does not support 'mixed'). Web only supports 'photo' for now.                                                           |
 | maxWidth                | OK  | OK      | NO  | To resize the image.                                                                                                                                                            |
 | maxHeight               | OK  | OK      | NO  | To resize the image.                                                                                                                                                            |
@@ -106,6 +106,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | presentationStyle       | OK  | NO      | NO  | Controls how the picker is presented. `currentContext`, `pageSheet`, `fullScreen`, `formSheet`, `popover`, `overFullScreen`, `overCurrentContext`. Default is `currentContext`. |
 | formatAsMp4             | OK  | NO      | NO  | Converts the selected video to MP4 (iOS Only).                                                                                                                                  |
 | assetRepresentationMode | OK  | NO      | NO  | A mode that determines which representation to use if an asset contains more than one. Possible values: 'auto', 'current', 'compatible'. Default is 'auto'.                     |
+| forceOldAndroidPhotoPicker | NO  | OK      | NO  | If true, forces to use old photo picker on Android, since new one redacts EXIF metadata (see https://issuetracker.google.com/issues/243294058)                                                                                  |
 
 
 ## The Response Object
@@ -120,10 +121,10 @@ The `callback` will be called with a response object, refer to [The Response Obj
 ## Asset Object
 
 | key       | iOS | Android | Web | Photo/Video | Requires Permissions | Description                                                                                                                                                                                                                                                                    |
-| --------- | --- | ------- | --- | ----------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| --------- |-----| ------- | --- |-------------| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | base64    | OK  | OK      | OK  | PHOTO ONLY  | NO                   | The base64 string of the image (photos only)                                                                                                                                                                                                                                   |
 | uri       | OK  | OK      | OK  | BOTH        | NO                   | The file uri in app specific cache storage. Except when picking **video from Android gallery** where you will get read only content uri, to get file uri in this case copy the file to app specific storage using any react-native library. For web it uses the base64 as uri. |
-| originalPath       | NO  | OK      | NO  | BOTH        | NO                   | The original file path. |
+| originalPath       | OK  | OK      | NO  | BOTH        | NO                   | The original file path. |
 | width     | OK  | OK      | OK  | BOTH        | NO                   | Asset dimensions                                                                                                                                                                                                                                                               |
 | height    | OK  | OK      | OK  | BOTH        | NO                   | Asset dimensions                                                                                                                                                                                                                                                               |
 | fileSize  | OK  | OK      | NO  | BOTH        | NO                   | The file size                                                                                                                                                                                                                                                                  |
