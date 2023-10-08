@@ -139,7 +139,7 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
         Intent pickIntent = new Intent(Intent.ACTION_PICK);
 
         if (!isSingleSelect) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || forceOldAndroidPhotoPicker) {
                 libraryIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
                 pickIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             } else {
