@@ -136,29 +136,48 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
             libraryIntent = new Intent(MediaStore.ACTION_PICK_IMAGES);
         }
 
+        Intent pickIntent = new Intent(Intent.ACTION_PICK);
+
         if (!isSingleSelect) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                 libraryIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                pickIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             } else {
                 if ((selectionLimit != 1) && (!libraryIntent.getAction().equals(Intent.ACTION_GET_CONTENT)))  {
                     int maxNum = selectionLimit;
                     if (selectionLimit == 0) maxNum = MediaStore.getPickImagesMaxLimit();
                     libraryIntent.putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, maxNum);
+                    pickIntent.putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, maxNum);
                 }
             }
         }
 
         if (isPhoto) {
             libraryIntent.setType("image/*");
+            pickIntent.setType("image/*");
         } else if (isVideo) {
             libraryIntent.setType("video/*");
+            pickIntent.setType("video/*");
         } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             libraryIntent.setType("*/*");
             libraryIntent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "video/*"});
+            pickIntent.setType("*/*");
+            pickIntent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "video/*"});
         }
 
+
         try {
-            currentActivity.startActivityForResult(libraryIntent, requestCode);
+            if (this.options.forceOldAndroidPhotoPicker) {
+                // Since we're forcing the old Android photo picker - we use a method that is used to selecting
+                // any type of file, and the Google Photos app (for example) won't show up in the side menu
+                // of that selector - so we need a hybrid approach which shows
+                String chooserTitle = this.options.chooserTitle != null ? this.options.chooserTitle : "Import Photos From";
+                Intent chooserIntent = Intent.createChooser(pickIntent, chooserTitle);
+                chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{libraryIntent});
+                currentActivity.startActivityForResult(chooserIntent, requestCode);
+            } else {
+                currentActivity.startActivityForResult(libraryIntent, requestCode);
+            }
         } catch (ActivityNotFoundException e) {
             callback.invoke(getErrorMap(errOthers, e.getMessage()));
             this.callback = null;
