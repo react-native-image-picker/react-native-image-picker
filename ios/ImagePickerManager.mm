@@ -154,8 +154,7 @@ NSData* extractImageData(UIImage* image){
 }
 
 
-
--(NSMutableDictionary *)mapImageToAsset:(UIImage *)image data:(NSData *)data phAsset:(PHAsset * _Nullable)phAsset {
+-(NSMutableDictionary *)mapImageToAsset:(UIImage *)image data:(NSData *)data phAsset:(PHAsset * _Nullable)phAsset metadata:(NSDictionary * _Nullable)metadata {
     NSString *fileType = [ImagePickerUtils getFileType:data];
     if (target == camera) {
         if ([self.options[@"saveToPhotos"] boolValue]) {
@@ -176,38 +175,44 @@ NSData* extractImageData(UIImage* image){
         if ([fileType isEqualToString:@"jpg"]) {
             // Get image source data before mutating it
             CGImageSourceRef imageSource = CGImageSourceCreateWithData((CFDataRef)data, nil);
-            CGMutableImageMetadataRef metadata = nil;
+
             // Attempt to extract the existing image metadata
-            if (imageSource != nil) {
-              metadata = CGImageMetadataCreateMutableCopy(CGImageSourceCopyMetadataAtIndex(imageSource, 0, nil));
+            if (metadata == nil && imageSource != nil) {
+                metadata = (__bridge NSDictionary *)CGImageMetadataCreateMutableCopy(CGImageSourceCopyMetadataAtIndex(imageSource, 0, nil));
             }
-            
+        
+            // Get the JPEG of the the underlying image at the desired quality
             data = UIImageJPEGRepresentation(newImage, quality);
-            
+
             // Set the image source to be the newly resized image
             imageSource = CGImageSourceCreateWithData((CFDataRef)data, nil);
             if (imageSource != nil && metadata != nil) {
                 // If we have existing metadata, merge that into new imageSource
                 CFMutableDataRef newData = CFDataCreateMutable(nil, 0);
                 CGImageDestinationRef destination = CGImageDestinationCreateWithData(newData, kUTTypeJPEG, 1, nil);
-                CGImageDestinationCopyImageSource(
-                                                  destination,
-                                                  imageSource,
-                                                  (CFDictionaryRef)@{
-                                                      (__bridge  NSString*)kCGImageDestinationMetadata : (__bridge  NSDictionary*)metadata,
-                                                      (__bridge  NSString*)kCGImageDestinationMergeMetadata : @YES
-                                                  },
-                                                  nil);
+                CFDictionaryRef options = (__bridge CFDictionaryRef)(@{
+                    (__bridge  NSString*)kCGImageDestinationMetadata : metadata,
+                    (__bridge  NSString*)kCGImageDestinationMergeMetadata : @YES
+                });
+                BOOL copyResult =  CGImageDestinationCopyImageSource(destination, imageSource, options, nil);
+                // If we fail to copy the image properties, this needs to be added directly and then finalized
+                if (!copyResult) {
+                CGImageDestinationAddImageFromSource(destination, imageSource, 0, (CFDictionaryRef)metadata);
+                CGImageDestinationFinalize(destination);
+                }
+                // Only set the data to the merged metadata if it was successful
+                if (newData != nil) {
                 // Set the underlying data to the data created by the CGImageDestination
-                // Use __bridge_transfer to transfer ownership and release newData
-                data = (__bridge_transfer NSData*)newData; 
-                
+                data = (__bridge_transfer NSData*)newData; // Use __bridge_transfer to transfer ownership and release newData
+                }
+            
                 // Release the CGImageDestination
                 if (destination != nil) {
                     CFRelease(destination);
                 }
+                
             }
-            
+
             // Release the CGImageSource
             if (imageSource != nil) {
                 CFRelease(imageSource);
