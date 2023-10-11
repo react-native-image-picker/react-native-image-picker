@@ -38,6 +38,7 @@ export interface Asset {
   uri?: string;
   width?: number;
   height?: number;
+  originalPath?: string;
   fileSize?: number;
   type?: string;
   fileName?: string;
