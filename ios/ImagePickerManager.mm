@@ -509,7 +509,6 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
                                                 data: [NSData dataWithContentsOfURL: [ImagePickerManager getNSURLFromInfo:info]]
                                             phAsset: asset
                                             metadata: [ImagePickerManager getMetadataFromInfo: info]]];
-            [ImagePickerManager getNSURLFromInfo:info]] phAsset:asset]];
         } else {
             NSError *error;
             NSDictionary *videoAsset = [self mapVideoToAsset:info[UIImagePickerControllerMediaURL] phAsset:asset error:&error];
