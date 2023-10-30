@@ -33,6 +33,9 @@ NSString *errOthers = @"others";
 RNImagePickerTarget target;
 
 BOOL photoSelected = NO;
+BOOL shouldFlip = NO;
+UIImagePickerController *uIImagePicker;
+NSDictionary *cameraOptions;
 
 RCT_EXPORT_MODULE(ImagePicker)
 
@@ -40,6 +43,7 @@ RCT_EXPORT_METHOD(launchCamera:(NSDictionary *)options callback:(RCTResponseSend
 {
     target = camera;
     photoSelected = NO;
+    cameraOptions = options;
     dispatch_async(dispatch_get_main_queue(), ^{
         [self launchImagePicker:options callback:callback];
     });
@@ -54,15 +58,44 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     });
 }
 
-// We won't compile this code when we build for the old architecture.
-#ifdef RCT_NEW_ARCH_ENABLED
-
-- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
-    (const facebook::react::ObjCTurboModule::InitParams &)params
-{
-    return std::make_shared<facebook::react::NativeImagePickerSpecJSI>(params);
+- (void)addObserver {
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(cameraChanged:)
+                                                     name:@"AVCaptureDeviceDidStartRunningNotification"
+                                               object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserverForName:@"_UIImagePickerControllerUserDidCaptureItem"
+                                                      object:nil
+                                                       queue:nil
+                                                  usingBlock:^(NSNotification * _Nonnull note) {
+        [self changePhotoOrientation];
+    }];
 }
-#endif
+
+- (void)cameraChanged:(NSNotification *)notification
+{
+    if(uIImagePicker.cameraDevice == UIImagePickerControllerCameraDeviceFront &&
+       [[cameraOptions valueForKey:@"avoidMirrorSelfieIOS"] boolValue]) {
+        shouldFlip = YES;
+    } else {
+        shouldFlip = NO;
+    }
+}
+
+- (void)changePhotoOrientation {
+    if(shouldFlip)
+    {
+        NSMutableArray<UIView *> *subviews = [NSMutableArray arrayWithObject:uIImagePicker.view];
+        while (subviews.count > 0) {
+            UIView *subview = [subviews firstObject];
+            [subviews removeObjectAtIndex:0];
+            [subviews addObjectsFromArray:subview.subviews];
+            if ([subview isKindOfClass:[UIImageView class]]) {
+                subview.transform = CGAffineTransformScale(uIImagePicker.cameraViewTransform, -1, 1);
+            }
+        }
+    }
+}
 
 - (void)launchImagePicker:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback
 {
@@ -104,7 +137,10 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     UIImagePickerController *picker = [[UIImagePickerController alloc] init];
     [ImagePickerUtils setupPickerFromOptions:picker options:self.options target:target];
     picker.delegate = self;
-    
+    if (cameraOptions) {
+        [self addObserver];
+        uIImagePicker = picker;
+    }
     if([self.options[@"includeExtra"] boolValue]) {
         [self checkPhotosPermissions:^(BOOL granted) {
             if (!granted) {
@@ -456,6 +492,10 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
         if ([info[UIImagePickerControllerMediaType] isEqualToString:(NSString *) kUTTypeImage]) {
             UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
+            
+            if(shouldFlip) {
+                image = [UIImage imageWithCGImage:image.CGImage scale:image.scale orientation:UIImageOrientationLeftMirrored];
+            }
             
             [assets addObject:[self mapImageToAsset:image data:[NSData dataWithContentsOfURL:[ImagePickerManager getNSURLFromInfo:info]] phAsset:asset]];
         } else {
