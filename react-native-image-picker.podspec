@@ -15,8 +15,8 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/react-native-image-picker/react-native-image-picker.git", :tag => "v#{s.version}" }
   s.source_files  = "ios/*.{h,m,mm}"
   s.pod_target_xcconfig = {
-  	'OTHER_CPLUSPLUSFLAGS' => '-fcxx-modules',
- 	  'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => true
+    'OTHER_CPLUSPLUSFLAGS' => '-fcxx-modules',
+    'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => true
   }
 
   if ENV['RCT_NEW_ARCH_ENABLED'] == '1'
