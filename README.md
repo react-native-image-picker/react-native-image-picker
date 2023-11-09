@@ -42,7 +42,7 @@ Add the appropriate keys to your `Info.plist` depending on your requirement:
 | ------------------------------ | --------------------------------------------------- |
 | Select image/video from photos | NSPhotoLibraryUsageDescription                      |
 | Capture Image                  | NSCameraUsageDescription                            |
-| Capture Video                  | NSCameraUsageDescription & NSCameraUsageDescription |
+| Capture Video                  | NSCameraUsageDescription & NSMicrophoneUsageDescription |
 
 ### Android
 
