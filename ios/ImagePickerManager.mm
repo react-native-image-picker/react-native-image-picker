@@ -1,3 +1,4 @@
+#import "UniformTypeIdentifiers/UniformTypeIdentifiers.h"
 #import "ImagePickerManager.h"
 #import "ImagePickerUtils.h"
 #import <React/RCTConvert.h>
@@ -543,7 +544,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
             // Matches both com.apple.live-photo-bundle and com.apple.private.live-photo-bundle
             if ([identifier containsString:@"live-photo-bundle"]) {
                 // Handle live photos
-                identifier = @"public.jpeg";
+                identifier = UTTypeImage.identifier;
             }
 
             [provider loadFileRepresentationForTypeIdentifier:identifier completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
