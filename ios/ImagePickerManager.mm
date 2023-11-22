@@ -1,3 +1,4 @@
+#import "UniformTypeIdentifiers/UniformTypeIdentifiers.h"
 #import "ImagePickerManager.h"
 #import "ImagePickerUtils.h"
 #import <React/RCTConvert.h>
@@ -154,8 +155,7 @@ NSData* extractImageData(UIImage* image){
 }
 
 
-
--(NSMutableDictionary *)mapImageToAsset:(UIImage *)image data:(NSData *)data phAsset:(PHAsset * _Nullable)phAsset {
+-(NSMutableDictionary *)mapImageToAsset:(UIImage *)image data:(NSData *)data phAsset:(PHAsset * _Nullable)phAsset metadata:(NSDictionary * _Nullable)metadata {
     NSString *fileType = [ImagePickerUtils getFileType:data];
     if (target == camera) {
         if ([self.options[@"saveToPhotos"] boolValue]) {
@@ -174,7 +174,51 @@ NSData* extractImageData(UIImage* image){
     float quality = [self.options[@"quality"] floatValue];
     if (![image isEqual:newImage] || (quality >= 0 && quality < 1)) {
         if ([fileType isEqualToString:@"jpg"]) {
+            // Get image source data before mutating it
+            CGImageSourceRef imageSource = CGImageSourceCreateWithData((CFDataRef)data, nil);
+
+            // Attempt to extract the existing image metadata
+            if (metadata == nil && imageSource != nil) {
+                metadata = (__bridge NSDictionary *)CGImageMetadataCreateMutableCopy(CGImageSourceCopyMetadataAtIndex(imageSource, 0, nil));
+            }
+        
+            // Get the JPEG of the the underlying image at the desired quality
             data = UIImageJPEGRepresentation(newImage, quality);
+
+            // Set the image source to be the newly resized image
+            imageSource = CGImageSourceCreateWithData((CFDataRef)data, nil);
+            if (imageSource != nil && metadata != nil) {
+                // If we have existing metadata, merge that into new imageSource
+                CFMutableDataRef newData = CFDataCreateMutable(nil, 0);
+                CGImageDestinationRef destination = CGImageDestinationCreateWithData(newData, kUTTypeJPEG, 1, nil);
+                CFDictionaryRef options = (__bridge CFDictionaryRef)(@{
+                    (__bridge  NSString*)kCGImageDestinationMetadata : metadata,
+                    (__bridge  NSString*)kCGImageDestinationMergeMetadata : @YES
+                });
+                BOOL copyResult =  CGImageDestinationCopyImageSource(destination, imageSource, options, nil);
+                // If we fail to copy the image properties, this needs to be added directly and then finalized
+                if (!copyResult) {
+                CGImageDestinationAddImageFromSource(destination, imageSource, 0, (CFDictionaryRef)metadata);
+                CGImageDestinationFinalize(destination);
+                }
+                // Only set the data to the merged metadata if it was successful
+                if (newData != nil) {
+                // Set the underlying data to the data created by the CGImageDestination
+                data = (__bridge_transfer NSData*)newData; // Use __bridge_transfer to transfer ownership and release newData
+                }
+            
+                // Release the CGImageDestination
+                if (destination != nil) {
+                    CFRelease(destination);
+                }
+                
+            }
+
+            // Release the CGImageSource
+            if (imageSource != nil) {
+                CFRelease(imageSource);
+            }
+            
         } else if ([fileType isEqualToString:@"png"]) {
             data = UIImagePNGRepresentation(newImage);
         }
@@ -435,6 +479,10 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
     }
 }
 
++ (NSDictionary *)getMetadataFromInfo:(NSDictionary *)info {
+    return info[UIImagePickerControllerMediaMetadata];
+}
+
 @end
 
 @implementation ImagePickerManager (UIImagePickerControllerDelegate)
@@ -458,7 +506,10 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         if ([info[UIImagePickerControllerMediaType] isEqualToString:(NSString *) kUTTypeImage]) {
             UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
             
-            [assets addObject:[self mapImageToAsset:image data:[NSData dataWithContentsOfURL:[ImagePickerManager getNSURLFromInfo:info]] phAsset:asset]];
+            [assets addObject: [self mapImageToAsset: image
+                                                data: [NSData dataWithContentsOfURL: [ImagePickerManager getNSURLFromInfo:info]]
+                                            phAsset: asset
+                                            metadata: [ImagePickerManager getMetadataFromInfo: info]]];
         } else {
             NSError *error;
             NSDictionary *videoAsset = [self mapVideoToAsset:info[UIImagePickerControllerMediaURL] phAsset:asset error:&error];
@@ -539,23 +590,39 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         
         dispatch_group_enter(completionGroup);
 
-        if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeImage]) {
+        if ([provider canLoadObjectOfClass:[UIImage class]]){
             NSString *identifier = provider.registeredTypeIdentifiers.firstObject;
             // Matches both com.apple.live-photo-bundle and com.apple.private.live-photo-bundle
             if ([identifier containsString:@"live-photo-bundle"]) {
                 // Handle live photos
-                identifier = @"public.jpeg";
+                identifier = UTTypeImage.identifier;
             }
 
             [provider loadFileRepresentationForTypeIdentifier:identifier completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
                 NSData *data = [[NSData alloc] initWithContentsOfURL:url];
                 UIImage *image = [[UIImage alloc] initWithData:data];
                 
-                assets[index] = [self mapImageToAsset:image data:data phAsset:asset];
+                assets[index] = [self mapImageToAsset:image data:data phAsset:asset metadata: nil];
                 dispatch_group_leave(completionGroup);
             }];
-        } else if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeMovie]) {
-            [provider loadFileRepresentationForTypeIdentifier:(NSString *)kUTTypeMovie completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
+        } else if ([provider hasItemConformingToTypeIdentifier: UTTypeHEIC.identifier]) {
+            // No jpeg is present, but a heic is -- this is still an image, so we'll convert it
+            [provider loadFileRepresentationForTypeIdentifier: UTTypeHEIC.identifier completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
+                NSData *data = [[NSData alloc] initWithContentsOfURL:url];
+                UIImage *image = [[UIImage alloc] initWithData:data];
+                [assets addObject:[self mapImageToAsset:image data:data phAsset:asset metadata: nil]];
+                dispatch_group_leave(completionGroup);
+            }]; 
+        } else if ([provider hasItemConformingToTypeIdentifier: UTTypeHEIF.identifier]) {
+            // No jpeg is present, but a heif is -- this is still an image, so we'll convert it
+            [provider loadFileRepresentationForTypeIdentifier: UTTypeHEIF.identifier completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
+                NSData *data = [[NSData alloc] initWithContentsOfURL:url];
+                UIImage *image = [[UIImage alloc] initWithData:data];
+                [assets addObject:[self mapImageToAsset:image data:data phAsset:asset metadata: nil]];
+                dispatch_group_leave(completionGroup);
+            }]; 
+        } else if ([provider hasItemConformingToTypeIdentifier: UTTypeMovie.identifier]) {
+            [provider loadFileRepresentationForTypeIdentifier: UTTypeMovie.identifier completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
                 NSDictionary *mappedAsset = [self mapVideoToAsset:url phAsset:asset error:nil];
                 if (nil != mappedAsset) {
                     assets[index] = mappedAsset;
