@@ -22,12 +22,12 @@ export default function App() {
   const onButtonPress = React.useCallback(async (type , options) => {
     if (type === 'capture') {
       try {
-      await registerForegroundNotification();
-      const response = await ImagePicker.launchCamera(options);
-      setResponse(response);
-    } finally {
-      await stopForegroundNotification();
-    }
+        await registerForegroundNotification();
+        const response = await ImagePicker.launchCamera(options);
+        setResponse(response);
+      } finally {
+        await stopForegroundNotification();
+      }
     } else if (type === 'library') {
       ImagePicker.launchImageLibrary(options, setResponse);
     }
@@ -36,7 +36,6 @@ export default function App() {
         setResponse(result ? 'Permission Granted' : 'Permission Denied');
       })
     }
-    
   }, []);
 
 
