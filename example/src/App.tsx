@@ -10,6 +10,8 @@ import {
 import {DemoButton, DemoResponse, DemoTitle} from './components';
 
 import * as ImagePicker from 'react-native-image-picker';
+import { PERMISSIONS, RESULTS, check, request } from 'react-native-permissions';
+import notifee, { AndroidColor, AndroidImportance } from '@notifee/react-native';
 
 /* toggle includeExtra */
 const includeExtra = true;
@@ -17,13 +19,31 @@ const includeExtra = true;
 export default function App() {
   const [response, setResponse] = React.useState<any>(null);
 
-  const onButtonPress = React.useCallback((type, options) => {
+  const onButtonPress = React.useCallback(async (type , options) => {
     if (type === 'capture') {
-      ImagePicker.launchCamera(options, setResponse);
-    } else {
+      try {
+      await registerForegroundNotification();
+      const response = await ImagePicker.launchCamera(options);
+      setResponse(response);
+    } finally {
+      await stopForegroundNotification();
+    }
+    } else if (type === 'library') {
       ImagePicker.launchImageLibrary(options, setResponse);
     }
+    else if (type === 'permission') {
+      requestCameraPermissionIfNeeded().then((result) => {
+        setResponse(result ? 'Permission Granted' : 'Permission Denied');
+      })
+    }
+    
   }, []);
+
+
+  React.useEffect(() => {
+    // Close the notification when the app is closed
+    return () => {stopForegroundNotification();}
+  })
 
   return (
     <SafeAreaView style={styles.container}>
@@ -80,8 +100,8 @@ const styles = StyleSheet.create({
 
 interface Action {
   title: string;
-  type: 'capture' | 'library';
-  options: ImagePicker.CameraOptions | ImagePicker.ImageLibraryOptions;
+  type: 'capture' | 'library' | 'permission';
+  options?: ImagePicker.CameraOptions | ImagePicker.ImageLibraryOptions;
 }
 
 const actions: Action[] = [
@@ -134,6 +154,10 @@ const actions: Action[] = [
       includeExtra,
     },
   },
+  {
+    title: 'Request Permission',
+    type: 'permission',
+  },
 ];
 
 if (Platform.OS === 'ios') {
@@ -147,4 +171,51 @@ if (Platform.OS === 'ios') {
       presentationStyle: 'fullScreen',
     },
   });
+}
+
+
+const requestCameraPermissionIfNeeded = async () => {
+  const result = await check(PERMISSIONS.ANDROID.CAMERA)
+
+  if(result === RESULTS.GRANTED)  return true;
+  else if (result === RESULTS.DENIED) {
+    const result = await request(PERMISSIONS.ANDROID.CAMERA)
+    if(result === RESULTS.GRANTED)  return true;
+  }
+  return false;
+}
+
+const registerForegroundNotification = async () => {
+  if (Platform.OS === 'android') {
+    // Need permission since Android 14
+    const result = await notifee.requestPermission();
+
+    const channelId = await notifee.createChannel({
+      id: 'camera',
+      name: 'Camera',
+      importance: AndroidImportance.LOW,
+    });
+
+    notifee.registerForegroundService((notification) => {
+      return new Promise(() => {  });
+    });
+
+    const notificationId = await notifee.displayNotification({
+      title: 'Camera is running',
+      body: 'Required for the app to stay alive in background',
+      android: {
+        channelId,
+        asForegroundService: true,
+        color: AndroidColor.CYAN,
+        colorized: true,
+        autoCancel: false,
+        ongoing: true,
+      },
+    });
+  }
+}
+const stopForegroundNotification = async () => {
+  if (Platform.OS === 'android') {
+    await notifee.stopForegroundService();
+  }
 }
