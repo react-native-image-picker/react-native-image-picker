@@ -14,5 +14,4 @@
                 android:resource="@xml/imagepicker_provider_paths" />
         </provider>
     </application>
-    <uses-permission android:name="android.permission.CAMERA" />
 </manifest>

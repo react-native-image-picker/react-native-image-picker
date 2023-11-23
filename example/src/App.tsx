@@ -10,7 +10,7 @@ import {
 import {DemoButton, DemoResponse, DemoTitle} from './components';
 
 import * as ImagePicker from 'react-native-image-picker';
-import { PERMISSIONS, RESULTS, check, request } from 'react-native-permissions';
+import { PERMISSIONS, Permission, RESULTS, check, request } from 'react-native-permissions';
 import notifee, { AndroidColor, AndroidImportance } from '@notifee/react-native';
 
 /* toggle includeExtra */
@@ -175,11 +175,15 @@ if (Platform.OS === 'ios') {
 
 
 const requestCameraPermissionIfNeeded = async () => {
-  const result = await check(PERMISSIONS.ANDROID.CAMERA)
+  var permission: Permission = PERMISSIONS.IOS.CAMERA;
+  if (Platform.OS === 'android') {
+    permission = PERMISSIONS.ANDROID.CAMERA;
+  }
+  const result = await check(permission)
 
   if(result === RESULTS.GRANTED)  return true;
   else if (result === RESULTS.DENIED) {
-    const result = await request(PERMISSIONS.ANDROID.CAMERA)
+    const result = await request(permission)
     if(result === RESULTS.GRANTED)  return true;
   }
   return false;
@@ -187,7 +191,7 @@ const requestCameraPermissionIfNeeded = async () => {
 
 const registerForegroundNotification = async () => {
   if (Platform.OS === 'android') {
-    // Need permission since Android 14
+    // Need permission since Android 13
     const result = await notifee.requestPermission();
 
     const channelId = await notifee.createChannel({
