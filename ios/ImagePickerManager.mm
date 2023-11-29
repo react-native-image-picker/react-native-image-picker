@@ -40,8 +40,19 @@ RCT_EXPORT_METHOD(launchCamera:(NSDictionary *)options callback:(RCTResponseSend
 {
     target = camera;
     photoSelected = NO;
+    if ([ImagePickerUtils isSimulator]) {
+        callback(@[@{@"errorCode": errCameraUnavailable}]);
+        return;
+    }
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self launchImagePicker:options callback:callback];
+        [self checkCameraPermissions:^(BOOL granted) {
+            if (!granted) {
+                callback(@[@{@"errorCode": errPermission}]);
+            }
+            else {
+                [self launchImagePicker:options callback:callback];
+            }
+        }];
     });
 }
 
@@ -67,11 +78,6 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 - (void)launchImagePicker:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback
 {
     self.callback = callback;
-    
-    if (target == camera && [ImagePickerUtils isSimulator]) {
-        self.callback(@[@{@"errorCode": errCameraUnavailable}]);
-        return;
-    }
     
     self.options = options;
 
