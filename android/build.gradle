@@ -21,12 +21,12 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
     buildToolsVersion getExtOrDefault('buildToolsVersion')
 
     defaultConfig {
-        minSdkVersion 21
-        targetSdkVersion 33
+        minSdkVersion getExtOrIntegerDefault('minSdkVersion')
+        targetSdkVersion getExtOrIntegerDefault('targetSdkVersion')
     }
     lintOptions {
         abortOnError false
