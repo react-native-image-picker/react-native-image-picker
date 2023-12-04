@@ -4,8 +4,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import <Photos/Photos.h>
 #import <PhotosUI/PhotosUI.h>
-
-@import MobileCoreServices;
+#import <MobileCoreServices/MobileCoreServices.h>
 
 @interface ImagePickerManager ()
 
@@ -67,12 +66,12 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 - (void)launchImagePicker:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback
 {
     self.callback = callback;
-    
+
     if (target == camera && [ImagePickerUtils isSimulator]) {
         self.callback(@[@{@"errorCode": errCameraUnavailable}]);
         return;
     }
-    
+
     self.options = options;
 
 #if __has_include(<PhotosUI/PHPicker.h>)
@@ -85,7 +84,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             picker.presentationController.delegate = self;
 
             if([self.options[@"includeExtra"] boolValue]) {
-                
+
                 [self checkPhotosPermissions:^(BOOL granted) {
                     if (!granted) {
                         self.callback(@[@{@"errorCode": errPermission}]);
@@ -96,7 +95,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             } else {
                 [self showPickerViewController:picker];
             }
-            
+
             return;
         }
     }
@@ -132,7 +131,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 NSData* extractImageData(UIImage* image){
     CFMutableDataRef imageData = CFDataCreateMutable(NULL, 0);
     CGImageDestinationRef destination = CGImageDestinationCreateWithData(imageData, kUTTypeJPEG, 1, NULL);
-    
+
     CFStringRef orientationKey[1];
     CFTypeRef   orientationValue[1];
     CGImagePropertyOrientation CGOrientation = CGImagePropertyOrientationForUIImageOrientation(image.imageOrientation);
@@ -142,11 +141,11 @@ NSData* extractImageData(UIImage* image){
 
     CFDictionaryRef imageProps = CFDictionaryCreate( NULL, (const void **)orientationKey, (const void **)orientationValue, 1,
                     &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-    
+
     CGImageDestinationAddImage(destination, image.CGImage, imageProps);
-    
+
     CGImageDestinationFinalize(destination);
-    
+
     CFRelease(destination);
     CFRelease(orientationValue[0]);
     CFRelease(imageProps);
@@ -163,7 +162,7 @@ NSData* extractImageData(UIImage* image){
         }
         data = extractImageData(image);
     }
-    
+
     UIImage* newImage = image;
     if (![fileType isEqualToString:@"gif"]) {
         newImage = [ImagePickerUtils resizeImage:image
@@ -179,7 +178,7 @@ NSData* extractImageData(UIImage* image){
             data = UIImagePNGRepresentation(newImage);
         }
     }
-    
+
     NSMutableDictionary *asset = [[NSMutableDictionary alloc] init];
     asset[@"type"] = [@"image/" stringByAppendingString:fileType];
 
@@ -204,13 +203,13 @@ NSData* extractImageData(UIImage* image){
     asset[@"fileName"] = fileName;
     asset[@"width"] = @(newImage.size.width);
     asset[@"height"] = @(newImage.size.height);
-    
+
     if(phAsset){
         asset[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
         asset[@"id"] = phAsset.localIdentifier;
         // Add more extra data here ...
     }
-    
+
     return asset;
 }
 
@@ -237,10 +236,10 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
     if ((target == camera) && [self.options[@"saveToPhotos"] boolValue]) {
         UISaveVideoAtPathToSavedPhotosAlbum(url.path, nil, nil, nil);
     }
-    
+
     if (![url.URLByResolvingSymlinksInPath.path isEqualToString:videoDestinationURL.URLByResolvingSymlinksInPath.path]) {
         NSFileManager *fileManager = [NSFileManager defaultManager];
-        
+
         // Delete file if it already exists
         if ([fileManager fileExistsAtPath:videoDestinationURL.path]) {
             [fileManager removeItemAtURL:videoDestinationURL error:nil];
@@ -260,25 +259,25 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
           }
         }
     }
-    
+
     NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
-    
+
     if([self.options[@"formatAsMp4"] boolValue] && ![fileExtension isEqualToString:@"mp4"]) {
         NSURL *parentURL = [videoDestinationURL URLByDeletingLastPathComponent];
         NSString *path = [[parentURL.path stringByAppendingString:@"/"] stringByAppendingString:[[NSUUID UUID] UUIDString]];
         path = [path stringByAppendingString:@".mp4"];
         NSURL *outputURL = [NSURL fileURLWithPath:path];
-        
+
         [[NSFileManager defaultManager] removeItemAtURL:outputURL error:nil];
         AVURLAsset *asset = [AVURLAsset URLAssetWithURL:videoDestinationURL options:nil];
         AVAssetExportSession *exportSession = [[AVAssetExportSession alloc] initWithAsset:asset presetName:AVAssetExportPresetPassthrough];
-        
+
         exportSession.outputURL = outputURL;
         exportSession.outputFileType = AVFileTypeMPEG4;
         exportSession.shouldOptimizeForNetworkUse = YES;
-        
+
         dispatch_semaphore_t sem = dispatch_semaphore_create(0);
-        
+
         [exportSession exportAsynchronouslyWithCompletionHandler:^(void) {
             if (exportSession.status == AVAssetExportSessionStatusCompleted) {
                 CGSize dimentions = [ImagePickerUtils getVideoDimensionsFromUrl:outputURL];
@@ -289,14 +288,14 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
                 response[@"fileSize"] = [ImagePickerUtils getFileSizeFromUrl:outputURL];
                 response[@"width"] = @(dimentions.width);
                 response[@"height"] = @(dimentions.height);
-                
+
                 dispatch_semaphore_signal(sem);
             } else if (exportSession.status == AVAssetExportSessionStatusFailed || exportSession.status == AVAssetExportSessionStatusCancelled) {
                 dispatch_semaphore_signal(sem);
             }
         }];
 
-        
+
         dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
     } else {
         CGSize dimentions = [ImagePickerUtils getVideoDimensionsFromUrl:videoDestinationURL];
@@ -307,7 +306,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         response[@"fileSize"] = [ImagePickerUtils getFileSizeFromUrl:videoDestinationURL];
         response[@"width"] = @(dimentions.width);
         response[@"height"] = @(dimentions.height);
-        
+
         if(phAsset){
             response[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
             response[@"id"] = phAsset.localIdentifier;
@@ -457,12 +456,12 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
         if ([info[UIImagePickerControllerMediaType] isEqualToString:(NSString *) kUTTypeImage]) {
             UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
-            
+
             [assets addObject:[self mapImageToAsset:image data:[NSData dataWithContentsOfURL:[ImagePickerManager getNSURLFromInfo:info]] phAsset:asset]];
         } else {
             NSError *error;
             NSDictionary *videoAsset = [self mapVideoToAsset:info[UIImagePickerControllerMediaURL] phAsset:asset error:&error];
-                        
+
             if (videoAsset == nil) {
                 NSString *errorMessage = error.localizedFailureReason;
                 if (errorMessage == nil) errorMessage = @"Video asset not found";
@@ -513,7 +512,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         return;
     }
     photoSelected = YES;
-    
+
     if (results.count == 0) {
         dispatch_async(dispatch_get_main_queue(), ^{
             self.callback(@[@{@"didCancel": @YES}]);
@@ -536,7 +535,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
             PHFetchResult* fetchResult = [PHAsset fetchAssetsWithLocalIdentifiers:@[result.assetIdentifier] options:nil];
             asset = fetchResult.firstObject;
         }
-        
+
         dispatch_group_enter(completionGroup);
 
         if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeImage]) {
@@ -550,7 +549,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
             [provider loadFileRepresentationForTypeIdentifier:identifier completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
                 NSData *data = [[NSData alloc] initWithContentsOfURL:url];
                 UIImage *image = [[UIImage alloc] initWithData:data];
-                
+
                 assets[index] = [self mapImageToAsset:image data:data phAsset:asset];
                 dispatch_group_leave(completionGroup);
             }];
