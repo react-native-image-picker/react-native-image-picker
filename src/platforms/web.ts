@@ -18,7 +18,7 @@ const DEFAULT_OPTIONS: Pick<
 };
 
 export function camera(
-  options: ImageLibraryOptions = DEFAULT_OPTIONS,
+  _: ImageLibraryOptions = DEFAULT_OPTIONS,
   callback?: Callback,
 ): Promise<ImagePickerResponse> {
   return new Promise((resolve) => {
