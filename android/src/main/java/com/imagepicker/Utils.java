@@ -199,7 +199,6 @@ public class Utils {
 
     private static boolean needToSwapDimension(String orientation){
         return orientation.equals(String.valueOf(ExifInterface.ORIENTATION_ROTATE_90))
-                || orientation.equals(String.valueOf(ExifInterface.ORIENTATION_ROTATE_270));
                 || orientation.equals(String.valueOf(ExifInterface.ORIENTATION_ROTATE_270))
                 || orientation.equals(String.valueOf(ExifInterface.ORIENTATION_TRANSPOSE))
                 || orientation.equals(String.valueOf(ExifInterface.ORIENTATION_TRANSVERSE));
