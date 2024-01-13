@@ -202,33 +202,46 @@ public class Utils {
                 || orientation.equals(String.valueOf(ExifInterface.ORIENTATION_ROTATE_270));
     }
 
-    // Resize image
+    private static boolean shouldConvertToJpeg(String mimeType, Options options) {
+        return options.convertToJpeg && mimeType != null && mimeType.equals("image/heic");
+    }
+
+    // Resize image and/or convert it from HEIC to JPEG
     // When decoding a jpg to bitmap all exif meta data will be lost, so make sure to copy orientation exif to new file else image might have wrong orientations
-    public static Uri resizeImage(Uri uri, Context context, Options options) {
+    public static Uri resizeOrConvertImage(Uri uri, Context context, Options options) {
         try {
             int[] origDimens = getImageDimensions(uri, context);
+            String mimeType = getMimeType(uri, context);
+
+            int targetQuality;
 
             if (!shouldResizeImage(origDimens[0], origDimens[1], options)) {
-                return uri;
+                if (shouldConvertToJpeg(mimeType, options)) {
+                    mimeType = "image/jpeg";
+                    targetQuality = options.conversionQuality;
+                } else {
+                    return uri;
+                }
+            } else {
+                targetQuality = options.quality;
             }
 
             int[] newDimens = getImageDimensBasedOnConstraints(origDimens[0], origDimens[1], options);
 
             try (InputStream imageStream = context.getContentResolver().openInputStream(uri)) {
-                String mimeType = getMimeType(uri, context);
                 Bitmap b = BitmapFactory.decodeStream(imageStream);
                 String originalOrientation = getOrientation(uri, context);
 
                 if (needToSwapDimension(originalOrientation)) {
                     b = Bitmap.createScaledBitmap(b, newDimens[1], newDimens[0], true);
-                }else {
+                } else {
                     b = Bitmap.createScaledBitmap(b, newDimens[0], newDimens[1], true);
                 }
 
                 File file = createFile(context, getFileTypeFromMime(mimeType));
 
                 try (OutputStream os = context.getContentResolver().openOutputStream(Uri.fromFile(file))) {
-                    b.compress(getBitmapCompressFormat(mimeType), options.quality, os);
+                    b.compress(getBitmapCompressFormat(mimeType), targetQuality, os);
                 }
 
                 setOrientation(file, originalOrientation, context);
@@ -558,7 +571,7 @@ public class Utils {
 
             // Call getAppSpecificStorageUri in the if block to avoid copying unsupported files
             if (isImageType(uri, context)) {
-                appSpecificUrl = resizeImage(appSpecificUrl, context, options);
+                appSpecificUrl = resizeOrConvertImage(appSpecificUrl, context, options);
                 assets.pushMap(getImageResponseMap(uri, appSpecificUrl, options, context));
             } else if (isVideoType(uri, context)) {
                 if (uri.getScheme().contains("content")) {
