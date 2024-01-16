@@ -17,6 +17,8 @@
 
 + (CGSize)getVideoDimensionsFromUrl:(NSURL *)url;
 
++ (CGAffineTransform)getVideoTransformFromUrl:(NSURL *)url;
+
 + (NSString *) getFileTypeFromUrl:(NSURL *)url;
 
 + (NSString *) getFileSizeFromUrl:(NSURL *)url;
