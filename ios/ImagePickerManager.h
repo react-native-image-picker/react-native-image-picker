@@ -29,7 +29,7 @@ RCT_ENUM_CONVERTER(
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #import "RNImagePickerSpec.h"
-@interface ImagePickerManager : NSObject <RNImagePickerSpec>
+@interface ImagePickerManager : NSObject <NativeImagePickerSpec>
 @end
 
 #else
