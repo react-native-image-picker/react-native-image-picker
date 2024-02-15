@@ -139,7 +139,16 @@
     
     if ([tracks count] > 0) {
         AVAssetTrack *track = [tracks objectAtIndex:0];
-        return track.naturalSize;
+        CGSize naturalSize = track.naturalSize;
+        CGAffineTransform preferredTransform = track.preferredTransform;
+
+        if (preferredTransform.a == 0 && preferredTransform.b == 1.0 && preferredTransform.c == -1.0 && preferredTransform.d == 0) {
+            // Video is in portrait mode
+            return CGSizeMake(naturalSize.height, naturalSize.width);
+        } else {
+            // Video is in landscape mode
+            return naturalSize;
+        }
     }
     
     return CGSizeMake(0, 0);
