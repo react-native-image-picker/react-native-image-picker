@@ -54,6 +54,7 @@ public class Utils {
     public static String mediaTypeVideo = "video";
 
     public static String cameraPermissionDescription = "This library does not require Manifest.permission.CAMERA, if you add this permission in manifest then you have to obtain the same.";
+    public static String archivePermissionDescription = "To save an image in the photo library the write permission is need";
 
     public static File createFile(Context reactContext, String fileType) {
         try {
@@ -138,8 +139,7 @@ public class Utils {
     }
 
     public static boolean isCameraAvailable(Context reactContext) {
-        return reactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)
-                || reactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
+        return reactContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
     }
 
     // Opening front camera is not officially supported in android, the below hack is obtained from various online sources
@@ -174,7 +174,7 @@ public class Utils {
         }
     }
 
-    static boolean hasPermission(final Activity activity) {
+    static boolean hasWriteExternalStoragePermission(final Activity activity) {
         final int writePermission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         return writePermission == PackageManager.PERMISSION_GRANTED;
     }
@@ -355,12 +355,8 @@ public class Utils {
                 return true;
             }
 
-            if (Arrays.asList(declaredPermissions).contains(Manifest.permission.CAMERA)
-                    && ActivityCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                return false;
-            }
-
-            return true;
+            return !Arrays.asList(declaredPermissions).contains(Manifest.permission.CAMERA)
+                    || ActivityCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
 
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
