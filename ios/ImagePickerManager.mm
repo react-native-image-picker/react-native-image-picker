@@ -281,13 +281,21 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         [exportSession exportAsynchronouslyWithCompletionHandler:^(void) {
             if (exportSession.status == AVAssetExportSessionStatusCompleted) {
                 CGSize dimentions = [ImagePickerUtils getVideoDimensionsFromUrl:outputURL];
+                CGAffineTransform transform = [ImagePickerUtils getVideoTransformFromUrl:videoDestinationURL];
+                int angle = atan2(transform.c, transform.a) * (180.0 / M_PI);
+                angle = abs(angle);
                 response[@"fileName"] = [outputURL lastPathComponent];
                 response[@"duration"] = [NSNumber numberWithDouble:CMTimeGetSeconds([AVAsset assetWithURL:outputURL].duration)];
                 response[@"uri"] = outputURL.absoluteString;
                 response[@"type"] = [ImagePickerUtils getFileTypeFromUrl:outputURL];
                 response[@"fileSize"] = [ImagePickerUtils getFileSizeFromUrl:outputURL];
-                response[@"width"] = @(dimentions.width);
-                response[@"height"] = @(dimentions.height);
+                if (angle == 90 || angle == 270) {
+                    response[@"width"] = @(dimentions.height);
+                    response[@"height"] = @(dimentions.width);
+                } else {
+                    response[@"width"] = @(dimentions.width);
+                    response[@"height"] = @(dimentions.height);
+                }
 
                 dispatch_semaphore_signal(sem);
             } else if (exportSession.status == AVAssetExportSessionStatusFailed || exportSession.status == AVAssetExportSessionStatusCancelled) {
@@ -299,13 +307,21 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
     } else {
         CGSize dimentions = [ImagePickerUtils getVideoDimensionsFromUrl:videoDestinationURL];
+        CGAffineTransform transform = [ImagePickerUtils getVideoTransformFromUrl:videoDestinationURL];
+        int angle = atan2(transform.c, transform.a) * (180.0 / M_PI);
+        angle = abs(angle);
         response[@"fileName"] = fileName;
         response[@"duration"] = [NSNumber numberWithDouble:CMTimeGetSeconds([AVAsset assetWithURL:videoDestinationURL].duration)];
         response[@"uri"] = videoDestinationURL.absoluteString;
         response[@"type"] = [ImagePickerUtils getFileTypeFromUrl:videoDestinationURL];
         response[@"fileSize"] = [ImagePickerUtils getFileSizeFromUrl:videoDestinationURL];
-        response[@"width"] = @(dimentions.width);
-        response[@"height"] = @(dimentions.height);
+        if (angle == 90 || angle == 270) {
+            response[@"width"] = @(dimentions.height);
+            response[@"height"] = @(dimentions.width);
+        } else {
+            response[@"width"] = @(dimentions.width);
+            response[@"height"] = @(dimentions.height);
+        }
 
         if(phAsset){
             response[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
