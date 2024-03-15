@@ -22,7 +22,7 @@
     if (target == camera) {
         picker.sourceType = UIImagePickerControllerSourceTypeCamera;
 
-        if (options[@"durationLimit"] > 0) {
+        if ([options[@"durationLimit"] doubleValue] > 0) {
             picker.videoMaximumDuration = [options[@"durationLimit"] doubleValue];
         }
 
