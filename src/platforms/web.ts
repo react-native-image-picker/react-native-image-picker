@@ -93,10 +93,10 @@ export function imageLibrary(
       document.body.removeChild(input);
     });
 
-    input.addEventListener('cancel', ()=>{
+    input.addEventListener('cancel', () => {
       const result = {
         didCancel: true,
-        assets:[]
+        assets: [],
       };
 
       if (callback) callback(result);
