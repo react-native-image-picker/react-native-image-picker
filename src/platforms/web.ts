@@ -100,6 +100,7 @@ export function imageLibrary(
       };
 
       if (callback) callback(result);
+      resolve(result);
     });
 
     const event = new MouseEvent('click');
