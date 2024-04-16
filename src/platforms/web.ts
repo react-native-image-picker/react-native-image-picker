@@ -93,6 +93,16 @@ export function imageLibrary(
       document.body.removeChild(input);
     });
 
+    input.addEventListener('cancel', () => {
+      const result = {
+        didCancel: true,
+        assets: [],
+      };
+
+      if (callback) callback(result);
+      resolve(result);
+    });
+
     const event = new MouseEvent('click');
     input.dispatchEvent(event);
   });
