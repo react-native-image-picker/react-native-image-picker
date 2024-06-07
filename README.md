@@ -50,6 +50,12 @@ No permissions required (`saveToPhotos` requires permission [check](#note-on-fil
 
 Note: This library does not require `Manifest.permission.CAMERA`, if your app declares as using this permission in manifest then you have to obtain the permission before using `launchCamera`.
 
+#### Targeting below Android API v30
+
+Check if your application meets the requirement for AndroidX Photo Picker, otherwise add the entry to your `AndroidManifest.xml`: <https://developer.android.com/training/data-storage/shared/photopicker#device-availability>
+
+Alternatively check out the example application's `example/android/app/src/main/AndroidManifest.xml`
+
 ## API Reference
 
 ## Methods
