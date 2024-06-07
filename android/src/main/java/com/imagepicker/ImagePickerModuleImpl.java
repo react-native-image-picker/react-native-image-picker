@@ -22,6 +22,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static com.imagepicker.Utils.*;
+import com.imagepicker.Options;
+
+import androidx.activity.result.PickVisualMediaRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia;
+import androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia;
 
 public class ImagePickerModuleImpl implements ActivityEventListener {
     static final String NAME = "ImagePicker";
@@ -116,6 +122,9 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
         this.callback = callback;
         this.options = new Options(options);
 
+        PickVisualMedia.VisualMediaType mediaType;
+        PickVisualMediaRequest mediaRequest;
+
         int requestCode;
         Intent libraryIntent;
         requestCode = REQUEST_LAUNCH_LIBRARY;
@@ -125,36 +134,27 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
         boolean isPhoto = this.options.mediaType.equals(mediaTypePhoto);
         boolean isVideo = this.options.mediaType.equals(mediaTypeVideo);
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            if (isSingleSelect && (isPhoto || isVideo)) {
-                libraryIntent = new Intent(Intent.ACTION_PICK);
-            } else {
-                libraryIntent = new Intent(Intent.ACTION_GET_CONTENT);
-                libraryIntent.addCategory(Intent.CATEGORY_OPENABLE);
-            }
-        } else {
-            libraryIntent = new Intent(MediaStore.ACTION_PICK_IMAGES);
-        }
-
-        if (!isSingleSelect) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                libraryIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-            } else {
-                if (selectionLimit != 1) {
-                    int maxNum = selectionLimit;
-                    if (selectionLimit == 0) maxNum = MediaStore.getPickImagesMaxLimit();
-                    libraryIntent.putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, maxNum);
-                }
-            }
-        }
-
+        // Note: Casting works, even though Android Studio complains about it
         if (isPhoto) {
-            libraryIntent.setType("image/*");
+            mediaType = (PickVisualMedia.VisualMediaType) PickVisualMedia.ImageOnly.INSTANCE;
         } else if (isVideo) {
-            libraryIntent.setType("video/*");
-        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            libraryIntent.setType("*/*");
-            libraryIntent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "video/*"});
+            mediaType = (PickVisualMedia.VisualMediaType) PickVisualMedia.VideoOnly.INSTANCE;
+        } else {
+            mediaType = (PickVisualMedia.VisualMediaType) PickVisualMedia.ImageAndVideo.INSTANCE;
+        }
+
+        mediaRequest = new PickVisualMediaRequest.Builder()
+                .setMediaType(mediaType)
+                .build();
+
+        // https://developer.android.com/training/data-storage/shared/photopicker
+        if (isSingleSelect) {
+            libraryIntent = new PickVisualMedia().createIntent(this.reactContext.getApplicationContext(), mediaRequest);
+        } else {
+            PickMultipleVisualMedia pickMultipleVisualMedia = selectionLimit > 1
+                    ? new PickMultipleVisualMedia(selectionLimit)
+                    : new PickMultipleVisualMedia();
+            libraryIntent = pickMultipleVisualMedia.createIntent(this.reactContext.getApplicationContext(), mediaRequest);
         }
 
         try {
