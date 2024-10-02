@@ -437,7 +437,6 @@ public class Utils {
         String originPath;
         if (uri.getScheme().contains("content")) {
             originPath = getFilePathFromContent(uri, context);
-            uri = getAppSpecificStorageUri(uri, context);
         } else {
             originPath = uri.toString();
         }
