@@ -343,25 +343,50 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
 - (void)checkPhotosPermissions:(void(^)(BOOL granted))callback
 {
-    PHAuthorizationStatus status = [PHPhotoLibrary authorizationStatus];
-    if (status == PHAuthorizationStatusAuthorized) {
-        callback(YES);
-        return;
-    } else if (status == PHAuthorizationStatusNotDetermined) {
-        [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
-            if (status == PHAuthorizationStatusAuthorized) {
-                callback(YES);
-                return;
-            }
-            else {
-                callback(NO);
-                return;
-            }
-        }];
+    // Request permission to use the camera with the target being the camera
+    if(target == camera) {
+        AVAuthorizationStatus status = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+        if (status == AVAuthorizationStatusAuthorized) {
+            callback(YES);
+            return;
+        } else if (status == AVAuthorizationStatusAuthorized) {
+            [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
+                if (granted) {
+                    callback(YES);
+                    return;
+                }
+                else {
+                    callback(NO);
+                    return;
+                }
+            }];
+        }
+        else {
+            callback(NO);
+        }
     }
     else {
-        callback(NO);
+        PHAuthorizationStatus status = [PHPhotoLibrary authorizationStatus];
+        if (status == PHAuthorizationStatusAuthorized) {
+            callback(YES);
+            return;
+        } else if (status == PHAuthorizationStatusNotDetermined) {
+            [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
+                if (status == PHAuthorizationStatusAuthorized) {
+                    callback(YES);
+                    return;
+                }
+                else {
+                    callback(NO);
+                    return;
+                }
+            }];
+        }
+        else {
+            callback(NO);
+        }
     }
+    
 }
 
 // Both camera and photo write permission is required to take picture/video and store it to public photos
