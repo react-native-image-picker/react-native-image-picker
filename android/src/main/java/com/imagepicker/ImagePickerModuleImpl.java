@@ -10,10 +10,7 @@ import android.provider.MediaStore;
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContextBaseJavaModule;
-import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.module.annotations.ReactModule;
 
 import java.io.File;
 import java.util.Collections;
@@ -65,8 +62,8 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
         this.callback = callback;
         this.options = new Options(options);
 
-        if (this.options.saveToPhotos && Build.VERSION.SDK_INT <= Build.VERSION_CODES.P && !hasPermission(currentActivity)) {
-            callback.invoke(getErrorMap(errPermission, null));
+        if (this.options.saveToPhotos && Build.VERSION.SDK_INT <= Build.VERSION_CODES.P && !hasWriteExternalStoragePermission(currentActivity)) {
+            callback.invoke(getErrorMap(errPermission, archivePermissionDescription));
             return;
         }
 
@@ -140,11 +137,9 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                 libraryIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             } else {
-                if (selectionLimit != 1) {
-                    int maxNum = selectionLimit;
-                    if (selectionLimit == 0) maxNum = MediaStore.getPickImagesMaxLimit();
-                    libraryIntent.putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, maxNum);
-                }
+                int maxNum = selectionLimit;
+                if (selectionLimit == 0) maxNum = MediaStore.getPickImagesMaxLimit();
+                libraryIntent.putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, maxNum);
             }
         }
 
