@@ -40,10 +40,14 @@ public class VideoMetadata extends Metadata {
             if (bitrate != null) this.bitrate = parseInt(bitrate);
 
             if (datetime != null) {
-                // METADATA_KEY_DATE gives us the following format: "20211214T102646.000Z"
-                // This format is very hard to parse, so we convert it to "20211214 102646" ("yyyyMMdd HHmmss")
-                String datetimeToFormat = datetime.substring(0, datetime.indexOf(".")).replace("T", " ");
-                this.datetime = getDateTimeInUTC(datetimeToFormat, "yyyyMMdd HHmmss");
+                try {
+                    // METADATA_KEY_DATE gives us the following format: "20211214T102646.000Z"
+                    // This format is very hard to parse, so we convert it to "20211214 102646" ("yyyyMMdd HHmmss")
+                    String datetimeToFormat = datetime.substring(0, datetime.indexOf(".")).replace("T", " ");
+                    this.datetime = getDateTimeInUTC(datetimeToFormat, "yyyyMMdd HHmmss");
+                } catch (Exception e) {
+                    Log.e("RNIP", "Invalid datetime format: " + e.getMessage());
+                }
             }
 
             String width = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
