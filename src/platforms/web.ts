@@ -61,7 +61,7 @@ export function imageLibrary(
   document.body.appendChild(input);
 
   return new Promise((resolve) => {
-    input.addEventListener('change', async () => {
+    const inputChangeHandler = async () => {
       if (input.files) {
         if (options.selectionLimit! <= 1) {
           const img = await readFile(input.files[0], {
@@ -90,8 +90,22 @@ export function imageLibrary(
           resolve(result);
         }
       }
+      cleanup();
+    };
+
+    const inputCancelHandler = async () => {
+      resolve({didCancel: true});
+      cleanup();
+    };
+
+    const cleanup = () => {
+      input.removeEventListener('change', inputChangeHandler);
+      input.removeEventListener('cancel', inputCancelHandler);
       document.body.removeChild(input);
-    });
+    };
+
+    input.addEventListener('change', inputChangeHandler);
+    input.addEventListener('cancel', inputCancelHandler);
 
     const event = new MouseEvent('click');
     input.dispatchEvent(event);
