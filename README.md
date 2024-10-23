@@ -50,11 +50,21 @@ No permissions required (`saveToPhotos` requires permission [check](#note-on-fil
 
 Note: This library does not require `Manifest.permission.CAMERA`, if your app declares as using this permission in manifest then you have to obtain the permission before using `launchCamera`.
 
-#### Targeting below Android API v30
+#### Targeting Android API Levels Below 30
 
-Check if your application meets the requirement for AndroidX Photo Picker, otherwise add the entry to your `AndroidManifest.xml`: <https://developer.android.com/training/data-storage/shared/photopicker#device-availability>
+If your app's `minSdkVersion` is set to below 30 and it does not already include or depend on `androidx.activity:activity:1.7.+` or a newer version, you'll need to add the following line to the dependencies section of your `app/build.gradle` file to ensure support for the backported AndroidX Photo Picker:
 
-Alternatively check out the example application's `example/android/app/src/main/AndroidManifest.xml`
+```groovy
+dependencies {
+    ...
+    implementation("androidx.activity:activity:1.7.+")
+    ...
+}
+```
+
+Additionally, you may need to update your `AndroidManifest.xml` to trigger the installation of the backported Photo Picker. For reference, you can check the example app's configuration in `example/android/app/src/main/AndroidManifest.xml` and `example/android/app/build.gradle`.
+
+For more details, consult the Android documentation on AndroidX Photo Picker: [https://developer.android.com/training/data-storage/shared/photopicker](https://developer.android.com/training/data-storage/shared/photopicker)
 
 ## API Reference
 
