@@ -52,12 +52,12 @@ Note: This library does not require `Manifest.permission.CAMERA`, if your app de
 
 #### Targeting Android API Levels Below 30
 
-If your app's `minSdkVersion` is set to below 30 and it does not already include or depend on `androidx.activity:activity:1.7.+` or a newer version, you'll need to add the following line to the dependencies section of your `app/build.gradle` file to ensure support for the backported AndroidX Photo Picker:
+If your app's `minSdkVersion` is set to below 30 and it does not already include or depend on `androidx.activity:activity:1.9.+` or a newer version, you'll need to add the following line to the dependencies section of your `app/build.gradle` file to ensure support for the backported AndroidX Photo Picker:
 
 ```groovy
 dependencies {
     ...
-    implementation("androidx.activity:activity:1.7.+")
+    implementation("androidx.activity:activity:1.9.+")
     ...
 }
 ```
