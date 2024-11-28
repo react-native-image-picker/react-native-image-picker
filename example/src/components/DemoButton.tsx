@@ -1,5 +1,5 @@
 import React from 'react';
-import {StyleSheet, Text, Pressable, ViewStyle, TextStyle} from 'react-native';
+import {Pressable, StyleSheet, Text, TextStyle, ViewStyle} from 'react-native';
 
 interface Props {
   onPress: () => void;
