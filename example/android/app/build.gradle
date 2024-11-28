@@ -109,6 +109,13 @@ dependencies {
     implementation("com.facebook.react:react-android")
     implementation("com.facebook.react:flipper-integration")
 
+    /**
+     * androidx.activity:activity >= 1.7.0 is required for the backported photo picker to work on Android < 30.
+     * It is recommended to have version >= 1.9.0, because there were several fixes to the Photo Picker.
+     * https://developer.android.com/jetpack/androidx/releases/activity#version_19_2.
+     */
+    implementation("androidx.activity:activity:1.9.+")
+
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {
