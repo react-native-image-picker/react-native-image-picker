@@ -6,56 +6,43 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "web": "webpack serve --mode=development --config webpack.config.js",
+    "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
+    "test": "jest"
   },
   "dependencies": {
-    "react": "18.2.0",
-    "react-dom": "^18.2.0",
-    "react-native": "0.73.6",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-native": "0.76.3",
     "react-native-image-picker": "link:../",
-    "react-native-web": "0.17.7"
+    "react-native-web": "0.19.13"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0",
-    "@babel/runtime": "^7.20.0",
-    "@react-native/babel-preset": "0.73.21",
-    "@react-native/eslint-config": "0.73.2",
-    "@react-native/metro-config": "0.73.5",
-    "@react-native/typescript-config": "0.73.1",
+    "@babel/core": "^7.25.2",
+    "@babel/preset-env": "^7.25.3",
+    "@babel/runtime": "^7.25.0",
+    "@react-native-community/cli": "15.0.1",
+    "@react-native-community/cli-platform-android": "15.0.1",
+    "@react-native-community/cli-platform-ios": "15.0.1",
+    "@react-native/babel-preset": "0.76.3",
+    "@react-native/eslint-config": "0.76.3",
+    "@react-native/metro-config": "0.76.3",
+    "@react-native/typescript-config": "0.76.3",
     "@types/react": "^18.2.6",
     "@types/react-test-renderer": "^18.0.0",
-    "@typescript-eslint/eslint-plugin": "^5.7.0",
-    "@typescript-eslint/parser": "^5.7.0",
     "babel-jest": "^29.6.3",
     "babel-loader": "^8.2.5",
     "babel-plugin-module-resolver": "^4.1.0",
-    "babel-plugin-react-native-web": "^0.18.7",
+    "babel-plugin-react-native-web": "^0.19.13",
     "eslint": "^8.19.0",
     "html-webpack-plugin": "^5.5.0",
     "jest": "^29.6.3",
     "prettier": "2.8.8",
-    "react-test-renderer": "18.2.0",
-    "ts-loader": "^9.3.1",
+    "react-test-renderer": "18.3.1",
     "typescript": "5.0.4",
     "webpack": "^5.74.0",
     "webpack-cli": "^4.10.0",
     "webpack-dev-server": "^4.9.3"
-  },
-  "resolutions": {
-    "@types/react": "^17"
-  },
-  "jest": {
-    "preset": "react-native",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "jsx",
-      "json",
-      "node"
-    ]
   },
   "engines": {
     "node": ">=18"
