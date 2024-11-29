@@ -19,7 +19,7 @@ Pod::Spec.new do |s|
     'RNImagePickerPrivacyInfo' => ['ios/PrivacyInfo.xcprivacy'],
   }
 
-  s.frameworks   = 'Photos','PhotosUI'
+  s.frameworks   = 'Photos','PhotosUI', 'AVFoundation', 'CoreMedia'
 
   if defined?(install_modules_dependencies) != nil
     install_modules_dependencies(s)

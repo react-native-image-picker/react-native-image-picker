@@ -18,19 +18,179 @@ const DEFAULT_OPTIONS: Pick<
 };
 
 export function camera(
-  options: ImageLibraryOptions = DEFAULT_OPTIONS,
+  options: CameraOptions = DEFAULT_OPTIONS,
   callback?: Callback,
 ): Promise<ImagePickerResponse> {
-  return new Promise((resolve) => {
+  if (options.mediaType !== 'photo') {
     const result = {
-      errorCode: 'camera_unavailable' as ErrorCode,
-      errorMessage: 'launchCamera is not supported for web yet',
-    };
+      errorCode: 'others' as ErrorCode,
+      errorMessage: 'For now, only photo mediaType is supported for web',
+    }
 
     if (callback) callback(result);
 
-    resolve(result);
-  });
+    return Promise.resolve(result);
+  }
+
+  const container = document.createElement('div');
+  const wrapper = document.createElement('div');
+  const content = document.createElement('div');
+  const buttons = document.createElement('div');
+  const btnCapture = document.createElement('button');
+  const btnBack = document.createElement('button');
+  const btnSave = document.createElement('button');
+  const btnCancel = document.createElement('button');
+  const video = document.createElement('video');
+  const canvas = document.createElement('canvas');
+
+  // init video
+  navigator.mediaDevices.getUserMedia({ audio: false, video: true })
+    .then(stream => {
+      video.srcObject = stream;
+      video.play();
+    }).catch(err => {
+      console.log(err);
+    })
+
+  const isAlreadyUsingFontAwesome = !!document.getElementsByClassName('fa').length;
+
+  if (!isAlreadyUsingFontAwesome) {
+    const isAlreadyInjectedFontAwesome = !!document.getElementById('injected-font-awesome');
+    if (!isAlreadyInjectedFontAwesome) { 
+      // inject font-awesome
+      const head = document.getElementsByTagName('HEAD')[0];
+      const link = document.createElement('link');
+      link.id = 'injected-font-awesome';
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css';
+      head.appendChild(link);
+    }
+  }
+
+  container.style.cssText = `    
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+  
+  wrapper.style.cssText = `
+    position: relative;
+    min-height: min(480px, 100vh);
+    min-width: min(640px, 100vw);
+    border-radius: 8px 8px 0 0;
+    background-color: #333333;
+  `;
+
+  video.style.cssText = 
+  canvas.style.cssText = `
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 8px 8px 0 0;
+  `;
+
+  content.style.cssText = `
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+  `;
+
+  buttons.style.cssText = `
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    min-height: 60px;
+    background-color: #333333;
+    border-radius: 0 0 8px 8px;  
+  `;
+ 
+  btnCapture.innerHTML = '<i class="fa fa-2x fa-camera"></i>';
+  // btnCapture.title = 'Capture';
+  btnBack.innerHTML = '<i class="fa fa-2x fa-undo"></i>';
+  // btnBack.title = 'Back';
+  btnSave.innerHTML = '<i class="fa fa-2x fa-check"></i>';
+  // btnSave.title = 'Apply';
+  btnCancel.innerHTML = '<i class="fa fa-2x fa-close"></i>';
+  // btnCancel.title = 'Cancel';
+
+  btnCapture.style.cssText =
+  btnBack.style.cssText =
+  btnSave.style.cssText =
+  btnCancel.style.cssText = `
+    padding: 10px;
+    color: #f2f2f2;
+    border: 0;
+    background: transparent;
+  `;
+
+  wrapper.append(video);
+  wrapper.append(canvas);
+  content.append(wrapper);
+  content.append(buttons);
+  container.append(content);
+
+  document.body.appendChild(container);
+
+  let hasPhoto = false;
+
+  const handleButtons = () => {
+    buttons.innerHTML = '';
+    if (hasPhoto) {
+      buttons.append(btnBack);
+      buttons.append(btnSave);
+    } else {
+      buttons.append(btnCapture);
+    }
+    buttons.append(btnCancel);
+  }
+
+  handleButtons();
+
+  return new Promise((resolve) => {
+    btnCapture.addEventListener('click', async () => {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d')?.drawImage(video, 0, 0, canvas.width, canvas.height);
+      hasPhoto = true;
+      handleButtons();
+    })
+
+    btnBack.addEventListener('click', () => {
+      canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
+      hasPhoto = false;
+      handleButtons();
+    })
+
+    btnSave.addEventListener('click', async () => {
+      const uri = canvas.toDataURL('image/png');
+      const asset: Asset = { uri };
+      const result = {assets: [asset]};
+
+      if (callback) callback(result);
+      resolve(result);
+
+      document.body.removeChild(container);
+    })
+    
+    btnCancel.addEventListener('click', async () => {
+      const result = {
+        assets: [],
+        didCancel: true,
+      }
+
+      if (callback) callback(result);
+      resolve(result);
+
+      document.body.removeChild(container);
+    })
+  })
 }
 
 export function imageLibrary(
@@ -61,7 +221,7 @@ export function imageLibrary(
   document.body.appendChild(input);
 
   return new Promise((resolve) => {
-    input.addEventListener('change', async () => {
+    const inputChangeHandler = async () => {
       if (input.files) {
         if (options.selectionLimit! <= 1) {
           const img = await readFile(input.files[0], {
@@ -90,8 +250,22 @@ export function imageLibrary(
           resolve(result);
         }
       }
+      cleanup();
+    };
+
+    const inputCancelHandler = async () => {
+      resolve({didCancel: true});
+      cleanup();
+    };
+
+    const cleanup = () => {
+      input.removeEventListener('change', inputChangeHandler);
+      input.removeEventListener('cancel', inputCancelHandler);
       document.body.removeChild(input);
-    });
+    };
+
+    input.addEventListener('change', inputChangeHandler);
+    input.addEventListener('cancel', inputCancelHandler);
 
     const event = new MouseEvent('click');
     input.dispatchEvent(event);
