@@ -15,6 +15,10 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/react-native-image-picker/react-native-image-picker.git", :tag => "v#{s.version}" }
   s.source_files  = "ios/*.{h,m,mm}"
 
+  s.resource_bundles = {
+    'RNImagePickerPrivacyInfo' => ['ios/PrivacyInfo.xcprivacy'],
+  }
+
   s.frameworks   = 'Photos','PhotosUI', 'AVFoundation', 'CoreMedia'
 
   if defined?(install_modules_dependencies) != nil
