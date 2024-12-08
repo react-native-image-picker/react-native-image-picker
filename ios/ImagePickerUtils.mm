@@ -6,7 +6,7 @@
 
 + (void) setupPickerFromOptions:(UIImagePickerController *)picker options:(NSDictionary *)options target:(RNImagePickerTarget)target
 {
-    if ([[options objectForKey:@"mediaType"] isEqualToString:@"video"]) {
+    if ([options[@"mediaType"] isEqualToString:@"video"] || [options[@"mediaType"] isEqualToString:@"mixed"]) {
 
         if ([[options objectForKey:@"videoQuality"] isEqualToString:@"high"]) {
             picker.videoQuality = UIImagePickerControllerQualityTypeHigh;
