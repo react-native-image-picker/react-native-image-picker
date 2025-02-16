@@ -203,10 +203,10 @@ public class Utils {
     }
 
     private static boolean shouldConvertToJpeg(String mimeType, Options options) {
-        return options.convertToJpeg && mimeType != null && mimeType.equals("image/heic");
+        return options.convertToJpeg && mimeType != null && (mimeType.equals("image/heic") || mimeType.equals("image/heif"));
     }
 
-    // Resize image and/or convert it from HEIC to JPEG
+    // Resize image and/or convert it from HEIC/HEIF to JPEG
     // When decoding a jpg to bitmap all exif meta data will be lost, so make sure to copy orientation exif to new file else image might have wrong orientations
     public static Uri resizeOrConvertImage(Uri uri, Context context, Options options) {
         try {
