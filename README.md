@@ -38,10 +38,10 @@ npx pod-install ios
 
 Add the appropriate keys to your `Info.plist` depending on your requirement:
 
-| Requirement                    | Key                                                 |
-| ------------------------------ | --------------------------------------------------- |
-| Select image/video from photos | NSPhotoLibraryUsageDescription                      |
-| Capture Image                  | NSCameraUsageDescription                            |
+| Requirement                    | Key                                                     |
+| ------------------------------ | ------------------------------------------------------- |
+| Select image/video from photos | NSPhotoLibraryUsageDescription                          |
+| Capture Image                  | NSCameraUsageDescription                                |
 | Capture Video                  | NSCameraUsageDescription & NSMicrophoneUsageDescription |
 
 ### Android
@@ -107,8 +107,9 @@ The `callback` will be called with a response object, refer to [The Response Obj
 ## Options
 
 | Option                  | iOS | Android | Web | Description                                                                                                                                                                                                                                |
-| ----------------------- | --- | ------- | --- |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ----------------------- | --- | ------- | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | mediaType               | OK  | OK      | OK  | `photo` or `video` or `mixed`(`launchCamera` on Android does not support 'mixed'). Web only supports 'photo' for now.                                                                                                                      |
+| restrictMimeTypes       | NO  | OK      | NO  | Array containing the mime-types allowed to be picked. Default is empty (everything).                                                                                                                                                       |
 | maxWidth                | OK  | OK      | NO  | To resize the image.                                                                                                                                                                                                                       |
 | maxHeight               | OK  | OK      | NO  | To resize the image.                                                                                                                                                                                                                       |
 | videoQuality            | OK  | OK      | NO  | `low`, `medium`, or `high` on iOS, `low` or `high` on Android.                                                                                                                                                                             |
@@ -124,6 +125,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | formatAsMp4             | OK  | NO      | NO  | Converts the selected video to MP4 (iOS Only).                                                                                                                                                                                             |
 | assetRepresentationMode | OK  | OK      | NO  | A mode that determines which representation to use if an asset contains more than one on iOS or disables HEIC/HEIF to JPEG conversion on Android if set to 'current'. Possible values: 'auto', 'current', 'compatible'. Default is 'auto'. |
 
+|
 
 ## The Response Object
 
@@ -136,20 +138,20 @@ The `callback` will be called with a response object, refer to [The Response Obj
 
 ## Asset Object
 
-| key       | iOS | Android | Web | Photo/Video | Requires Permissions | Description                                                                                                                                                                                                                                                                    |
-| --------- | --- | ------- | --- | ----------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| base64    | OK  | OK      | OK  | PHOTO ONLY  | NO                   | The base64 string of the image (photos only)                                                                                                                                                                                                                                   |
-| uri       | OK  | OK      | OK  | BOTH        | NO                   | The file uri in app specific cache storage. Except when picking **video from Android gallery** where you will get read only content uri, to get file uri in this case copy the file to app specific storage using any react-native library. For web it uses the base64 as uri. |
-| originalPath       | NO  | OK      | NO  | BOTH        | NO                   | The original file path. |
-| width     | OK  | OK      | OK  | BOTH        | NO                   | Asset dimensions                                                                                                                                                                                                                                                               |
-| height    | OK  | OK      | OK  | BOTH        | NO                   | Asset dimensions                                                                                                                                                                                                                                                               |
-| fileSize  | OK  | OK      | NO  | BOTH        | NO                   | The file size                                                                                                                                                                                                                                                                  |
-| type      | OK  | OK      | NO  | BOTH        | NO                   | The file type                                                                                                                                                                                                                                                                  |
-| fileName  | OK  | OK      | NO  | BOTH        | NO                   | The file name                                                                                                                                                                                                                                                                  |
-| duration  | OK  | OK      | NO  | VIDEO ONLY  | NO                   | The selected video duration in seconds                                                                                                                                                                                                                                         |
-| bitrate   | --- | OK      | NO  | VIDEO ONLY  | NO                   | The average bitrate (in bits/sec) of the selected video, if available. (Android only)                                                                                                                                                                                          |
-| timestamp | OK  | OK      | NO  | BOTH        | YES                  | Timestamp of the asset. Only included if 'includeExtra' is true                                                                                                                                                                                                                |
-| id        | OK  | OK      | NO  | BOTH        | YES                  | local identifier of the photo or video. On Android, this is the same as fileName                                                                                                                                                                                               |
+| key          | iOS | Android | Web | Photo/Video | Requires Permissions | Description                                                                                                                                                                                                                                                                    |
+| ------------ | --- | ------- | --- | ----------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| base64       | OK  | OK      | OK  | PHOTO ONLY  | NO                   | The base64 string of the image (photos only)                                                                                                                                                                                                                                   |
+| uri          | OK  | OK      | OK  | BOTH        | NO                   | The file uri in app specific cache storage. Except when picking **video from Android gallery** where you will get read only content uri, to get file uri in this case copy the file to app specific storage using any react-native library. For web it uses the base64 as uri. |
+| originalPath | NO  | OK      | NO  | BOTH        | NO                   | The original file path.                                                                                                                                                                                                                                                        |
+| width        | OK  | OK      | OK  | BOTH        | NO                   | Asset dimensions                                                                                                                                                                                                                                                               |
+| height       | OK  | OK      | OK  | BOTH        | NO                   | Asset dimensions                                                                                                                                                                                                                                                               |
+| fileSize     | OK  | OK      | NO  | BOTH        | NO                   | The file size                                                                                                                                                                                                                                                                  |
+| type         | OK  | OK      | NO  | BOTH        | NO                   | The file type                                                                                                                                                                                                                                                                  |
+| fileName     | OK  | OK      | NO  | BOTH        | NO                   | The file name                                                                                                                                                                                                                                                                  |
+| duration     | OK  | OK      | NO  | VIDEO ONLY  | NO                   | The selected video duration in seconds                                                                                                                                                                                                                                         |
+| bitrate      | --- | OK      | NO  | VIDEO ONLY  | NO                   | The average bitrate (in bits/sec) of the selected video, if available. (Android only)                                                                                                                                                                                          |
+| timestamp    | OK  | OK      | NO  | BOTH        | YES                  | Timestamp of the asset. Only included if 'includeExtra' is true                                                                                                                                                                                                                |
+| id           | OK  | OK      | NO  | BOTH        | YES                  | local identifier of the photo or video. On Android, this is the same as fileName                                                                                                                                                                                               |
 
 ## Note on file storage
 
