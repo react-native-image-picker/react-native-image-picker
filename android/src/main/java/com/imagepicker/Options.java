@@ -29,7 +29,7 @@ public class Options {
         selectionLimit = options.getInt("selectionLimit");
         includeBase64 = options.getBoolean("includeBase64");
         includeExtra = options.getBoolean("includeExtra");
-        useLegacyPicker = options.getBoolean("useLegacyPicker")
+        useLegacyPicker = !options.hasKey("useLegacyPicker") ? false : options.getBoolean("useLegacyPicker");
         
         String videoQualityString = options.getString("videoQuality");
         if (!TextUtils.isEmpty(videoQualityString) && !videoQualityString.toLowerCase().equals("high")) {
