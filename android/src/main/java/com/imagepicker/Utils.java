@@ -207,7 +207,6 @@ public class Utils {
     }
 
     // Resize image and/or convert it from HEIC/HEIF to JPEG
-    // When decoding a jpg to bitmap all exif meta data will be lost, so make sure to copy orientation exif to new file else image might have wrong orientations
     public static Uri resizeOrConvertImage(Uri uri, Context context, Options options) {
         try {
             int[] origDimens = getImageDimensions(uri, context);
@@ -239,21 +238,67 @@ public class Utils {
                 }
 
                 File file = createFile(context, getFileTypeFromMime(mimeType));
+                Uri newUri = Uri.fromFile(file);
 
                 try (OutputStream os = context.getContentResolver().openOutputStream(Uri.fromFile(file))) {
                     b.compress(getBitmapCompressFormat(mimeType), targetQuality, os);
                 }
 
+                copyExif(uri, newUri, context);
+
                 setOrientation(file, originalOrientation, context);
 
                 deleteFile(uri);
 
-                return Uri.fromFile(file);
+                return newUri;
             }
 
         } catch (Exception e) {
             e.printStackTrace();
             return uri; // cannot resize the image, return the original uri
+        }
+    }
+
+    private static void copyExif(Uri sourceUri, Uri destUri, Context context) {
+        String[] exifTags = {
+            ExifInterface.TAG_DATETIME,
+            ExifInterface.TAG_GPS_LATITUDE,
+            ExifInterface.TAG_GPS_LATITUDE_REF,
+            ExifInterface.TAG_GPS_LONGITUDE,
+            ExifInterface.TAG_GPS_LONGITUDE_REF,
+            ExifInterface.TAG_GPS_ALTITUDE,
+            ExifInterface.TAG_ORIENTATION,
+            ExifInterface.TAG_WHITE_BALANCE,
+            ExifInterface.TAG_FLASH,
+            ExifInterface.TAG_FOCAL_LENGTH,
+            ExifInterface.TAG_ISO_SPEED_RATINGS,
+            ExifInterface.TAG_EXPOSURE_TIME,
+            ExifInterface.TAG_MAKE,
+            ExifInterface.TAG_MODEL,
+            ExifInterface.TAG_SOFTWARE,
+            ExifInterface.TAG_ARTIST,
+            ExifInterface.TAG_GPS_TIMESTAMP,
+            ExifInterface.TAG_LENS_MODEL,
+            ExifInterface.TAG_F_NUMBER,
+            ExifInterface.TAG_SUBSEC_TIME,
+            ExifInterface.TAG_SUBSEC_TIME_DIGITIZED,
+            ExifInterface.TAG_SUBSEC_TIME_ORIGINAL
+        };
+    
+        try (InputStream sourceStream = context.getContentResolver().openInputStream(sourceUri)) {
+            ExifInterface originalExif = new ExifInterface(sourceStream);
+            ExifInterface newExif = new ExifInterface(destUri.getPath());
+
+            for (String exifTag : exifTags) {
+                String value = originalExif.getAttribute(exifTag);
+                if (value != null) {
+                    newExif.setAttribute(exifTag, value);
+                }
+            }
+
+            newExif.saveAttributes();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
