@@ -25,7 +25,7 @@ export function camera(
     const result = {
       errorCode: 'others' as ErrorCode,
       errorMessage: 'For now, only photo mediaType is supported for web',
-    }
+    };
 
     if (callback) callback(result);
 
@@ -43,27 +43,36 @@ export function camera(
   const video = document.createElement('video');
   const canvas = document.createElement('canvas');
 
+  let currentMediaStream: MediaStream | null = null;
+
   // init video
-  navigator.mediaDevices.getUserMedia({ audio: false, video: true })
-    .then(stream => {
+  navigator.mediaDevices
+    .getUserMedia({audio: false, video: true})
+    .then((stream) => {
+      currentMediaStream = stream;
       video.srcObject = stream;
       video.play();
-    }).catch(err => {
-      console.log(err);
     })
+    .catch((err) => {
+      console.log(err);
+    });
 
-  const isAlreadyUsingFontAwesome = !!document.getElementsByClassName('fa').length;
+  const isAlreadyUsingFontAwesome =
+    !!document.getElementsByClassName('fa').length;
 
   if (!isAlreadyUsingFontAwesome) {
-    const isAlreadyInjectedFontAwesome = !!document.getElementById('injected-font-awesome');
-    if (!isAlreadyInjectedFontAwesome) { 
+    const isAlreadyInjectedFontAwesome = !!document.getElementById(
+      'injected-font-awesome',
+    );
+    if (!isAlreadyInjectedFontAwesome) {
       // inject font-awesome
       const head = document.getElementsByTagName('HEAD')[0];
       const link = document.createElement('link');
       link.id = 'injected-font-awesome';
       link.rel = 'stylesheet';
       link.type = 'text/css';
-      link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css';
+      link.href =
+        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css';
       head.appendChild(link);
     }
   }
@@ -79,7 +88,7 @@ export function camera(
     align-items: center;
     justify-content: center;
   `;
-  
+
   wrapper.style.cssText = `
     position: relative;
     min-height: min(480px, 100vh);
@@ -88,8 +97,7 @@ export function camera(
     background-color: #333333;
   `;
 
-  video.style.cssText = 
-  canvas.style.cssText = `
+  video.style.cssText = canvas.style.cssText = `
     position: absolute;
     top: 0;
     left: 0;
@@ -110,7 +118,7 @@ export function camera(
     background-color: #333333;
     border-radius: 0 0 8px 8px;  
   `;
- 
+
   btnCapture.innerHTML = '<i class="fa fa-2x fa-camera"></i>';
   // btnCapture.title = 'Capture';
   btnBack.innerHTML = '<i class="fa fa-2x fa-undo"></i>';
@@ -121,9 +129,10 @@ export function camera(
   // btnCancel.title = 'Cancel';
 
   btnCapture.style.cssText =
-  btnBack.style.cssText =
-  btnSave.style.cssText =
-  btnCancel.style.cssText = `
+    btnBack.style.cssText =
+    btnSave.style.cssText =
+    btnCancel.style.cssText =
+      `
     padding: 10px;
     color: #f2f2f2;
     border: 0;
@@ -149,48 +158,62 @@ export function camera(
       buttons.append(btnCapture);
     }
     buttons.append(btnCancel);
-  }
+  };
 
   handleButtons();
+
+  function stopCamera() {
+    document.body.removeChild(container);
+
+    if (!currentMediaStream) return;
+
+    currentMediaStream.getTracks().forEach((track) => {
+      track.stop();
+    });
+    video.srcObject = null;
+    currentMediaStream = null;
+  }
 
   return new Promise((resolve) => {
     btnCapture.addEventListener('click', async () => {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      canvas.getContext('2d')?.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas
+        .getContext('2d')
+        ?.drawImage(video, 0, 0, canvas.width, canvas.height);
       hasPhoto = true;
       handleButtons();
-    })
+    });
 
     btnBack.addEventListener('click', () => {
       canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
       hasPhoto = false;
       handleButtons();
-    })
+    });
 
     btnSave.addEventListener('click', async () => {
       const uri = canvas.toDataURL('image/png');
-      const asset: Asset = { uri };
+      const asset: Asset = {uri};
       const result = {assets: [asset]};
 
       if (callback) callback(result);
       resolve(result);
 
-      document.body.removeChild(container);
-    })
-    
+      stopCamera();
+    });
+
     btnCancel.addEventListener('click', async () => {
       const result = {
         assets: [],
         didCancel: true,
-      }
+      };
 
       if (callback) callback(result);
       resolve(result);
 
-      document.body.removeChild(container);
-    })
-  })
+      stopCamera();
+    });
+  });
 }
 
 export function imageLibrary(
