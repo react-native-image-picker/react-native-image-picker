@@ -43,9 +43,12 @@ export function camera(
   const video = document.createElement('video');
   const canvas = document.createElement('canvas');
 
+  let currentMediaStream: MediaStream | null = null;
+
   // init video
   navigator.mediaDevices.getUserMedia({ audio: false, video: true })
     .then(stream => {
+      currentMediaStream = stream;
       video.srcObject = stream;
       video.play();
     }).catch(err => {
@@ -153,6 +156,18 @@ export function camera(
 
   handleButtons();
 
+  function stopCamera() {
+    document.body.removeChild(container);
+
+    if (!currentMediaStream) return;
+  
+    currentMediaStream.getTracks().forEach((track) => {
+      track.stop();
+    });
+    video.srcObject = null;
+    currentMediaStream = null;
+  }
+
   return new Promise((resolve) => {
     btnCapture.addEventListener('click', async () => {
       canvas.width = video.videoWidth;
@@ -176,7 +191,7 @@ export function camera(
       if (callback) callback(result);
       resolve(result);
 
-      document.body.removeChild(container);
+      stopCamera();
     })
     
     btnCancel.addEventListener('click', async () => {
@@ -188,7 +203,7 @@ export function camera(
       if (callback) callback(result);
       resolve(result);
 
-      document.body.removeChild(container);
+      stopCamera();
     })
   })
 }
