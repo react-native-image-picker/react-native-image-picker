@@ -18,6 +18,7 @@ export interface OptionsCommon {
     | 'overFullScreen'
     | 'overCurrentContext';
   assetRepresentationMode?: 'auto' | 'current' | 'compatible';
+  useLegacyPicker: boolean;
 }
 
 export interface ImageLibraryOptions extends OptionsCommon {

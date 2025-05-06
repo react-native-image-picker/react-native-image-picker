@@ -133,6 +133,7 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
         boolean isSingleSelect = selectionLimit == 1;
         boolean isPhoto = this.options.mediaType.equals(mediaTypePhoto);
         boolean isVideo = this.options.mediaType.equals(mediaTypeVideo);
+        boolean useLegacyPicker = this.options.useLegacyPicker;
 
         // Note: Casting works, even though Android Studio complains about it
         if (isPhoto) {
@@ -147,14 +148,19 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
                 .setMediaType(mediaType)
                 .build();
 
-        // https://developer.android.com/training/data-storage/shared/photopicker
-        if (isSingleSelect) {
-            libraryIntent = new PickVisualMedia().createIntent(this.reactContext.getApplicationContext(), mediaRequest);
+        if (useLegacyPicker) {
+            libraryIntent = new Intent(Intent.ACTION_PICK);
+            libraryIntent.setType("image/*");
         } else {
-            PickMultipleVisualMedia pickMultipleVisualMedia = selectionLimit > 1
-                    ? new PickMultipleVisualMedia(selectionLimit)
-                    : new PickMultipleVisualMedia();
-            libraryIntent = pickMultipleVisualMedia.createIntent(this.reactContext.getApplicationContext(), mediaRequest);
+            // https://developer.android.com/training/data-storage/shared/photopicker
+            if (isSingleSelect) {
+                libraryIntent = new PickVisualMedia().createIntent(this.reactContext.getApplicationContext(), mediaRequest);
+            } else {
+                PickMultipleVisualMedia pickMultipleVisualMedia = selectionLimit > 1
+                        ? new PickMultipleVisualMedia(selectionLimit)
+                        : new PickMultipleVisualMedia();
+                libraryIntent = pickMultipleVisualMedia.createIntent(this.reactContext.getApplicationContext(), mediaRequest);
+            }
         }
 
         if(this.options.restrictMimeTypes.length > 0) {

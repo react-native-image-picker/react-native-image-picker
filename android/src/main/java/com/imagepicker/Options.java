@@ -19,7 +19,8 @@ public class Options {
     Boolean useFrontCamera = false;
     String mediaType;
     String[] restrictMimeTypes;
-
+    Boolean useLegacyPicker = false;
+    
     Options(ReadableMap options) {
         mediaType = options.getString("mediaType");
         restrictMimeTypes = options.getArray("restrictMimeTypes").toArrayList().stream()
@@ -28,7 +29,8 @@ public class Options {
         selectionLimit = options.getInt("selectionLimit");
         includeBase64 = options.getBoolean("includeBase64");
         includeExtra = options.getBoolean("includeExtra");
-
+        useLegacyPicker = !options.hasKey("useLegacyPicker") ? false : options.getBoolean("useLegacyPicker");
+        
         String videoQualityString = options.getString("videoQuality");
         if (!TextUtils.isEmpty(videoQualityString) && !videoQualityString.toLowerCase().equals("high")) {
             videoQuality = 0;
