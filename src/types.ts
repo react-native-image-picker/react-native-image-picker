@@ -29,6 +29,7 @@ export interface CameraOptions extends OptionsCommon {
   durationLimit?: number;
   saveToPhotos?: boolean;
   cameraType?: CameraType;
+  androidCameraPackage?: string;
 }
 
 export interface Asset {
