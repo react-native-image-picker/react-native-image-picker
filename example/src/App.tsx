@@ -6,6 +6,8 @@ import {
   ScrollView,
   StyleSheet,
   View,
+  TextInput,
+  Text,
 } from 'react-native';
 import {DemoButton, DemoResponse, DemoTitle} from './components';
 
@@ -16,43 +18,68 @@ const includeExtra = true;
 
 export default function App() {
   const [response, setResponse] = React.useState<any>(null);
+  const [cameraPackage, setCameraPackage] = React.useState('');
 
-  const onButtonPress = React.useCallback((type, options) => {
-    if (type === 'capture') {
-      ImagePicker.launchCamera(options, setResponse);
-    } else {
-      ImagePicker.launchImageLibrary(options, setResponse);
-    }
-  }, []);
+  const onButtonPress = React.useCallback(
+    (
+      type: 'capture' | 'library',
+      options: ImagePicker.ImageLibraryOptions | ImagePicker.CameraOptions,
+    ) => {
+      const finalOptions = {
+        ...options,
+        ...(Platform.OS === 'android' &&
+          cameraPackage && {
+            androidCameraPackage: cameraPackage,
+          }),
+      };
+
+      if (type === 'capture') {
+        ImagePicker.launchCamera(finalOptions, setResponse);
+      } else {
+        ImagePicker.launchImageLibrary(finalOptions, setResponse);
+      }
+    },
+    [cameraPackage],
+  );
 
   return (
     <SafeAreaView style={styles.container}>
       <DemoTitle>🌄 React Native Image Picker</DemoTitle>
       <ScrollView>
         <View style={styles.buttonContainer}>
-          {actions.map(({title, type, options}) => {
-            return (
-              <DemoButton
-                key={title}
-                onPress={() => onButtonPress(type, options)}>
-                {title}
-              </DemoButton>
-            );
-          })}
+          {actions.map(({title, type, options}) => (
+            <DemoButton
+              key={title}
+              onPress={() => onButtonPress(type, options)}>
+              {title}
+            </DemoButton>
+          ))}
         </View>
+
+        {Platform.OS === 'android' && (
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Android Camera Package Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g. net.sourceforge.opencamera"
+              value={cameraPackage}
+              onChangeText={setCameraPackage}
+            />
+          </View>
+        )}
+
         <DemoResponse>{response}</DemoResponse>
 
-        {response?.assets &&
-          response?.assets.map(({uri}: {uri: string}) => (
-            <View key={uri} style={styles.imageContainer}>
-              <Image
-                resizeMode="cover"
-                resizeMethod="scale"
-                style={styles.image}
-                source={{uri: uri}}
-              />
-            </View>
-          ))}
+        {response?.assets?.map(({uri}: {uri: string}) => (
+          <View key={uri} style={styles.imageContainer}>
+            <Image
+              resizeMode="cover"
+              resizeMethod="scale"
+              style={styles.image}
+              source={{uri}}
+            />
+          </View>
+        ))}
       </ScrollView>
     </SafeAreaView>
   );
@@ -62,6 +89,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'aliceblue',
+  },
+  inputContainer: {
+    padding: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 6,
+  },
+  input: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    backgroundColor: '#fff',
   },
   buttonContainer: {
     flexDirection: 'row',

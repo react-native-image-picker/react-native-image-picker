@@ -19,6 +19,7 @@ public class Options {
     Boolean useFrontCamera = false;
     String mediaType;
     String[] restrictMimeTypes;
+    String androidCameraPackage;
 
     Options(ReadableMap options) {
         mediaType = options.getString("mediaType");
@@ -45,6 +46,10 @@ public class Options {
 
         if (options.getString("cameraType").equals("front")) {
             useFrontCamera = true;
+        }
+
+        if( options.hasKey("androidCameraPackage")) {
+            androidCameraPackage = options.getString("androidCameraPackage");
         }
 
         quality = (int) (options.getDouble("quality") * 100);

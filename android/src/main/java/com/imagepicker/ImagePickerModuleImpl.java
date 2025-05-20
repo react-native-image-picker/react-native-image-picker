@@ -92,6 +92,9 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
         } else {
             requestCode = REQUEST_LAUNCH_IMAGE_CAPTURE;
             cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            if(this.options.androidCameraPackage != null && !this.options.androidCameraPackage.isEmpty()) {
+                cameraIntent.setPackage(this.options.androidCameraPackage);
+            }
             file = createFile(reactContext, "jpg");
             cameraCaptureURI = createUri(file, reactContext);
         }
