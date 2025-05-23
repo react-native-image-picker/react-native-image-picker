@@ -21,6 +21,26 @@
 
 + (NSString *) getFileSizeFromUrl:(NSURL *)url;
 
-+ (PHAsset *)fetchPHAssetOnIOS13:(NSDictionary<NSString *,id> *)info;
++ (PHAsset *)fetchAssetFromImageInfo:(NSDictionary<NSString *,id> *)info;
+
++ (BOOL)isAssetInICloud:(PHAsset *)asset;
+
++ (void)fetchImageFromICloudIfNeeded:(PHAsset *)asset 
+                         targetSize:(CGSize)targetSize 
+                        contentMode:(PHImageContentMode)contentMode 
+                            options:(PHImageRequestOptions *)options 
+                         completion:(void (^)(UIImage *image, NSDictionary *info, NSError *error))completion;
+
++ (void)fetchImageDataFromICloudIfNeeded:(PHAsset *)asset 
+                              options:(PHImageRequestOptions *)options 
+                           completion:(void (^)(NSData *imageData, NSString *dataUTI, UIImageOrientation orientation, NSDictionary *info, NSError *error))completion;
+
++ (NSData *)getImageDataHandlingICloud:(NSURL *)url phAsset:(PHAsset *)asset;
+
++ (void)getImageDataHandlingICloudAsync:(NSURL *)url 
+                                phAsset:(PHAsset *)asset 
+                             completion:(void (^)(NSData *imageData, NSError *error))completion;
+
++ (UIImageOrientation)UIImageOrientationFromCGImagePropertyOrientation:(CGImagePropertyOrientation)cgOrientation;
     
 @end

@@ -1,6 +1,7 @@
 #import "ImagePickerUtils.h"
 #import <CoreServices/CoreServices.h>
 #import <PhotosUI/PhotosUI.h>
+#import <AVFoundation/AVFoundation.h>
 
 @implementation ImagePickerUtils
 
@@ -48,7 +49,6 @@
 
 + (PHPickerConfiguration *)makeConfigurationFromOptions:(NSDictionary *)options target:(RNImagePickerTarget)target API_AVAILABLE(ios(14))
 {
-#if __has_include(<PhotosUI/PHPicker.h>)
     PHPickerConfiguration *configuration;
     
     if(options[@"includeExtra"]) {
@@ -78,9 +78,6 @@
         configuration.filter = [PHPickerFilter anyFilterMatchingSubfilters: @[PHPickerFilter.imagesFilter, PHPickerFilter.videosFilter]];
     }
     return configuration;
-#else
-    return nil;
-#endif
 }
 
 
@@ -177,18 +174,315 @@
     return newImage;
 }
 
-+ (PHAsset *)fetchPHAssetOnIOS13:(NSDictionary<NSString *,id> *)info
++ (PHAsset *)fetchAssetFromImageInfo:(NSDictionary<NSString *,id> *)info
 {
-    NSURL *referenceURL = [info objectForKey:UIImagePickerControllerReferenceURL];
-
-    if(!referenceURL) {
-      return nil;
+    // In iOS 14+, the best practice is to use PHPicker with assetIdentifier
+    // But if we're using UIImagePickerController and have a URL, we can attempt to find the asset
+    NSURL *assetURL = info[UIImagePickerControllerImageURL];
+    if (!assetURL) {
+        return nil;
     }
+    
+    // Try to get the asset based on the file path since we can't use ALAssetURLs anymore
+    NSString *localID = [self getLocalIdentifierFromImageURL:assetURL];
+    if (localID) {
+        PHFetchResult* fetchResult = [PHAsset fetchAssetsWithLocalIdentifiers:@[localID] options:nil];
+        return fetchResult.firstObject;
+    }
+    
+    return nil;
+}
 
-    // We fetch the asset like this to support iOS 10 and lower
-    // see: https://stackoverflow.com/a/52529904/4177049
-    PHFetchResult* fetchResult = [PHAsset fetchAssetsWithALAssetURLs:@[referenceURL] options:nil];
-    return fetchResult.firstObject;
+// Helper method to try to get local identifier from a file URL
++ (NSString *)getLocalIdentifierFromImageURL:(NSURL *)url
+{
+    if (!url) {
+        return nil;
+    }
+    
+    // Try to find matching assets in the photo library
+    PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
+    fetchOptions.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
+    
+    __block NSString *localIdentifier = nil;
+    
+    // Get the file name and create date to help narrow down the search
+    NSString *fileName = url.lastPathComponent;
+    
+    // Fetch all photo assets and look for a match
+    PHFetchResult *result = [PHAsset fetchAssetsWithOptions:fetchOptions];
+    [result enumerateObjectsUsingBlock:^(PHAsset *asset, NSUInteger idx, BOOL *stop) {
+        // Request the asset resource to get the file name
+        PHAssetResource *resource = [[PHAssetResource assetResourcesForAsset:asset] firstObject];
+        if ([resource.originalFilename isEqualToString:fileName]) {
+            localIdentifier = asset.localIdentifier;
+            *stop = YES;
+        }
+    }];
+    
+    return localIdentifier;
+}
+
++ (BOOL)isAssetInICloud:(PHAsset *)asset
+{
+    if (!asset) {
+        return NO;
+    }
+    
+    PHImageRequestOptions *options = [[PHImageRequestOptions alloc] init];
+    options.networkAccessAllowed = NO;
+    options.synchronous = YES;
+    
+    __block BOOL isInICloud = NO;
+    
+    [[PHImageManager defaultManager] requestImageDataAndOrientationForAsset:asset 
+                                                                    options:options 
+                                                              resultHandler:^(NSData *imageData, NSString *dataUTI, CGImagePropertyOrientation orientation, NSDictionary *info) {
+        if (!imageData) {
+            NSNumber *isInCloudKey = info[PHImageResultIsInCloudKey];
+            if (isInCloudKey && [isInCloudKey boolValue]) {
+                isInICloud = YES;
+            }
+        }
+    }];
+    
+    return isInICloud;
+}
+
++ (UIImageOrientation)UIImageOrientationFromCGImagePropertyOrientation:(CGImagePropertyOrientation)cgOrientation {
+    switch (cgOrientation) {
+        case kCGImagePropertyOrientationUp:
+            return UIImageOrientationUp;
+        case kCGImagePropertyOrientationDown:
+            return UIImageOrientationDown;
+        case kCGImagePropertyOrientationLeft:
+            return UIImageOrientationLeft;
+        case kCGImagePropertyOrientationRight:
+            return UIImageOrientationRight;
+        case kCGImagePropertyOrientationUpMirrored:
+            return UIImageOrientationUpMirrored;
+        case kCGImagePropertyOrientationDownMirrored:
+            return UIImageOrientationDownMirrored;
+        case kCGImagePropertyOrientationLeftMirrored:
+            return UIImageOrientationLeftMirrored;
+        case kCGImagePropertyOrientationRightMirrored:
+            return UIImageOrientationRightMirrored;
+        default:
+            return UIImageOrientationUp;
+    }
+}
+
++ (void)fetchImageFromICloudIfNeeded:(PHAsset *)asset 
+                         targetSize:(CGSize)targetSize 
+                        contentMode:(PHImageContentMode)contentMode 
+                            options:(PHImageRequestOptions *)options 
+                         completion:(void (^)(UIImage *image, NSDictionary *info, NSError *error))completion
+{
+    if (!asset) {
+        NSError *error = [NSError errorWithDomain:@"ImagePickerUtils" 
+                                             code:1001 
+                                         userInfo:@{NSLocalizedDescriptionKey: @"PHAsset is nil"}];
+        completion(nil, nil, error);
+        return;
+    }
+    
+    if (!options) {
+        options = [[PHImageRequestOptions alloc] init];
+    }
+    
+    options.networkAccessAllowed = YES;
+    options.deliveryMode = PHImageRequestOptionsDeliveryModeHighQualityFormat;
+    options.resizeMode = PHImageRequestOptionsResizeModeExact;
+    
+    [[PHImageManager defaultManager] requestImageForAsset:asset 
+                                               targetSize:targetSize 
+                                              contentMode:contentMode 
+                                                  options:options 
+                                            resultHandler:^(UIImage *result, NSDictionary *info) {
+        BOOL downloadNeeded = [info[PHImageResultIsInCloudKey] boolValue];
+        BOOL cancelled = [info[PHImageCancelledKey] boolValue];
+        BOOL error = info[PHImageErrorKey] != nil;
+        
+        if (cancelled) {
+            NSError *cancelError = [NSError errorWithDomain:@"ImagePickerUtils" 
+                                                       code:1002 
+                                                   userInfo:@{NSLocalizedDescriptionKey: @"iCloud download was cancelled"}];
+            completion(nil, info, cancelError);
+            return;
+        }
+        
+        if (error) {
+            completion(nil, info, info[PHImageErrorKey]);
+            return;
+        }
+        
+        if (result) {
+            completion(result, info, nil);
+        } else if (downloadNeeded) {
+            NSError *downloadError = [NSError errorWithDomain:@"ImagePickerUtils" 
+                                                         code:1003 
+                                                     userInfo:@{NSLocalizedDescriptionKey: @"Failed to download image from iCloud"}];
+            completion(nil, info, downloadError);
+        } else {
+            NSError *unknownError = [NSError errorWithDomain:@"ImagePickerUtils" 
+                                                        code:1004 
+                                                    userInfo:@{NSLocalizedDescriptionKey: @"Unknown error occurred while fetching image"}];
+            completion(nil, info, unknownError);
+        }
+    }];
+}
+
++ (void)fetchImageDataFromICloudIfNeeded:(PHAsset *)asset 
+                              options:(PHImageRequestOptions *)options 
+                           completion:(void (^)(NSData *imageData, NSString *dataUTI, UIImageOrientation orientation, NSDictionary *info, NSError *error))completion
+{
+    if (!asset) {
+        NSError *error = [NSError errorWithDomain:@"ImagePickerUtils" 
+                                             code:1001 
+                                         userInfo:@{NSLocalizedDescriptionKey: @"PHAsset is nil"}];
+        completion(nil, nil, UIImageOrientationUp, nil, error);
+        return;
+    }
+    
+    if (!options) {
+        options = [[PHImageRequestOptions alloc] init];
+    }
+    
+    options.networkAccessAllowed = YES;
+    options.deliveryMode = PHImageRequestOptionsDeliveryModeHighQualityFormat;
+    
+    [[PHImageManager defaultManager] requestImageDataAndOrientationForAsset:asset 
+                                                                    options:options 
+                                                              resultHandler:^(NSData *imageData, NSString *dataUTI, CGImagePropertyOrientation cgOrientation, NSDictionary *info) {
+        BOOL downloadNeeded = [info[PHImageResultIsInCloudKey] boolValue];
+        BOOL cancelled = [info[PHImageCancelledKey] boolValue];
+        BOOL error = info[PHImageErrorKey] != nil;
+        
+        UIImageOrientation uiOrientation = [self UIImageOrientationFromCGImagePropertyOrientation:cgOrientation];
+        
+        if (cancelled) {
+            NSError *cancelError = [NSError errorWithDomain:@"ImagePickerUtils" 
+                                                       code:1002 
+                                                   userInfo:@{NSLocalizedDescriptionKey: @"iCloud download was cancelled"}];
+            completion(nil, nil, UIImageOrientationUp, info, cancelError);
+            return;
+        }
+        
+        if (error) {
+            completion(nil, nil, UIImageOrientationUp, info, info[PHImageErrorKey]);
+            return;
+        }
+        
+        if (imageData) {
+            completion(imageData, dataUTI, uiOrientation, info, nil);
+        } else if (downloadNeeded) {
+            NSError *downloadError = [NSError errorWithDomain:@"ImagePickerUtils" 
+                                                         code:1003 
+                                                     userInfo:@{NSLocalizedDescriptionKey: @"Failed to download image data from iCloud"}];
+            completion(nil, nil, UIImageOrientationUp, info, downloadError);
+        } else {
+            NSError *unknownError = [NSError errorWithDomain:@"ImagePickerUtils" 
+                                                        code:1004 
+                                                    userInfo:@{NSLocalizedDescriptionKey: @"Unknown error occurred while fetching image data"}];
+            completion(nil, nil, UIImageOrientationUp, info, unknownError);
+        }
+    }];
+}
+
++ (NSData *)getImageDataHandlingICloud:(NSURL *)url phAsset:(PHAsset *)asset {
+    if (!url && !asset) {
+        return nil;
+    }
+    
+    if (url) {
+        NSData *localData = [NSData dataWithContentsOfURL:url];
+        if (localData && localData.length > 0) {
+            return localData;
+        }
+    }
+    
+    if (!asset) {
+        return nil;
+    }
+    
+    if (![self isAssetInICloud:asset]) {
+        if (url) {
+            return [NSData dataWithContentsOfURL:url];
+        }
+        return nil;
+    }
+    
+    __block NSData *resultData = nil;
+    __block BOOL completed = NO;
+    
+    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+    
+    [self fetchImageDataFromICloudIfNeeded:asset 
+                                   options:nil 
+                                completion:^(NSData *imageData, NSString *dataUTI, UIImageOrientation orientation, NSDictionary *info, NSError *error) {
+        if (imageData && !error) {
+            resultData = imageData;
+        }
+        completed = YES;
+        dispatch_semaphore_signal(semaphore);
+    }];
+    
+    dispatch_time_t timeout = dispatch_time(DISPATCH_TIME_NOW, 30 * NSEC_PER_SEC);
+    dispatch_semaphore_wait(semaphore, timeout);
+    
+    return resultData;
+}
+
++ (void)getImageDataHandlingICloudAsync:(NSURL *)url 
+                                phAsset:(PHAsset *)asset 
+                             completion:(void (^)(NSData *imageData, NSError *error))completion {
+    if (!completion) {
+        return;
+    }
+    
+    if (!url && !asset) {
+        NSError *error = [NSError errorWithDomain:@"ImagePickerUtils" 
+                                             code:1005 
+                                         userInfo:@{NSLocalizedDescriptionKey: @"Both URL and PHAsset are nil"}];
+        completion(nil, error);
+        return;
+    }
+    
+    if (url) {
+        NSData *localData = [NSData dataWithContentsOfURL:url];
+        if (localData && localData.length > 0) {
+            completion(localData, nil);
+            return;
+        }
+    }
+    
+    if (!asset) {
+        NSError *error = [NSError errorWithDomain:@"ImagePickerUtils" 
+                                             code:1006 
+                                         userInfo:@{NSLocalizedDescriptionKey: @"Asset is nil and URL data is empty"}];
+        completion(nil, error);
+        return;
+    }
+    
+    if (![self isAssetInICloud:asset]) {
+        if (url) {
+            NSData *data = [NSData dataWithContentsOfURL:url];
+            completion(data, nil);
+            return;
+        } else {
+            NSError *error = [NSError errorWithDomain:@"ImagePickerUtils" 
+                                                 code:1007 
+                                             userInfo:@{NSLocalizedDescriptionKey: @"Asset is not in iCloud but URL is nil"}];
+            completion(nil, error);
+            return;
+        }
+    }
+    
+    [self fetchImageDataFromICloudIfNeeded:asset 
+                                   options:nil 
+                                completion:^(NSData *imageData, NSString *dataUTI, UIImageOrientation orientation, NSDictionary *info, NSError *error) {
+        completion(imageData, error);
+    }];
 }
 
 @end

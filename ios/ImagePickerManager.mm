@@ -19,10 +19,9 @@
 @interface ImagePickerManager (UIAdaptivePresentationControllerDelegate) <UIAdaptivePresentationControllerDelegate>
 @end
 
-#if __has_include(<PhotosUI/PHPicker.h>)
+API_AVAILABLE(ios(14))
 @interface ImagePickerManager (PHPickerViewControllerDelegate) <PHPickerViewControllerDelegate>
 @end
-#endif
 
 @implementation ImagePickerManager
 
@@ -74,7 +73,6 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
     self.options = options;
 
-#if __has_include(<PhotosUI/PHPicker.h>)
     if (@available(iOS 14, *)) {
         if (target == library) {
             PHPickerConfiguration *configuration = [ImagePickerUtils makeConfigurationFromOptions:options target:target];
@@ -99,7 +97,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
             return;
         }
     }
-#endif
+
     UIImagePickerController *picker = [[UIImagePickerController alloc] init];
     [ImagePickerUtils setupPickerFromOptions:picker options:self.options target:target];
     picker.delegate = self;
@@ -343,13 +341,13 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
 - (void)checkPhotosPermissions:(void(^)(BOOL granted))callback
 {
-    PHAuthorizationStatus status = [PHPhotoLibrary authorizationStatus];
-    if (status == PHAuthorizationStatusAuthorized) {
+    PHAuthorizationStatus status = [PHPhotoLibrary authorizationStatusForAccessLevel:PHAccessLevelReadWrite];
+    if (status == PHAuthorizationStatusAuthorized || status == PHAuthorizationStatusLimited) {
         callback(YES);
         return;
     } else if (status == PHAuthorizationStatusNotDetermined) {
-        [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
-            if (status == PHAuthorizationStatusAuthorized) {
+        [PHPhotoLibrary requestAuthorizationForAccessLevel:PHAccessLevelReadWrite handler:^(PHAuthorizationStatus status) {
+            if (status == PHAuthorizationStatusAuthorized || status == PHAuthorizationStatusLimited) {
                 callback(YES);
                 return;
             }
@@ -400,12 +398,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         [self checkCameraPermissions:permissionBlock];
     }
     else {
-        if (@available(iOS 11.0, *)) {
-            callback(YES);
-        }
-        else {
-            [self checkPhotosPermissions:permissionBlock];
-        }
+        callback(YES);
     }
 }
 
@@ -426,12 +419,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 }
 
 + (NSURL *)getNSURLFromInfo:(NSDictionary *)info {
-    if (@available(iOS 11.0, *)) {
-        return info[UIImagePickerControllerImageURL];
-    }
-    else {
-        return info[UIImagePickerControllerReferenceURL];
-    }
+    return info[UIImagePickerControllerImageURL];
 }
 
 @end
@@ -451,13 +439,21 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
         // If include extra, we fetch the PHAsset, this required library permissions
         if([self.options[@"includeExtra"] boolValue]) {
-          asset = [ImagePickerUtils fetchPHAssetOnIOS13:info];
+          asset = [ImagePickerUtils fetchAssetFromImageInfo:info];
         }
 
         if ([info[UIImagePickerControllerMediaType] isEqualToString:(NSString *) kUTTypeImage]) {
             UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
+            NSData *imageData = nil;
+            NSURL *imageURL = [ImagePickerManager getNSURLFromInfo:info];
+            if (imageURL) {
+                imageData = [NSData dataWithContentsOfURL:imageURL];
+            }
+            if (!imageData) {
+                imageData = UIImageJPEGRepresentation(image, 1.0);
+            }
 
-            [assets addObject:[self mapImageToAsset:image data:[NSData dataWithContentsOfURL:[ImagePickerManager getNSURLFromInfo:info]] phAsset:asset]];
+            [assets addObject:[self mapImageToAsset:image data:imageData phAsset:asset]];
         } else {
             NSError *error;
             NSDictionary *videoAsset = [self mapVideoToAsset:info[UIImagePickerControllerMediaURL] phAsset:asset error:&error];
@@ -501,7 +497,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
 @end
 
-#if __has_include(<PhotosUI/PHPicker.h>)
+API_AVAILABLE(ios(14))
 @implementation ImagePickerManager (PHPickerViewControllerDelegate)
 
 - (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14))
@@ -547,10 +543,17 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
             }
 
             [provider loadFileRepresentationForTypeIdentifier:identifier completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
-                NSData *data = [[NSData alloc] initWithContentsOfURL:url];
-                UIImage *image = [[UIImage alloc] initWithData:data];
-
-                assets[index] = [self mapImageToAsset:image data:data phAsset:asset];
+                NSData *imageData = nil;
+                if (url) {
+                    imageData = [[NSData alloc] initWithContentsOfURL:url];
+                }
+                
+                if (imageData) {
+                    UIImage *image = [[UIImage alloc] initWithData:imageData];
+                    assets[index] = [self mapImageToAsset:image data:imageData phAsset:asset];
+                } else {
+                    assets[index] = (NSDictionary *)[NSNull null];
+                }
                 dispatch_group_leave(completionGroup);
             }];
         } else if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeMovie]) {
@@ -584,5 +587,3 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 }
 
 @end
-
-#endif
