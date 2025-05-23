@@ -176,14 +176,11 @@
 
 + (PHAsset *)fetchAssetFromImageInfo:(NSDictionary<NSString *,id> *)info
 {
-    // In iOS 14+, the best practice is to use PHPicker with assetIdentifier
-    // But if we're using UIImagePickerController and have a URL, we can attempt to find the asset
     NSURL *assetURL = info[UIImagePickerControllerImageURL];
     if (!assetURL) {
         return nil;
     }
     
-    // Try to get the asset based on the file path since we can't use ALAssetURLs anymore
     NSString *localID = [self getLocalIdentifierFromImageURL:assetURL];
     if (localID) {
         PHFetchResult* fetchResult = [PHAsset fetchAssetsWithLocalIdentifiers:@[localID] options:nil];
@@ -193,26 +190,21 @@
     return nil;
 }
 
-// Helper method to try to get local identifier from a file URL
 + (NSString *)getLocalIdentifierFromImageURL:(NSURL *)url
 {
     if (!url) {
         return nil;
     }
     
-    // Try to find matching assets in the photo library
     PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
     fetchOptions.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
     
     __block NSString *localIdentifier = nil;
     
-    // Get the file name and create date to help narrow down the search
     NSString *fileName = url.lastPathComponent;
     
-    // Fetch all photo assets and look for a match
     PHFetchResult *result = [PHAsset fetchAssetsWithOptions:fetchOptions];
     [result enumerateObjectsUsingBlock:^(PHAsset *asset, NSUInteger idx, BOOL *stop) {
-        // Request the asset resource to get the file name
         PHAssetResource *resource = [[PHAssetResource assetResourcesForAsset:asset] firstObject];
         if ([resource.originalFilename isEqualToString:fileName]) {
             localIdentifier = asset.localIdentifier;

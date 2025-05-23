@@ -205,14 +205,12 @@ NSData* extractImageData(UIImage* image){
     if(phAsset){
         asset[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
         asset[@"id"] = phAsset.localIdentifier;
-        // Add more extra data here ...
     }
 
     return asset;
 }
 
 CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIImageOrientation uiOrientation) {
-    //code from here: https://developer.apple.com/documentation/imageio/cgimagepropertyorientation?language=objc
     switch (uiOrientation) {
         case UIImageOrientationUp: return kCGImagePropertyOrientationUp;
         case UIImageOrientationDown: return kCGImagePropertyOrientationDown;
@@ -238,14 +236,11 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
     if (![url.URLByResolvingSymlinksInPath.path isEqualToString:videoDestinationURL.URLByResolvingSymlinksInPath.path]) {
         NSFileManager *fileManager = [NSFileManager defaultManager];
 
-        // Delete file if it already exists
         if ([fileManager fileExistsAtPath:videoDestinationURL.path]) {
             [fileManager removeItemAtURL:videoDestinationURL error:nil];
         }
 
-        if (url) { // Protect against reported crash
-
-          // If we have write access to the source file, move it. Otherwise use copy.
+        if (url) {
           if ([fileManager isWritableFileAtPath:[url path]]) {
             [fileManager moveItemAtURL:url toURL:videoDestinationURL error:error];
           } else {
@@ -308,7 +303,6 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         if(phAsset){
             response[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
             response[@"id"] = phAsset.localIdentifier;
-            // Add more extra data here ...
         }
     }
 
@@ -437,7 +431,6 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         }
         photoSelected = YES;
 
-        // If include extra, we fetch the PHAsset, this required library permissions
         if([self.options[@"includeExtra"] boolValue]) {
           asset = [ImagePickerUtils fetchAssetFromImageInfo:info];
         }
@@ -526,7 +519,6 @@ API_AVAILABLE(ios(14))
         PHAsset *asset = nil;
         NSItemProvider *provider = result.itemProvider;
 
-        // If include extra, we fetch the PHAsset, this required library permissions
         if([self.options[@"includeExtra"] boolValue] && result.assetIdentifier != nil) {
             PHFetchResult* fetchResult = [PHAsset fetchAssetsWithLocalIdentifiers:@[result.assetIdentifier] options:nil];
             asset = fetchResult.firstObject;
@@ -536,9 +528,7 @@ API_AVAILABLE(ios(14))
 
         if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeImage]) {
             NSString *identifier = provider.registeredTypeIdentifiers.firstObject;
-            // Matches both com.apple.live-photo-bundle and com.apple.private.live-photo-bundle
             if ([identifier containsString:@"live-photo-bundle"]) {
-                // Handle live photos
                 identifier = @"public.jpeg";
             }
 
@@ -565,13 +555,11 @@ API_AVAILABLE(ios(14))
                 dispatch_group_leave(completionGroup);
             }];
         } else {
-            // The provider didn't have an item matching photo or video (fails on M1 Mac Simulator)
             dispatch_group_leave(completionGroup);
         }
     }];
 
     dispatch_group_notify(completionGroup, dispatch_get_main_queue(), ^{
-        //  mapVideoToAsset can fail and return nil, leaving asset NSNull.
         for (NSDictionary *asset in assets) {
             if ([asset isEqual:[NSNull null]]) {
                 self.callback(@[@{@"errorCode": errOthers}]);
