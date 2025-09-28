@@ -19,7 +19,9 @@ public class Options {
     Boolean useFrontCamera = false;
     String mediaType;
     String[] restrictMimeTypes;
-
+    Boolean forceOldAndroidPhotoPicker = false;
+    String chooserTitle = null;
+  
     Options(ReadableMap options) {
         mediaType = options.getString("mediaType");
         restrictMimeTypes = options.getArray("restrictMimeTypes").toArrayList().stream()
@@ -28,6 +30,8 @@ public class Options {
         selectionLimit = options.getInt("selectionLimit");
         includeBase64 = options.getBoolean("includeBase64");
         includeExtra = options.getBoolean("includeExtra");
+        forceOldAndroidPhotoPicker = options.getBoolean("forceOldAndroidPhotoPicker");
+        chooserTitle = options.getString("chooserTitle");
 
         String videoQualityString = options.getString("videoQuality");
         if (!TextUtils.isEmpty(videoQualityString) && !videoQualityString.toLowerCase().equals("high")) {

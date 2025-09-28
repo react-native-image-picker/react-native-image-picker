@@ -207,6 +207,7 @@ NSData* extractImageData(UIImage* image){
     if(phAsset){
         asset[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
         asset[@"id"] = phAsset.localIdentifier;
+        asset[@"originalPath"] = [NSString stringWithFormat:@"ph://%@", phAsset.localIdentifier];
         // Add more extra data here ...
     }
 
