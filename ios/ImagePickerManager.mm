@@ -229,9 +229,11 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
 -(NSMutableDictionary *)mapVideoToAsset:(NSURL *)url phAsset:(PHAsset * _Nullable)phAsset error:(NSError **)error {
     NSString *fileName = [url lastPathComponent];
-    NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
-    NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
     NSString *fileExtension = [fileName pathExtension];
+    NSString *fileNameWithoutExtension = [fileName stringByDeletingPathExtension];
+    NSString *uniqueFileName = [NSString stringWithFormat:@"%@_%@.%@", fileNameWithoutExtension, [[NSUUID UUID] UUIDString], fileExtension];
+    NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:uniqueFileName];
+    NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
 
     if ((target == camera) && [self.options[@"saveToPhotos"] boolValue]) {
         UISaveVideoAtPathToSavedPhotosAlbum(url.path, nil, nil, nil);
