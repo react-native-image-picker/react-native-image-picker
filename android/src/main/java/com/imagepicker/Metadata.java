@@ -7,6 +7,7 @@ import androidx.annotation.Nullable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 abstract class Metadata {
     protected String datetime;
@@ -40,6 +41,18 @@ abstract class Metadata {
         } catch (Exception e) {
             // This error does not bubble up to RN as we don't want failed datetime parsing to prevent selection
             Log.e("RNIP", "Could not parse image datetime to UTC: " + e.getMessage());
+            return null;
+        }
+    }
+
+    protected @Nullable
+    String getDateTimeInUTCFromMillis(long millis) {
+        try {
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
+            formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return formatter.format(new Date(millis));
+        } catch (Exception e) {
+            Log.e("RNIP", "Could not format datetime from millis: " + e.getMessage());
             return null;
         }
     }

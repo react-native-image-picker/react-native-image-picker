@@ -3,6 +3,7 @@
 #import "ImagePickerUtils.h"
 #import <React/RCTConvert.h>
 #import <AVFoundation/AVFoundation.h>
+#import <ImageIO/ImageIO.h>
 #import <Photos/Photos.h>
 #import <PhotosUI/PhotosUI.h>
 #import <MobileCoreServices/MobileCoreServices.h>
@@ -155,7 +156,7 @@ NSData* extractImageData(UIImage* image){
 
 
 
--(NSMutableDictionary *)mapImageToAsset:(UIImage *)image data:(NSData *)data phAsset:(PHAsset * _Nullable)phAsset {
+-(NSMutableDictionary *)mapImageToAsset:(UIImage *)image data:(NSData *)data phAsset:(PHAsset * _Nullable)phAsset suggestedName:(NSString * _Nullable)suggestedName {
     NSString *fileType = [ImagePickerUtils getFileType:data];
     if (target == camera) {
         if ([self.options[@"saveToPhotos"] boolValue]) {
@@ -171,6 +172,14 @@ NSData* extractImageData(UIImage* image){
                                     maxHeight:[self.options[@"maxHeight"] floatValue]];
     }
 
+    NSMutableDictionary *asset = [[NSMutableDictionary alloc] init];
+    NSDictionary *exifData = getExifDataFromImage(data);
+    if (exifData) {
+        asset[@"exif"] = exifData;
+    } else {
+        asset[@"exif"] = @{};
+    }
+
     float quality = [self.options[@"quality"] floatValue];
     if (![image isEqual:newImage] || (quality >= 0 && quality < 1)) {
         if ([fileType isEqualToString:@"jpg"]) {
@@ -180,10 +189,9 @@ NSData* extractImageData(UIImage* image){
         }
     }
 
-    NSMutableDictionary *asset = [[NSMutableDictionary alloc] init];
     asset[@"type"] = [@"image/" stringByAppendingString:fileType];
 
-    NSString *fileName = [self getImageFileName:fileType];
+    NSString *fileName = [self getImageFileNameFrom:phAsset ForType:fileType suggestedName:suggestedName];
     NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
     [data writeToFile:path atomically:YES];
 
@@ -208,10 +216,57 @@ NSData* extractImageData(UIImage* image){
     if(phAsset){
         asset[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
         asset[@"id"] = phAsset.localIdentifier;
-        // Add more extra data here ...
+    } else {
+        NSString *timestamp = [self timestampFromExifDictionary:exifData];
+        if (timestamp) {
+            asset[@"timestamp"] = timestamp;
+        } else {
+            NSURL *writtenFileURL = [NSURL fileURLWithPath:path];
+            NSDate *modDate = nil;
+            [writtenFileURL getResourceValue:&modDate forKey:NSURLContentModificationDateKey error:nil];
+            if (modDate) {
+                asset[@"timestamp"] = [self getDateTimeInUTC:modDate];
+            }
+        }
     }
 
     return asset;
+}
+
+- (NSString *)timestampFromExifDictionary:(NSDictionary *)properties {
+    if (!properties || properties.count == 0) return nil;
+    NSString *dateString = nil;
+    NSDictionary *exifDict = properties[(__bridge NSString *)kCGImagePropertyExifDictionary];
+    if (exifDict) {
+        dateString = exifDict[(__bridge NSString *)kCGImagePropertyExifDateTimeOriginal];
+        if (!dateString.length) dateString = exifDict[(__bridge NSString *)kCGImagePropertyExifDateTimeDigitized];
+    }
+    if (!dateString.length) {
+        NSDictionary *tiffDict = properties[(__bridge NSString *)kCGImagePropertyTIFFDictionary];
+        if (tiffDict) dateString = tiffDict[(__bridge NSString *)kCGImagePropertyTIFFDateTime];
+    }
+    if (!dateString.length) return nil;
+    NSDateFormatter *parser = [[NSDateFormatter alloc] init];
+    [parser setDateFormat:@"yyyy:MM:dd HH:mm:ss"];
+    NSDate *date = [parser dateFromString:dateString];
+    return date ? [self getDateTimeInUTC:date] : nil;
+}
+
+NSDictionary *getExifDataFromImage(NSData *data) {
+    CGImageSourceRef imageSource = CGImageSourceCreateWithData((CFDataRef)data, NULL);
+    if (!imageSource) {
+        return nil;
+    }
+
+    NSDictionary *exifDictionary = (NSDictionary *) CFBridgingRelease(CGImageSourceCopyPropertiesAtIndex(imageSource, 0, NULL));
+    if (!exifDictionary) {
+        CFRelease(imageSource);
+        return nil;
+    }
+
+    CFRelease(imageSource);
+
+    return exifDictionary;
 }
 
 CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIImageOrientation uiOrientation) {
@@ -229,7 +284,27 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 }
 
 -(NSMutableDictionary *)mapVideoToAsset:(NSURL *)url phAsset:(PHAsset * _Nullable)phAsset error:(NSError **)error {
-    NSString *fileName = [url lastPathComponent];
+    // Resolve original filename from PHAsset resources; temp URL name is a system-generated UUID
+    NSString *fileName = nil;
+    if (phAsset) {
+        NSArray<PHAssetResource *> *resources = [PHAssetResource assetResourcesForAsset:phAsset];
+        NSArray<NSNumber *> *preferredTypes = @[
+            @(PHAssetResourceTypeVideo),
+            @(PHAssetResourceTypeFullSizeVideo),
+            @(PHAssetResourceTypePairedVideo)
+        ];
+        for (NSNumber *typeNum in preferredTypes) {
+            PHAssetResourceType preferredType = (PHAssetResourceType)[typeNum integerValue];
+            for (PHAssetResource *resource in resources) {
+                if (resource.type == preferredType) {
+                    fileName = resource.originalFilename;
+                    break;
+                }
+            }
+            if (fileName) break;
+        }
+    }
+    if (!fileName) fileName = [url lastPathComponent];
     NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
     NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
     NSString *fileExtension = [fileName pathExtension];
@@ -289,6 +364,10 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
                 response[@"fileSize"] = [ImagePickerUtils getFileSizeFromUrl:outputURL];
                 response[@"width"] = @(dimentions.width);
                 response[@"height"] = @(dimentions.height);
+                if (!phAsset) {
+                    NSString *timestamp = [self timestampFromVideoURL:outputURL];
+                    if (timestamp) response[@"timestamp"] = timestamp;
+                }
 
                 dispatch_semaphore_signal(sem);
             } else if (exportSession.status == AVAssetExportSessionStatusFailed || exportSession.status == AVAssetExportSessionStatusCancelled) {
@@ -311,11 +390,27 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         if(phAsset){
             response[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
             response[@"id"] = phAsset.localIdentifier;
-            // Add more extra data here ...
+        } else {
+            NSString *timestamp = [self timestampFromVideoURL:videoDestinationURL];
+            if (timestamp) {
+                response[@"timestamp"] = timestamp;
+            }
         }
     }
 
     return response;
+}
+
+- (NSString *)timestampFromVideoURL:(NSURL *)url {
+    if (!url) return nil;
+    AVURLAsset *asset = [AVURLAsset URLAssetWithURL:url options:nil];
+    for (AVMetadataItem *item in asset.commonMetadata) {
+        if ([item.commonKey isEqual:AVMetadataCommonKeyCreationDate]) {
+            NSDate *date = item.dateValue;
+            if (date) return [self getDateTimeInUTC:date];
+        }
+    }
+    return nil;
 }
 
 - (NSString *) getDateTimeInUTC:(NSDate *)date {
@@ -410,11 +505,28 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
     }
 }
 
-- (NSString *)getImageFileName:(NSString *)fileType
+- (NSString *)getImageFileNameFrom:(PHAsset * _Nullable)phAsset ForType:(NSString *)fileType suggestedName:(NSString * _Nullable)suggestedName
 {
-    NSString *fileName = [[NSUUID UUID] UUIDString];
-    fileName = [fileName stringByAppendingString:@"."];
-    return [fileName stringByAppendingString:fileType];
+    if (phAsset) {
+        NSArray<PHAssetResource *> *resources = [PHAssetResource assetResourcesForAsset:phAsset];
+        PHAssetResource *photoResource = nil;
+        for (PHAssetResource *resource in resources) {
+            if (resource.type == PHAssetResourceTypePhoto) {
+                photoResource = resource;
+                break;
+            }
+        }
+        if (!photoResource) photoResource = resources.firstObject;
+        if (photoResource) {
+            NSString *base = [photoResource.originalFilename stringByDeletingPathExtension];
+            return [base stringByAppendingPathExtension:fileType];
+        }
+    }
+    // Fallback: use suggestedName from NSItemProvider when PHAsset is unavailable (limited access)
+    if (suggestedName && suggestedName.length > 0) {
+        return [suggestedName stringByAppendingPathExtension:fileType];
+    }
+    return [[[NSUUID UUID] UUIDString] stringByAppendingPathExtension:fileType];
 }
 
 + (UIImage *)getUIImageFromInfo:(NSDictionary *)info
@@ -458,7 +570,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         if ([info[UIImagePickerControllerMediaType] isEqualToString:(NSString *) kUTTypeImage]) {
             UIImage *image = [ImagePickerManager getUIImageFromInfo:info];
 
-            [assets addObject:[self mapImageToAsset:image data:[NSData dataWithContentsOfURL:[ImagePickerManager getNSURLFromInfo:info]] phAsset:asset]];
+            [assets addObject:[self mapImageToAsset:image data:[NSData dataWithContentsOfURL:[ImagePickerManager getNSURLFromInfo:info]] phAsset:asset suggestedName:nil]];
         } else {
             NSError *error;
             NSDictionary *videoAsset = [self mapVideoToAsset:info[UIImagePickerControllerMediaURL] phAsset:asset error:&error];
@@ -530,6 +642,9 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
     [results enumerateObjectsUsingBlock:^(PHPickerResult *result, NSUInteger index, BOOL *stop) {
         PHAsset *asset = nil;
         NSItemProvider *provider = result.itemProvider;
+        // suggestedName is the original filename (without extension) from NSItemProvider.
+        // Used as fallback when PHAsset fetch returns nil (e.g. Limited photo library access).
+        NSString *suggestedName = provider.suggestedName;
 
         // If include extra, we fetch the PHAsset, this required library permissions
         if([self.options[@"includeExtra"] boolValue] && result.assetIdentifier != nil) {
@@ -551,7 +666,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
                 NSData *data = [[NSData alloc] initWithContentsOfURL:url];
                 UIImage *image = [[UIImage alloc] initWithData:data];
 
-                assets[index] = [self mapImageToAsset:image data:data phAsset:asset];
+                assets[index] = [self mapImageToAsset:image data:data phAsset:asset suggestedName:suggestedName];
                 dispatch_group_leave(completionGroup);
             }];
         } else if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeMovie]) {
