@@ -288,7 +288,7 @@ export function imageLibrary(
 }
 
 function readFile(
-  targetFile: Blob,
+  targetFile: File,
   options: Partial<ImageLibraryOptions>,
 ): Promise<Asset> {
   return new Promise((resolve, reject) => {
@@ -306,6 +306,7 @@ function readFile(
       const returnRaw = () =>
         resolve({
           uri: uri as string,
+          fileName: targetFile.name,
           width: 0,
           height: 0,
         });
@@ -316,6 +317,7 @@ function readFile(
         image.onload = () =>
           resolve({
             uri,
+            fileName: targetFile.name,
             width: image.naturalWidth ?? image.width,
             height: image.naturalHeight ?? image.height,
             // The blob's result cannot be directly decoded as Base64 without
