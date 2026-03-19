@@ -507,8 +507,6 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
 - (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14))
 {
-    [picker dismissViewControllerAnimated:YES completion:nil];
-
     if (photoSelected == YES) {
         return;
     }
@@ -516,7 +514,9 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
     if (results.count == 0) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            self.callback(@[@{@"didCancel": @YES}]);
+            [picker dismissViewControllerAnimated:YES completion:^{
+                self.callback(@[@{@"didCancel": @YES}]);
+            }];
         });
         return;
     }
@@ -572,7 +572,9 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         //  mapVideoToAsset can fail and return nil, leaving asset NSNull.
         for (NSDictionary *asset in assets) {
             if ([asset isEqual:[NSNull null]]) {
-                self.callback(@[@{@"errorCode": errOthers}]);
+                [picker dismissViewControllerAnimated:YES completion:^{
+                    self.callback(@[@{@"errorCode": errOthers}]);
+                }];
                 return;
             }
         }
@@ -580,7 +582,9 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
         [response setObject:assets forKey:@"assets"];
 
-        self.callback(@[response]);
+        [picker dismissViewControllerAnimated:YES completion:^{
+            self.callback(@[response]);
+        }];
     });
 }
 
