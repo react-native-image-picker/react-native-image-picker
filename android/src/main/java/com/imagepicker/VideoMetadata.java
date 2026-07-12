@@ -43,7 +43,7 @@ public class VideoMetadata extends Metadata {
                 // METADATA_KEY_DATE gives us the following format: "20211214T102646.000Z"
                 // This date is always returned in UTC, so we strip the ending that `SimpleDateFormat` can't parse, and append `+GMT`
                 String datetimeToFormat = datetime.substring(0, datetime.indexOf(".")) + "+GMT";
-                this.datetime = getDateTimeInUTC(datetimeToFormat, "yyyyMMdd'T'HHmmss+zzz");
+                this.datetime = getDateTimeWithLocalTimeZoneOffset(datetimeToFormat, "yyyyMMdd'T'HHmmss+zzz");
             }
 
             String width = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);

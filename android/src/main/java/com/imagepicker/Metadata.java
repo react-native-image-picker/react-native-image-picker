@@ -20,14 +20,14 @@ abstract class Metadata {
     abstract public int getHeight();
 
     /**
-     * Converts a timestamp to a UTC timestamp
+     * Formats a timestamp with the device's local timezone offset.
      *
      * @param value  - timestamp
      * @param format - input format
      * @return formatted timestamp
      */
     protected @Nullable
-    String getDateTimeInUTC(String value, String format) {
+    String getDateTimeWithLocalTimeZoneOffset(String value, String format) {
         try {
             Date datetime = new SimpleDateFormat(format, Locale.US).parse(value);
             SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
@@ -39,7 +39,7 @@ abstract class Metadata {
             return null;
         } catch (Exception e) {
             // This error does not bubble up to RN as we don't want failed datetime parsing to prevent selection
-            Log.e("RNIP", "Could not parse image datetime to UTC: " + e.getMessage());
+            Log.e("RNIP", "Could not parse image datetime: " + e.getMessage());
             return null;
         }
     }
