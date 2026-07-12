@@ -206,7 +206,7 @@ NSData* extractImageData(UIImage* image){
     asset[@"height"] = @(newImage.size.height);
 
     if(phAsset){
-        asset[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
+        asset[@"timestamp"] = [self getDateTimeWithLocalTimeZoneOffset:phAsset.creationDate];
         asset[@"id"] = phAsset.localIdentifier;
         // Add more extra data here ...
     }
@@ -309,7 +309,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         response[@"height"] = @(dimentions.height);
 
         if(phAsset){
-            response[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
+            response[@"timestamp"] = [self getDateTimeWithLocalTimeZoneOffset:phAsset.creationDate];
             response[@"id"] = phAsset.localIdentifier;
             // Add more extra data here ...
         }
@@ -318,7 +318,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
     return response;
 }
 
-- (NSString *) getDateTimeInUTC:(NSDate *)date {
+- (NSString *) getDateTimeWithLocalTimeZoneOffset:(NSDate *)date {
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     [formatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss.SSSZ"];
     return [formatter stringFromDate:date];
