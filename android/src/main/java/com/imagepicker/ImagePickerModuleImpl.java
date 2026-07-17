@@ -13,6 +13,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.module.annotations.ReactModule;
 
 import java.io.File;
@@ -109,8 +110,13 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
 
         try {
             currentActivity.startActivityForResult(cameraIntent, requestCode);
-        } catch (ActivityNotFoundException e) {
-            callback.invoke(getErrorMap(errOthers, e.getMessage()));
+        } catch (ActivityNotFoundException | NullPointerException e) {
+            // startActivityForResult can throw NullPointerException from the framework
+            // when the activity's window decor view is not yet available. Tag the message
+            // so JS can tell a recoverable launch failure apart from other errors.
+            if (callback != null) {
+                callback.invoke(getErrorMap(errOthers, "launchFailed: " + e.getMessage()));
+            }
             this.callback = null;
         }
     }
@@ -166,8 +172,13 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
 
         try {
             currentActivity.startActivityForResult(libraryIntent, requestCode);
-        } catch (ActivityNotFoundException e) {
-            callback.invoke(getErrorMap(errOthers, e.getMessage()));
+        } catch (ActivityNotFoundException | NullPointerException e) {
+            // startActivityForResult can throw NullPointerException from the framework
+            // when the activity's window decor view is not yet available. Tag the message
+            // so JS can tell a recoverable launch failure apart from other errors.
+            if (callback != null) {
+                callback.invoke(getErrorMap(errOthers, "launchFailed: " + e.getMessage()));
+            }
             this.callback = null;
         }
     }
@@ -177,11 +188,22 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
 
         executor.submit(() -> {
             try {
-                callback.invoke(getResponseMap(fileUris, options, reactContext));
+                final ReadableMap result = getResponseMap(fileUris, options, reactContext);
+                // In bridgeless (New Architecture) mode the JS callback must be invoked on
+                // the UI/JS thread, otherwise it hits a fatal CHECK in the JSI layer.
+                UiThreadUtil.runOnUiThread(() -> {
+                    if (callback != null) {
+                        callback.invoke(result);
+                    }
+                    callback = null;
+                });
             } catch (RuntimeException exception) {
-                callback.invoke(getErrorMap(errOthers, exception.getMessage()));
-            } finally {
-                callback = null;
+                UiThreadUtil.runOnUiThread(() -> {
+                    if (callback != null) {
+                        callback.invoke(getErrorMap(errOthers, exception.getMessage()));
+                    }
+                    callback = null;
+                });
             }
         });
     }
@@ -199,10 +221,14 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
                 deleteFile(fileUri);
             }
             try {
-                callback.invoke(getCancelMap());
+                if (callback != null) {
+                    callback.invoke(getCancelMap());
+                }
                 return;
             } catch (RuntimeException exception) {
-                callback.invoke(getErrorMap(errOthers, exception.getMessage()));
+                if (callback != null) {
+                    callback.invoke(getErrorMap(errOthers, exception.getMessage()));
+                }
             } finally {
                 callback = null;
             }
