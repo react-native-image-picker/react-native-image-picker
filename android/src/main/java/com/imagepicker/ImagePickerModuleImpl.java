@@ -13,6 +13,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.module.annotations.ReactModule;
 
 import java.io.File;
@@ -107,21 +108,10 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraCaptureURI);
         cameraIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
-        try {
-            currentActivity.startActivityForResult(cameraIntent, requestCode);
-        } catch (ActivityNotFoundException e) {
-            callback.invoke(getErrorMap(errOthers, e.getMessage()));
-            this.callback = null;
-        }
+        startActivityForResultOnUiThread(cameraIntent, requestCode, callback);
     }
 
     public void launchImageLibrary(final ReadableMap options, final Callback callback) {
-        final Activity currentActivity = this.reactContext.getCurrentActivity();
-        if (currentActivity == null) {
-            callback.invoke(getErrorMap(errOthers, "Activity error"));
-            return;
-        }
-
         this.callback = callback;
         this.options = new Options(options);
 
@@ -164,11 +154,36 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
             libraryIntent.putExtra(Intent.EXTRA_MIME_TYPES, this.options.restrictMimeTypes);
         }
 
+        startActivityForResultOnUiThread(libraryIntent, requestCode, callback);
+    }
+
+    void startActivityForResultOnUiThread(
+            final Intent intent,
+            final int requestCode,
+            final Callback launchCallback
+    ) {
+        UiThreadUtil.runOnUiThread(() -> {
+            final Activity currentActivity = this.reactContext.getCurrentActivity();
+            if (currentActivity == null || currentActivity.isFinishing() || currentActivity.isDestroyed()) {
+                finishLaunchWithError(launchCallback, "Activity error");
+                return;
+            }
+
+            try {
+                currentActivity.startActivityForResult(intent, requestCode);
+            } catch (ActivityNotFoundException exception) {
+                finishLaunchWithError(launchCallback, exception.getMessage());
+            }
+        });
+    }
+
+    private void finishLaunchWithError(final Callback launchCallback, final String message) {
         try {
-            currentActivity.startActivityForResult(libraryIntent, requestCode);
-        } catch (ActivityNotFoundException e) {
-            callback.invoke(getErrorMap(errOthers, e.getMessage()));
-            this.callback = null;
+            launchCallback.invoke(getErrorMap(errOthers, message));
+        } finally {
+            if (this.callback == launchCallback) {
+                this.callback = null;
+            }
         }
     }
 
