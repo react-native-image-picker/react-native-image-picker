@@ -206,6 +206,22 @@ public class Utils {
         return options.convertToJpeg && mimeType != null && (mimeType.equals("image/heic") || mimeType.equals("image/heif"));
     }
 
+    static int calculateInSampleSize(int sourceWidth, int sourceHeight, int targetWidth, int targetHeight) {
+        if (targetWidth <= 0 || targetHeight <= 0) {
+            return 1;
+        }
+
+        int sampleSize = 1;
+        int halfWidth = sourceWidth / 2;
+        int halfHeight = sourceHeight / 2;
+
+        while (halfWidth / sampleSize >= targetWidth && halfHeight / sampleSize >= targetHeight) {
+            sampleSize *= 2;
+        }
+
+        return sampleSize;
+    }
+
     // Resize image and/or convert it from HEIC/HEIF to JPEG
     // When decoding a jpg to bitmap all exif meta data will be lost, so make sure to copy orientation exif to new file else image might have wrong orientations
     public static Uri resizeOrConvertImage(Uri uri, Context context, Options options) {
@@ -229,19 +245,29 @@ public class Utils {
             int[] newDimens = getImageDimensBasedOnConstraints(origDimens[0], origDimens[1], options);
 
             try (InputStream imageStream = context.getContentResolver().openInputStream(uri)) {
-                Bitmap b = BitmapFactory.decodeStream(imageStream);
+                BitmapFactory.Options decodeOptions = new BitmapFactory.Options();
+                decodeOptions.inSampleSize = calculateInSampleSize(
+                        origDimens[0], origDimens[1], newDimens[0], newDimens[1]);
+                Bitmap b = BitmapFactory.decodeStream(imageStream, null, decodeOptions);
+                if (b == null) {
+                    throw new IOException("Could not decode image");
+                }
                 String originalOrientation = getOrientation(uri, context);
 
+                Bitmap scaledBitmap;
                 if (needToSwapDimension(originalOrientation)) {
-                    b = Bitmap.createScaledBitmap(b, newDimens[1], newDimens[0], true);
+                    scaledBitmap = Bitmap.createScaledBitmap(b, newDimens[1], newDimens[0], true);
                 } else {
-                    b = Bitmap.createScaledBitmap(b, newDimens[0], newDimens[1], true);
+                    scaledBitmap = Bitmap.createScaledBitmap(b, newDimens[0], newDimens[1], true);
+                }
+                if (scaledBitmap != b) {
+                    b.recycle();
                 }
 
                 File file = createFile(context, getFileTypeFromMime(mimeType));
 
                 try (OutputStream os = context.getContentResolver().openOutputStream(Uri.fromFile(file))) {
-                    b.compress(getBitmapCompressFormat(mimeType), targetQuality, os);
+                    scaledBitmap.compress(getBitmapCompressFormat(mimeType), targetQuality, os);
                 }
 
                 setOrientation(file, originalOrientation, context);
