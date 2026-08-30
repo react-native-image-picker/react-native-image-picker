@@ -1,8 +1,11 @@
 #import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
+#import <ImageIO/ImageIO.h>
 
 #import <React/RCTLog.h>
 #import <React/RCTRootView.h>
+
+#import <react-native-image-picker/ImagePickerUtils.h>
 
 #define TIMEOUT_SECONDS 600
 #define TEXT_TO_LOOK_FOR @"Welcome to React"
@@ -12,6 +15,48 @@
 @end
 
 @implementation exampleTests
+
+- (UIImage *)makeTestImage
+{
+  UIGraphicsBeginImageContextWithOptions(CGSizeMake(1, 1), YES, 1);
+  [[UIColor redColor] setFill];
+  UIRectFill(CGRectMake(0, 0, 1, 1));
+  UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+  UIGraphicsEndImageContext();
+  return image;
+}
+
+- (void)testDetectsHeicImageData
+{
+  UIImage *image = [self makeTestImage];
+
+  NSMutableData *heicData = [NSMutableData data];
+  CGImageDestinationRef destination = CGImageDestinationCreateWithData(
+      (__bridge CFMutableDataRef)heicData, CFSTR("public.heic"), 1, NULL);
+  if (destination == NULL) {
+    XCTFail(@"HEIC encoding is unavailable");
+    return;
+  }
+
+  CGImageDestinationAddImage(destination, image.CGImage, NULL);
+  BOOL finalized = CGImageDestinationFinalize(destination);
+  CFRelease(destination);
+
+  XCTAssertTrue(finalized);
+  XCTAssertEqualObjects([ImagePickerUtils getFileType:heicData], @"heic");
+}
+
+- (void)testPreservesExistingImageTypeDetection
+{
+  UIImage *image = [self makeTestImage];
+  NSData *gifData = [[NSData alloc]
+      initWithBase64EncodedString:@"R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+      options:0];
+
+  XCTAssertEqualObjects([ImagePickerUtils getFileType:UIImageJPEGRepresentation(image, 1)], @"jpg");
+  XCTAssertEqualObjects([ImagePickerUtils getFileType:UIImagePNGRepresentation(image)], @"png");
+  XCTAssertEqualObjects([ImagePickerUtils getFileType:gifData], @"gif");
+}
 
 - (BOOL)findSubviewInView:(UIView *)view matching:(BOOL (^)(UIView *view))test
 {
