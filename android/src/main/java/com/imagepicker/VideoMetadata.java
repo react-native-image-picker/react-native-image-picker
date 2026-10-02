@@ -39,7 +39,8 @@ public class VideoMetadata extends Metadata {
             if (duration != null) this.duration = Math.round(Float.parseFloat(duration)) / 1000;
             if (bitrate != null) this.bitrate = parseInt(bitrate);
 
-            if (datetime != null) {
+            // When the file has no creation time (0), METADATA_KEY_DATE returns the MP4 epoch "19040101T000000.000Z", so treat it as unknown
+            if (datetime != null && !datetime.startsWith("19040101T000000")) {
                 // METADATA_KEY_DATE gives us the following format: "20211214T102646.000Z"
                 // This date is always returned in UTC, so we strip the ending that `SimpleDateFormat` can't parse, and append `+GMT`
                 String datetimeToFormat = datetime.substring(0, datetime.indexOf(".")) + "+GMT";
