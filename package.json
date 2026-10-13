@@ -43,7 +43,7 @@
     "@semantic-release/git": "10.0.1",
     "@types/react": "18.2.13",
     "@types/react-native": "0.72.2",
-    "semantic-release": "21.0.5",
+    "semantic-release": "25.0.9",
     "typescript": "5.2.2"
   },
   "@react-native-community/bob": {
