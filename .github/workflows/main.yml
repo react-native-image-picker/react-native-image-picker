@@ -9,10 +9,15 @@ on:
 jobs:
   Main:
     runs-on: ubuntu-latest
-
+    permissions:
+      id-token: write # CRITICAL: Required for OIDC / Trusted Publishing
+      contents: write # Required by semantic-release to push tags/releases
+      issues: write   # Required to comment on related issues
+      pull-requests: write # Required to comment on related PRs
+    
     strategy:
       matrix:
-        node-version: [18]
+        node-version: [24]
 
     steps:
       - uses: actions/checkout@v3
@@ -21,7 +26,7 @@ jobs:
           persist-credentials: false
           
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -39,4 +44,4 @@ jobs:
           yarn ci:publish
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
