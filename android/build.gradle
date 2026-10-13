@@ -8,7 +8,7 @@ if (isNewArchitectureEnabled()) {
 }
 
 android {
-    compileSdkVersion 35
+    compileSdkVersion safeExtGet('compileSdkVersion', 36)
 
     def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
     if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
