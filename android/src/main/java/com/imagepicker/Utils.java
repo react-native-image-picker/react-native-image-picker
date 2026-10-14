@@ -504,7 +504,7 @@ public class Utils {
     }
 
     static ReadableMap getImageResponseMap(Uri uri, Uri appSpecificUri, Options options, Context context) {
-        ImageMetadata imageMetadata = new ImageMetadata(appSpecificUri, context);
+        ImageMetadata imageMetadata = new ImageMetadata(uri, context);
         int[] dimensions = getImageDimensions(appSpecificUri, context);
 
         String fileName = getFileName(uri, context);
