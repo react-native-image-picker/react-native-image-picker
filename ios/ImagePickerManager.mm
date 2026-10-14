@@ -497,6 +497,14 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
 - (void)presentationControllerDidDismiss:(UIPresentationController *)presentationController
 {
+    // A selection may already be in flight: video file representations load
+    // asynchronously long after the sheet dismisses, so this dismissal event
+    // can fire before the picked assets are delivered. The JS callback is
+    // once-only on the new architecture; a second invocation is fatal.
+    if (photoSelected == YES) {
+        return;
+    }
+    photoSelected = YES;
     self.callback(@[@{@"didCancel": @YES}]);
 }
 
