@@ -1,5 +1,6 @@
 #import "ImagePickerUtils.h"
 #import <CoreServices/CoreServices.h>
+#import <ImageIO/ImageIO.h>
 #import <PhotosUI/PhotosUI.h>
 
 @implementation ImagePickerUtils
@@ -94,22 +95,22 @@
 
 + (NSString*) getFileType:(NSData *)imageData
 {
-    const uint8_t firstByteJpg = 0xFF;
-    const uint8_t firstBytePng = 0x89;
-    const uint8_t firstByteGif = 0x47;
-    
-    uint8_t firstByte;
-    [imageData getBytes:&firstByte length:1];
-    switch (firstByte) {
-      case firstByteJpg:
-        return @"jpg";
-      case firstBytePng:
-        return @"png";
-      case firstByteGif:
-        return @"gif";
-      default:
-        return @"jpg";
+    CGImageSourceRef imageSource = CGImageSourceCreateWithData((__bridge CFDataRef)imageData, NULL);
+    if (imageSource != NULL) {
+        CFStringRef imageType = CGImageSourceGetType(imageSource);
+        CFStringRef extension = imageType == NULL
+            ? NULL
+            : UTTypeCopyPreferredTagWithClass(imageType, kUTTagClassFilenameExtension);
+        NSString *fileType = CFBridgingRelease(extension);
+        CFRelease(imageSource);
+
+        if (fileType.length > 0) {
+            NSString *lowercaseFileType = fileType.lowercaseString;
+            return [lowercaseFileType isEqualToString:@"jpeg"] ? @"jpg" : lowercaseFileType;
+        }
     }
+
+    return @"jpg";
 }
 
 + (NSString *) getFileTypeFromUrl:(NSURL *)url {
