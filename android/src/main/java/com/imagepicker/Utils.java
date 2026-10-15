@@ -415,7 +415,7 @@ public class Utils {
             ContentResolver contentResolver = context.getContentResolver();
             String contentResolverMimeType = contentResolver.getType(uri);
 
-            if (contentResolverMimeType.isBlank()) {
+            if (contentResolverMimeType == null || contentResolverMimeType.isBlank()) {
                 return getMimeTypeForContent(uri, context);
             } else {
                 return contentResolverMimeType;
@@ -579,7 +579,8 @@ public class Utils {
                 }
                 assets.pushMap(getVideoResponseMap(uri, appSpecificUrl, options, context));
             } else {
-                throw new RuntimeException("Unsupported file type");
+                throw new RuntimeException("Unsupported file type: '" + getMimeType(uri, context)
+                        + "', fileName='" + getFileName(uri, context) + "', uri='" + uri + "'");
             }
         }
 
