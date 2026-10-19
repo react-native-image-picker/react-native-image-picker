@@ -23,6 +23,7 @@ export interface OptionsCommon {
 export interface ImageLibraryOptions extends OptionsCommon {
   selectionLimit?: number;
   restrictMimeTypes?: string[];
+  preselectedAssetIds?: string[];
 }
 
 export interface CameraOptions extends OptionsCommon {
@@ -45,6 +46,7 @@ export interface Asset {
   bitrate?: number;
   timestamp?: string;
   id?: string;
+  assetId?: string;
 }
 
 export interface ImagePickerResponse {
@@ -52,6 +54,7 @@ export interface ImagePickerResponse {
   errorCode?: ErrorCode;
   errorMessage?: string;
   assets?: Asset[];
+  selectedAssetIds?: string[];
 }
 
 export type PhotoQuality =

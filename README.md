@@ -121,6 +121,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | includeExtra            | OK  | OK      | NO  | If `true`, will include extra data which requires library permissions to be requested (i.e. exif data).                                                                                                                                                                                   |
 | saveToPhotos            | OK  | OK      | NO  | (Boolean) Only for `launchCamera`, saves the image/video file captured to public photo.                                                                                                                                                                                                   |
 | selectionLimit          | OK  | OK      | OK  | Supports providing any integer value. Use `0` to allow any number of files on iOS version >= 14 & Android version >= 13. Default is `1`.                                                                                                                                                  |
+| preselectedAssetIds     | OK  | OK      | NO  | Asset ids to show as already selected, from `assetId` of an earlier pick. The response then lists the whole selection in `selectedAssetIds`; kept items are not repeated in `assets`, as the system does not hand their data back. iOS >= 15, Android >= 16 (API 36).                     |
 | presentationStyle       | OK  | NO      | NO  | Controls how the picker is presented. `currentContext`, `pageSheet`, `fullScreen`, `formSheet`, `popover`, `overFullScreen`, `overCurrentContext`. Default is `currentContext`.                                                                                                           |
 | formatAsMp4             | OK  | NO      | NO  | Converts the selected video to MP4 (iOS Only).                                                                                                                                                                                                                                            |
 | assetRepresentationMode | OK  | OK      | NO  | A mode that determines which representation to use if an asset contains more than one on iOS or disables HEIC/HEIF to JPEG conversion on Android if set to 'current'. Possible values: 'auto', 'current', 'compatible'. Default is 'auto'.                                                |
@@ -128,12 +129,13 @@ The `callback` will be called with a response object, refer to [The Response Obj
 
 ## The Response Object
 
-| key          | iOS | Android | Web | Description                                                         |
-| ------------ | --- | ------- | --- | ------------------------------------------------------------------- |
-| didCancel    | OK  | OK      | OK  | `true` if the user cancelled the process                            |
-| errorCode    | OK  | OK      | OK  | Check [ErrorCode](#ErrorCode) for all error codes                   |
-| errorMessage | OK  | OK      | OK  | Description of the error, use it for debug purpose only             |
-| assets       | OK  | OK      | OK  | Array of the selected media, [refer to Asset Object](#Asset-Object) |
+| key              | iOS | Android | Web | Description                                                         |
+| ---------------- | --- | ------- | --- | ------------------------------------------------------------------- |
+| didCancel        | OK  | OK      | OK  | `true` if the user cancelled the process                            |
+| errorCode        | OK  | OK      | OK  | Check [ErrorCode](#ErrorCode) for all error codes                   |
+| errorMessage     | OK  | OK      | OK  | Description of the error, use it for debug purpose only             |
+| assets           | OK  | OK      | OK  | Array of the selected media, [refer to Asset Object](#Asset-Object) |
+| selectedAssetIds | OK  | OK      | NO  | Whole selection, kept items included. See `preselectedAssetIds`     |
 
 ## Asset Object
 
@@ -151,6 +153,7 @@ The `callback` will be called with a response object, refer to [The Response Obj
 | bitrate      | --- | OK      | NO  | VIDEO ONLY  | NO                   | The average bitrate (in bits/sec) of the selected video, if available. (Android only)                                                                                                                                                                                          |
 | timestamp    | OK  | OK      | NO  | BOTH        | YES                  | Timestamp of the asset. Only included if 'includeExtra' is true                                                                                                                                                                                                                |
 | id           | OK  | OK      | NO  | BOTH        | YES                  | local identifier of the photo or video. On Android, this is the same as fileName                                                                                                                                                                                               |
+| assetId      | OK  | OK      | NO  | BOTH        | NO                   | Identifier to pass back in `preselectedAssetIds`: the PHPicker asset identifier on iOS, the picker content uri on Android.                                                                                                                                                     |
 
 ## Note on file storage
 

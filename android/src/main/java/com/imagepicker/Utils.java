@@ -518,6 +518,7 @@ public class Utils {
         map.putInt("height", dimensions[1]);
         map.putString("type", getMimeType(appSpecificUri, context));
         map.putString("originalPath", originalPath);
+        map.putString("assetId", uri.toString());
 
         if (options.includeBase64) {
             map.putString("base64", getBase64String(appSpecificUri, context));
@@ -548,6 +549,7 @@ public class Utils {
         map.putInt("width", videoMetadata.getWidth());
         map.putInt("height", videoMetadata.getHeight());
         map.putString("originalPath", originalPath);
+        map.putString("assetId", uri.toString());
 
         if (options.includeExtra) {
             // Add more extra data here ...
@@ -560,9 +562,20 @@ public class Utils {
 
     static ReadableMap getResponseMap(List<Uri> fileUris, Options options, Context context) throws RuntimeException {
         WritableArray assets = Arguments.createArray();
+        WritableArray selectedAssetIds = Arguments.createArray();
+        boolean appliesPreselection = options.appliesPreselection();
 
         for (int i = 0; i < fileUris.size(); ++i) {
             Uri uri = fileUris.get(i);
+
+            if (appliesPreselection) {
+                selectedAssetIds.pushString(uri.toString());
+
+                // Matches iOS, where the picker hands preselected items back without their data.
+                if (options.preselectedAssetIds.contains(uri.toString())) {
+                    continue;
+                }
+            }
 
             Uri appSpecificUrl = uri;
             if (uri.getScheme().contains("content")) {
@@ -585,6 +598,9 @@ public class Utils {
 
         WritableMap response = Arguments.createMap();
         response.putArray("assets", assets);
+        if (appliesPreselection) {
+            response.putArray("selectedAssetIds", selectedAssetIds);
+        }
 
         return response;
     }

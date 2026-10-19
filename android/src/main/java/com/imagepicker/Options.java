@@ -2,7 +2,11 @@ package com.imagepicker;
 
 import com.facebook.react.bridge.ReadableMap;
 
+import android.os.Build;
 import android.text.TextUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Options {
     int selectionLimit;
@@ -20,6 +24,7 @@ public class Options {
     String mediaType;
     String[] restrictMimeTypes;
     String androidCameraPackage;
+    List<String> preselectedAssetIds;
 
     Options(ReadableMap options) {
         mediaType = options.getString("mediaType");
@@ -48,6 +53,13 @@ public class Options {
             useFrontCamera = true;
         }
 
+        if (options.hasKey("preselectedAssetIds")) {
+            preselectedAssetIds = new ArrayList<>();
+            for (Object id : options.getArray("preselectedAssetIds").toArrayList()) {
+                preselectedAssetIds.add(id.toString());
+            }
+        }
+
         if( options.hasKey("androidCameraPackage")) {
             androidCameraPackage = options.getString("androidCameraPackage");
         }
@@ -57,5 +69,10 @@ public class Options {
         maxWidth = options.getInt("maxWidth");
         saveToPhotos = options.getBoolean("saveToPhotos");
         durationLimit = options.getInt("durationLimit");
+    }
+
+    // The system photo picker supports pre-selection from Android 16 (API 36), for multiple selection only.
+    boolean appliesPreselection() {
+        return preselectedAssetIds != null && selectionLimit != 1 && Build.VERSION.SDK_INT >= 36;
     }
 }

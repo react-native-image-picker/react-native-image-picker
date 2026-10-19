@@ -18,7 +18,35 @@ const includeExtra = true;
 
 export default function App() {
   const [response, setResponse] = React.useState<any>(null);
+  const [assets, setAssets] = React.useState<ImagePicker.Asset[]>([]);
   const [cameraPackage, setCameraPackage] = React.useState('');
+
+  const preselectedAssetIds = assets.flatMap(({assetId}) =>
+    assetId ? [assetId] : [],
+  );
+
+  // Items kept from an earlier pick are listed in selectedAssetIds only, so their data comes from that pick.
+  const onResponse = React.useCallback(
+    (next: ImagePicker.ImagePickerResponse) => {
+      setResponse(next);
+
+      const picked = next.assets;
+      const selected = next.selectedAssetIds;
+
+      if (!picked) return;
+
+      setAssets(previous =>
+        selected
+          ? selected.flatMap(
+              id =>
+                [...previous, ...picked].find(({assetId}) => assetId === id) ??
+                [],
+            )
+          : picked,
+      );
+    },
+    [],
+  );
 
   const onButtonPress = React.useCallback(
     (
@@ -34,12 +62,12 @@ export default function App() {
       };
 
       if (type === 'capture') {
-        ImagePicker.launchCamera(finalOptions, setResponse);
+        ImagePicker.launchCamera(finalOptions, onResponse);
       } else {
-        ImagePicker.launchImageLibrary(finalOptions, setResponse);
+        ImagePicker.launchImageLibrary(finalOptions, onResponse);
       }
     },
-    [cameraPackage],
+    [cameraPackage, onResponse],
   );
 
   return (
@@ -54,6 +82,17 @@ export default function App() {
               {title}
             </DemoButton>
           ))}
+          <DemoButton
+            onPress={() =>
+              onButtonPress('library', {
+                selectionLimit: 0,
+                mediaType: 'mixed',
+                includeExtra,
+                preselectedAssetIds,
+              })
+            }>
+            {'Select again\n(keep selection)'}
+          </DemoButton>
         </View>
 
         {Platform.OS === 'android' && (
@@ -70,7 +109,7 @@ export default function App() {
 
         <DemoResponse>{response}</DemoResponse>
 
-        {response?.assets?.map(({uri}: {uri: string}) => (
+        {assets.map(({uri}) => (
           <View key={uri} style={styles.imageContainer}>
             <Image
               resizeMode="cover"

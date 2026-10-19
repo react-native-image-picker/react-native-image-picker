@@ -527,9 +527,27 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         [assets addObject:(NSDictionary *)[NSNull null]];
     }
 
+    NSArray<NSString *> *preselectedAssetIds = nil;
+    if (@available(iOS 15, *)) {
+        preselectedAssetIds = self.options[@"preselectedAssetIds"];
+    }
+    NSMutableArray<NSString *> *selectedAssetIds = [[NSMutableArray alloc] initWithCapacity:results.count];
+    NSMutableIndexSet *keptIndexes = [[NSMutableIndexSet alloc] init];
+
     [results enumerateObjectsUsingBlock:^(PHPickerResult *result, NSUInteger index, BOOL *stop) {
         PHAsset *asset = nil;
         NSItemProvider *provider = result.itemProvider;
+        NSString *assetId = result.assetIdentifier;
+
+        if (assetId != nil) {
+            [selectedAssetIds addObject:assetId];
+        }
+
+        // The picker hands preselected items back without their data, so they are only listed in selectedAssetIds.
+        if (assetId != nil && [preselectedAssetIds containsObject:assetId]) {
+            [keptIndexes addIndex:index];
+            return;
+        }
 
         // If include extra, we fetch the PHAsset, this required library permissions
         if([self.options[@"includeExtra"] boolValue] && result.assetIdentifier != nil) {
@@ -551,13 +569,16 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
                 NSData *data = [[NSData alloc] initWithContentsOfURL:url];
                 UIImage *image = [[UIImage alloc] initWithData:data];
 
-                assets[index] = [self mapImageToAsset:image data:data phAsset:asset];
+                NSMutableDictionary *mappedAsset = [self mapImageToAsset:image data:data phAsset:asset];
+                if (assetId != nil) mappedAsset[@"assetId"] = assetId;
+                assets[index] = mappedAsset;
                 dispatch_group_leave(completionGroup);
             }];
         } else if ([provider hasItemConformingToTypeIdentifier:(NSString *)kUTTypeMovie]) {
             [provider loadFileRepresentationForTypeIdentifier:(NSString *)kUTTypeMovie completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
-                NSDictionary *mappedAsset = [self mapVideoToAsset:url phAsset:asset error:nil];
+                NSMutableDictionary *mappedAsset = [[self mapVideoToAsset:url phAsset:asset error:nil] mutableCopy];
                 if (nil != mappedAsset) {
+                    if (assetId != nil) mappedAsset[@"assetId"] = assetId;
                     assets[index] = mappedAsset;
                 }
                 dispatch_group_leave(completionGroup);
@@ -569,16 +590,24 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
     }];
 
     dispatch_group_notify(completionGroup, dispatch_get_main_queue(), ^{
-        //  mapVideoToAsset can fail and return nil, leaving asset NSNull.
-        for (NSDictionary *asset in assets) {
-            if ([asset isEqual:[NSNull null]]) {
+        NSMutableArray<NSDictionary *> *pickedAssets = [[NSMutableArray alloc] initWithCapacity:assets.count];
+        for (NSUInteger i = 0; i < assets.count; i++) {
+            if ([keptIndexes containsIndex:i]) {
+                continue;
+            }
+            //  mapVideoToAsset can fail and return nil, leaving asset NSNull.
+            if ([assets[i] isEqual:[NSNull null]]) {
                 self.callback(@[@{@"errorCode": errOthers}]);
                 return;
             }
+            [pickedAssets addObject:assets[i]];
         }
 
         NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
-        [response setObject:assets forKey:@"assets"];
+        [response setObject:pickedAssets forKey:@"assets"];
+        if (preselectedAssetIds != nil) {
+            [response setObject:selectedAssetIds forKey:@"selectedAssetIds"];
+        }
 
         self.callback(@[response]);
     });

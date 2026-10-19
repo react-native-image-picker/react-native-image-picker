@@ -16,6 +16,7 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.module.annotations.ReactModule;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -36,6 +37,9 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
     public static final int REQUEST_LAUNCH_IMAGE_CAPTURE = 13001;
     public static final int REQUEST_LAUNCH_VIDEO_CAPTURE = 13002;
     public static final int REQUEST_LAUNCH_LIBRARY = 13003;
+
+    // MediaStore.EXTRA_PICKER_PRE_SELECTION_URIS (API 36), spelled out so apps on an older compileSdk still build.
+    private static final String EXTRA_PICKER_PRE_SELECTION_URIS = "android.provider.extra.PICKER_PRE_SELECTION_URIS";
 
     private Uri fileUri;
 
@@ -162,6 +166,14 @@ public class ImagePickerModuleImpl implements ActivityEventListener {
 
         if(this.options.restrictMimeTypes.length > 0) {
             libraryIntent.putExtra(Intent.EXTRA_MIME_TYPES, this.options.restrictMimeTypes);
+        }
+
+        if (this.options.appliesPreselection() && !this.options.preselectedAssetIds.isEmpty()) {
+            ArrayList<Uri> preselectedUris = new ArrayList<>();
+            for (String id : this.options.preselectedAssetIds) {
+                preselectedUris.add(Uri.parse(id));
+            }
+            libraryIntent.putParcelableArrayListExtra(EXTRA_PICKER_PRE_SELECTION_URIS, preselectedUris);
         }
 
         try {

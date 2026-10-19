@@ -51,7 +51,7 @@
 #if __has_include(<PhotosUI/PHPicker.h>)
     PHPickerConfiguration *configuration;
     
-    if(options[@"includeExtra"]) {
+    if(options[@"includeExtra"] || options[@"preselectedAssetIds"] != nil) {
         PHPhotoLibrary *photoLibrary = [PHPhotoLibrary sharedPhotoLibrary];
         configuration = [[PHPickerConfiguration alloc] initWithPhotoLibrary:photoLibrary];
     } else {
@@ -69,6 +69,13 @@
     }
     
     configuration.selectionLimit = [options[@"selectionLimit"] integerValue];
+
+    if (@available(iOS 15, *)) {
+        NSArray<NSString *> *preselectedAssetIds = options[@"preselectedAssetIds"];
+        if (preselectedAssetIds.count > 0) {
+            configuration.preselectedAssetIdentifiers = preselectedAssetIds;
+        }
+    }
 
     if ([options[@"mediaType"] isEqualToString:@"video"]) {
         configuration.filter = [PHPickerFilter videosFilter];
