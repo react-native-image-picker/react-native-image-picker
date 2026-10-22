@@ -64,12 +64,23 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 }
 #endif
 
+- (void)invokeCallback:(NSArray *)response
+{
+    if (self.callback == nil) {
+        return;
+    }
+
+    RCTResponseSenderBlock callback = self.callback;
+    self.callback = nil;
+    callback(response);
+}
+
 - (void)launchImagePicker:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback
 {
     self.callback = callback;
 
     if (target == camera && [ImagePickerUtils isSimulator]) {
-        self.callback(@[@{@"errorCode": errCameraUnavailable}]);
+        [self invokeCallback:@[@{@"errorCode": errCameraUnavailable}]];
         return;
     }
 
@@ -88,7 +99,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
                 [self checkPhotosPermissions:^(BOOL granted) {
                     if (!granted) {
-                        self.callback(@[@{@"errorCode": errPermission}]);
+                        [self invokeCallback:@[@{@"errorCode": errPermission}]];
                         return;
                     }
                     [self showPickerViewController:picker];
@@ -109,7 +120,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     if([self.options[@"includeExtra"] boolValue]) {
         [self checkPhotosPermissions:^(BOOL granted) {
             if (!granted) {
-                self.callback(@[@{@"errorCode": errPermission}]);
+                [self invokeCallback:@[@{@"errorCode": errPermission}]];
                 return;
             }
             [self showPickerViewController:picker];
@@ -466,7 +477,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
             if (videoAsset == nil) {
                 NSString *errorMessage = error.localizedFailureReason;
                 if (errorMessage == nil) errorMessage = @"Video asset not found";
-                self.callback(@[@{@"errorCode": errOthers, @"errorMessage": errorMessage}]);
+                [self invokeCallback:@[@{@"errorCode": errOthers, @"errorMessage": errorMessage}]];
                 return;
             }
             [assets addObject:videoAsset];
@@ -474,7 +485,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
         NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
         response[@"assets"] = assets;
-        self.callback(@[response]);
+        [self invokeCallback:@[response]];
     };
 
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -486,7 +497,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 {
     dispatch_async(dispatch_get_main_queue(), ^{
         [picker dismissViewControllerAnimated:YES completion:^{
-            self.callback(@[@{@"didCancel": @YES}]);
+            [self invokeCallback:@[@{@"didCancel": @YES}]];
         }];
     });
 }
@@ -497,7 +508,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
 - (void)presentationControllerDidDismiss:(UIPresentationController *)presentationController
 {
-    self.callback(@[@{@"didCancel": @YES}]);
+    [self invokeCallback:@[@{@"didCancel": @YES}]];
 }
 
 @end
@@ -507,7 +518,6 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
 - (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14))
 {
-    [picker dismissViewControllerAnimated:YES completion:nil];
 
     if (photoSelected == YES) {
         return;
@@ -516,7 +526,9 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
     if (results.count == 0) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            self.callback(@[@{@"didCancel": @YES}]);
+            [picker dismissViewControllerAnimated:YES completion:^{
+                [self invokeCallback:@[@{@"didCancel": @YES}]];
+            }];
         });
         return;
     }
@@ -572,7 +584,9 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         //  mapVideoToAsset can fail and return nil, leaving asset NSNull.
         for (NSDictionary *asset in assets) {
             if ([asset isEqual:[NSNull null]]) {
-                self.callback(@[@{@"errorCode": errOthers}]);
+                [picker dismissViewControllerAnimated:YES completion:^{
+                    [self invokeCallback:@[@{@"errorCode": errOthers}]];
+                }];
                 return;
             }
         }
@@ -580,7 +594,9 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
         [response setObject:assets forKey:@"assets"];
 
-        self.callback(@[response]);
+        [picker dismissViewControllerAnimated:YES completion:^{
+            [self invokeCallback:@[response]];
+        }];
     });
 }
 
