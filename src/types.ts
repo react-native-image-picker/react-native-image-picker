@@ -43,6 +43,7 @@ export interface Asset {
   fileName?: string;
   duration?: number;
   bitrate?: number;
+  /** Timestamp of the asset with the device's local timezone offset. */
   timestamp?: string;
   id?: string;
 }

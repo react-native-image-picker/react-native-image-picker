@@ -16,7 +16,7 @@ public class ImageMetadata extends Metadata {
 
             // Extract anymore metadata here...
             if (datetimeTag != null)
-                this.datetime = getDateTimeInUTC(datetimeTag, "yyyy:MM:dd HH:mm:ss");
+                this.datetime = getDateTimeWithLocalTimeZoneOffset(datetimeTag, "yyyy:MM:dd HH:mm:ss");
         } catch (Exception e) {
             // This error does not bubble up to RN as we don't want failed datetime retrieval to prevent selection
             Log.e("RNIP", "Could not load image metadata: " + e.getMessage());
