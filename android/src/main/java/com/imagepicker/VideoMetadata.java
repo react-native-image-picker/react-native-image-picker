@@ -3,10 +3,13 @@ package com.imagepicker;
 import static java.lang.Integer.parseInt;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
+import android.provider.MediaStore;
 import android.util.Log;
 
+import java.io.File;
 import java.io.IOException;
 
 // MetadataRetriever only implements AutoCloseable starting with Android API 29
@@ -40,10 +43,17 @@ public class VideoMetadata extends Metadata {
             if (bitrate != null) this.bitrate = parseInt(bitrate);
 
             if (datetime != null) {
-                // METADATA_KEY_DATE gives us the following format: "20211214T102646.000Z"
-                // This date is always returned in UTC, so we strip the ending that `SimpleDateFormat` can't parse, and append `+GMT`
-                String datetimeToFormat = datetime.substring(0, datetime.indexOf(".")) + "+GMT";
+                int dotIndex = datetime.indexOf(".");
+                String datetimeToFormat = dotIndex > 0
+                        ? datetime.substring(0, dotIndex) + "+GMT"
+                        : datetime + "+GMT";
                 this.datetime = getDateTimeInUTC(datetimeToFormat, "yyyyMMdd'T'HHmmss+zzz");
+            }
+            if (this.datetime == null) {
+                this.datetime = getDateTimeFromMediaStore(uri, context);
+            }
+            if (this.datetime == null) {
+                this.datetime = getDateTimeFromFile(uri);
             }
 
             String width = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
@@ -64,6 +74,55 @@ public class VideoMetadata extends Metadata {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private String getDateTimeFromMediaStore(Uri uri, Context context) {
+        String[] projection = new String[]{
+                MediaStore.Video.Media.DATE_TAKEN,
+                MediaStore.MediaColumns.DATE_ADDED
+        };
+        try (Cursor cursor = context.getContentResolver().query(uri, projection, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int takenIndex = cursor.getColumnIndex(MediaStore.Video.Media.DATE_TAKEN);
+                if (takenIndex >= 0) {
+                    long dateTaken = cursor.getLong(takenIndex);
+                    if (dateTaken > 0) {
+                        return getDateTimeInUTCFromMillis(dateTaken);
+                    }
+                }
+                int addedIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DATE_ADDED);
+                if (addedIndex >= 0) {
+                    long dateAdded = cursor.getLong(addedIndex);
+                    if (dateAdded > 0) {
+                        return getDateTimeInUTCFromMillis(dateAdded * 1000L);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e("RNIP", "Could not get video date from MediaStore: " + e.getMessage());
+        }
+        return null;
+    }
+
+    private String getDateTimeFromFile(Uri uri) {
+        if (uri == null || !"file".equalsIgnoreCase(uri.getScheme())) {
+            return null;
+        }
+        try {
+            String path = uri.getPath();
+            if (path != null) {
+                File file = new File(path);
+                if (file.exists()) {
+                    long lastModified = file.lastModified();
+                    if (lastModified > 0) {
+                        return getDateTimeInUTCFromMillis(lastModified);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e("RNIP", "Could not get video date from file: " + e.getMessage());
+        }
+        return null;
     }
 
     public int getBitrate() {

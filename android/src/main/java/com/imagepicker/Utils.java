@@ -12,12 +12,14 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.camera2.CameraCharacteristics;
+import android.content.ContentUris;
 import android.net.Uri;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.util.Base64;
+import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import androidx.annotation.Nullable;
@@ -108,33 +110,6 @@ public class Utils {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    // Make a copy of shared storage files inside app specific storage so that users can access it later.
-    public static Uri getAppSpecificStorageUri(Uri sharedStorageUri, Context context) {
-        if (sharedStorageUri == null) {
-            return null;
-        }
-        ContentResolver contentResolver = context.getContentResolver();
-        String fileType = getFileTypeFromMime(contentResolver.getType(sharedStorageUri));
-
-        if (fileType == null) {
-            Cursor cursor =
-                    contentResolver.query(sharedStorageUri, null, null, null, null);
-            if (cursor.moveToFirst()) {
-                int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-                String fileName = cursor.getString(nameIndex);
-                int lastDotIndex = fileName.lastIndexOf('.');
-
-                if (lastDotIndex != -1) {
-                    fileType = fileName.substring(lastDotIndex + 1);
-                }
-            }
-        }
-
-        Uri toUri = Uri.fromFile(createFile(context, fileType));
-        copyUri(sharedStorageUri, toUri, contentResolver);
-        return toUri;
     }
 
     public static boolean isCameraAvailable(Context reactContext) {
@@ -447,15 +422,11 @@ public class Utils {
     }
 
     static String getOriginalFilePath(Uri uri, Context context) {
-        String originPath;
         if (uri.getScheme().contains("content")) {
-            originPath = getFilePathFromContent(uri, context);
-            uri = getAppSpecificStorageUri(uri, context);
-        } else {
-            originPath = uri.toString();
+            String path = getFilePathFromContent(uri, context);
+            return path != null ? path : uri.toString();
         }
-
-        return originPath;
+        return uri.toString();
     }
 
     private static String getFilePathFromContent(Uri uri, Context context) {
@@ -471,6 +442,31 @@ public class Utils {
     }
 
     private static String getFileNameForContent(Uri uri, Context context) {
+        // On Android 13+ the Photo Picker returns synthetic URIs whose DISPLAY_NAME
+        // is just the numeric media ID (e.g. "1000000050"). Resolve the real filename
+        // by querying MediaStore directly with that ID.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && uri.toString().contains("com.android.providers.media.photopicker")) {
+            try {
+                long mediaId = Long.parseLong(uri.getLastPathSegment());
+                Uri[] candidates = {
+                    ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, mediaId),
+                    ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, mediaId),
+                };
+                for (Uri candidate : candidates) {
+                    try (Cursor c = context.getContentResolver().query(
+                            candidate,
+                            new String[]{MediaStore.MediaColumns.DISPLAY_NAME},
+                            null, null, null)) {
+                        if (c != null && c.moveToFirst()) {
+                            String name = c.getString(0);
+                            if (name != null && !name.isEmpty()) return name;
+                        }
+                    } catch (Exception ignored) {}
+                }
+            } catch (NumberFormatException ignored) {}
+        }
+
         ContentResolver contentResolver = context.getContentResolver();
         Cursor cursor = contentResolver.query(uri, null, null, null, null);
 
@@ -504,7 +500,7 @@ public class Utils {
     }
 
     static ReadableMap getImageResponseMap(Uri uri, Uri appSpecificUri, Options options, Context context) {
-        ImageMetadata imageMetadata = new ImageMetadata(appSpecificUri, context);
+        ImageMetadata imageMetadata = new ImageMetadata(uri, context);
         int[] dimensions = getImageDimensions(appSpecificUri, context);
 
         String fileName = getFileName(uri, context);
@@ -564,20 +560,15 @@ public class Utils {
         for (int i = 0; i < fileUris.size(); ++i) {
             Uri uri = fileUris.get(i);
 
-            Uri appSpecificUrl = uri;
-            if (uri.getScheme().contains("content")) {
-                appSpecificUrl = getAppSpecificStorageUri(uri, context);
-            }
-
-            // Call getAppSpecificStorageUri in the if block to avoid copying unsupported files
             if (isImageType(uri, context)) {
-                appSpecificUrl = resizeOrConvertImage(appSpecificUrl, context, options);
-                assets.pushMap(getImageResponseMap(uri, appSpecificUrl, options, context));
+                Uri resultUri = resizeOrConvertImage(uri, context, options);
+                assets.pushMap(getImageResponseMap(uri, resultUri, options, context));
             } else if (isVideoType(uri, context)) {
-                if (uri.getScheme().contains("content")) {
-                    appSpecificUrl = getAppSpecificStorageUri(uri, context);
+                try {
+                    assets.pushMap(getVideoResponseMap(uri, uri, options, context));
+                } catch (Exception e) {
+                    Log.w("RNIP", "Skipping video due to metadata error: " + e.getMessage());
                 }
-                assets.pushMap(getVideoResponseMap(uri, appSpecificUrl, options, context));
             } else {
                 throw new RuntimeException("Unsupported file type");
             }
