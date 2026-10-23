@@ -1,7 +1,5 @@
 package com.imagepicker;
 
-import static java.lang.Integer.parseInt;
-
 import android.content.Context;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
@@ -37,7 +35,18 @@ public class VideoMetadata extends Metadata {
 
             // Extract anymore metadata here...
             if (duration != null) this.duration = Math.round(Float.parseFloat(duration)) / 1000;
-            if (bitrate != null) this.bitrate = parseInt(bitrate);
+            if (bitrate != null) {
+                // MediaMetadataRetriever can report Long.MAX_VALUE when it cannot compute the
+                // bitrate (e.g. fragmented MP4 whose moov declares a zero duration). Parsing it
+                // as an int threw a NumberFormatException that failed the whole pick, so treat
+                // any value that is not a valid int as unknown (0).
+                try {
+                    long parsedBitrate = Long.parseLong(bitrate);
+                    this.bitrate = parsedBitrate > Integer.MAX_VALUE ? 0 : (int) parsedBitrate;
+                } catch (NumberFormatException e) {
+                    this.bitrate = 0;
+                }
+            }
 
             if (datetime != null) {
                 // METADATA_KEY_DATE gives us the following format: "20211214T102646.000Z"
