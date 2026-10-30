@@ -229,7 +229,10 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 }
 
 -(NSMutableDictionary *)mapVideoToAsset:(NSURL *)url phAsset:(PHAsset * _Nullable)phAsset error:(NSError **)error {
-    NSString *fileName = [url lastPathComponent];
+    // Each copy gets a unique name, like picked photos do. Library videos often share
+    // a file name (IMG_1234.mov), and copying them all to tmp/<file name> made each
+    // video overwrite the previous one's copy.
+    NSString *fileName = [[[NSUUID UUID] UUIDString] stringByAppendingPathExtension:url.pathExtension ?: @""];
     NSString *path = [[NSTemporaryDirectory() stringByStandardizingPath] stringByAppendingPathComponent:fileName];
     NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
     NSString *fileExtension = [fileName pathExtension];
