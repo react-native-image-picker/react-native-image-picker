@@ -9,6 +9,7 @@
     "/android",
     "!/android/build",
     "/ios",
+    "/Package.swift",
     "/*.podspec",
     "/src",
     "/lib"
@@ -60,5 +61,8 @@
     "android": {
       "javaPackageName": "com.imagepicker"
     }
+  },
+  "swiftpmConfig": {
+    "name": "RNImagePicker"
   }
 }
