@@ -69,7 +69,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     self.callback = callback;
 
     if (target == camera && [ImagePickerUtils isSimulator]) {
-        self.callback(@[@{@"errorCode": errCameraUnavailable}]);
+        [self invokeCallback:@[@{@"errorCode": errCameraUnavailable}] forLaunch:callback];
         return;
     }
 
@@ -88,7 +88,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
                 [self checkPhotosPermissions:^(BOOL granted) {
                     if (!granted) {
-                        self.callback(@[@{@"errorCode": errPermission}]);
+                        [self invokeCallback:@[@{@"errorCode": errPermission}] forLaunch:callback];
                         return;
                     }
                     [self showPickerViewController:picker];
@@ -109,7 +109,7 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     if([self.options[@"includeExtra"] boolValue]) {
         [self checkPhotosPermissions:^(BOOL granted) {
             if (!granted) {
-                self.callback(@[@{@"errorCode": errPermission}]);
+                [self invokeCallback:@[@{@"errorCode": errPermission}] forLaunch:callback];
                 return;
             }
             [self showPickerViewController:picker];
@@ -124,6 +124,22 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     dispatch_async(dispatch_get_main_queue(), ^{
         UIViewController *root = RCTPresentedViewController();
         [root presentViewController:picker animated:YES completion:nil];
+    });
+}
+
+// React Native aborts the app when a callback is called twice (#2390). The
+// delegate methods can fire twice for one pick, and a second launch replaces
+// self.callback while the first pick still loads. So each launch's callback is
+// called once, on the main queue, and only while it is the current launch's: a
+// newer launch drops an older pick that still loads (its promise never settles).
+- (void)invokeCallback:(NSArray *)response forLaunch:(RCTResponseSenderBlock)launchCallback
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (launchCallback == nil || self.callback != launchCallback) {
+            return;
+        }
+        self.callback = nil;
+        launchCallback(response);
     });
 }
 
@@ -441,6 +457,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info
 {
+    RCTResponseSenderBlock launchCallback = self.callback;
     dispatch_block_t dismissCompletionBlock = ^{
         NSMutableArray<NSDictionary *> *assets = [[NSMutableArray alloc] initWithCapacity:1];
         PHAsset *asset = nil;
@@ -466,7 +483,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
             if (videoAsset == nil) {
                 NSString *errorMessage = error.localizedFailureReason;
                 if (errorMessage == nil) errorMessage = @"Video asset not found";
-                self.callback(@[@{@"errorCode": errOthers, @"errorMessage": errorMessage}]);
+                [self invokeCallback:@[@{@"errorCode": errOthers, @"errorMessage": errorMessage}] forLaunch:launchCallback];
                 return;
             }
             [assets addObject:videoAsset];
@@ -474,7 +491,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
         NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
         response[@"assets"] = assets;
-        self.callback(@[response]);
+        [self invokeCallback:@[response] forLaunch:launchCallback];
     };
 
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -484,9 +501,10 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
 {
+    RCTResponseSenderBlock launchCallback = self.callback;
     dispatch_async(dispatch_get_main_queue(), ^{
         [picker dismissViewControllerAnimated:YES completion:^{
-            self.callback(@[@{@"didCancel": @YES}]);
+            [self invokeCallback:@[@{@"didCancel": @YES}] forLaunch:launchCallback];
         }];
     });
 }
@@ -497,7 +515,12 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
 - (void)presentationControllerDidDismiss:(UIPresentationController *)presentationController
 {
-    self.callback(@[@{@"didCancel": @YES}]);
+    // A pick that is still loading wins over the swipe that closed the picker
+    if (photoSelected == YES) {
+        return;
+    }
+    photoSelected = YES;
+    [self invokeCallback:@[@{@"didCancel": @YES}] forLaunch:self.callback];
 }
 
 @end
@@ -514,10 +537,9 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
     }
     photoSelected = YES;
 
+    RCTResponseSenderBlock launchCallback = self.callback;
     if (results.count == 0) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            self.callback(@[@{@"didCancel": @YES}]);
-        });
+        [self invokeCallback:@[@{@"didCancel": @YES}] forLaunch:launchCallback];
         return;
     }
 
@@ -572,7 +594,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         //  mapVideoToAsset can fail and return nil, leaving asset NSNull.
         for (NSDictionary *asset in assets) {
             if ([asset isEqual:[NSNull null]]) {
-                self.callback(@[@{@"errorCode": errOthers}]);
+                [self invokeCallback:@[@{@"errorCode": errOthers}] forLaunch:launchCallback];
                 return;
             }
         }
@@ -580,7 +602,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         NSMutableDictionary *response = [[NSMutableDictionary alloc] init];
         [response setObject:assets forKey:@"assets"];
 
-        self.callback(@[response]);
+        [self invokeCallback:@[response] forLaunch:launchCallback];
     });
 }
 
