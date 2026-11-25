@@ -6,11 +6,14 @@
 #import <Photos/Photos.h>
 #import <PhotosUI/PhotosUI.h>
 #import <MobileCoreServices/MobileCoreServices.h>
+#import <objc/runtime.h>
 
 @interface ImagePickerManager ()
 
 @property (nonatomic, strong) RCTResponseSenderBlock callback;
 @property (nonatomic, copy) NSDictionary *options;
+@property (nonatomic, assign) RNImagePickerTarget target;
+@property (nonatomic, assign) BOOL photoSelected;
 
 @end
 
@@ -30,27 +33,26 @@
 NSString *errCameraUnavailable = @"camera_unavailable";
 NSString *errPermission = @"permission";
 NSString *errOthers = @"others";
-RNImagePickerTarget target;
-
-BOOL photoSelected = NO;
+// UIKit delegates are weak, so each picker retains its request manager.
+static char pickerRequestKey;
 
 RCT_EXPORT_MODULE(ImagePicker)
 
 RCT_EXPORT_METHOD(launchCamera:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
 {
-    target = camera;
-    photoSelected = NO;
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self launchImagePicker:options callback:callback];
+        ImagePickerManager *request = [ImagePickerManager new];
+        request.target = camera;
+        [request launchImagePicker:options callback:callback];
     });
 }
 
 RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback)
 {
-    target = library;
-    photoSelected = NO;
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self launchImagePicker:options callback:callback];
+        ImagePickerManager *request = [ImagePickerManager new];
+        request.target = library;
+        [request launchImagePicker:options callback:callback];
     });
 }
 
@@ -66,9 +68,20 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
 - (void)launchImagePicker:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback
 {
-    self.callback = callback;
+    // A TurboModule callback may only be invoked once, including across threads.
+    __block BOOL callbackInvoked = NO;
+    NSObject *callbackLock = [NSObject new];
+    self.callback = ^(NSArray *response) {
+        @synchronized (callbackLock) {
+            if (callbackInvoked) {
+                return;
+            }
+            callbackInvoked = YES;
+        }
+        callback(response);
+    };
 
-    if (target == camera && [ImagePickerUtils isSimulator]) {
+    if (self.target == camera && [ImagePickerUtils isSimulator]) {
         self.callback(@[@{@"errorCode": errCameraUnavailable}]);
         return;
     }
@@ -77,9 +90,10 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
 
 #if __has_include(<PhotosUI/PHPicker.h>)
     if (@available(iOS 14, *)) {
-        if (target == library) {
-            PHPickerConfiguration *configuration = [ImagePickerUtils makeConfigurationFromOptions:options target:target];
+        if (self.target == library) {
+            PHPickerConfiguration *configuration = [ImagePickerUtils makeConfigurationFromOptions:options target:self.target];
             PHPickerViewController *picker = [[PHPickerViewController alloc] initWithConfiguration:configuration];
+            objc_setAssociatedObject(picker, &pickerRequestKey, self, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
             picker.delegate = self;
             picker.modalPresentationStyle = [RCTConvert UIModalPresentationStyle:options[@"presentationStyle"]];
             picker.presentationController.delegate = self;
@@ -102,7 +116,8 @@ RCT_EXPORT_METHOD(launchImageLibrary:(NSDictionary *)options callback:(RCTRespon
     }
 #endif
     UIImagePickerController *picker = [[UIImagePickerController alloc] init];
-    [ImagePickerUtils setupPickerFromOptions:picker options:self.options target:target];
+    [ImagePickerUtils setupPickerFromOptions:picker options:self.options target:self.target];
+    objc_setAssociatedObject(picker, &pickerRequestKey, self, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     picker.delegate = self;
     picker.presentationController.delegate = self;
     
@@ -157,7 +172,7 @@ NSData* extractImageData(UIImage* image){
 
 -(NSMutableDictionary *)mapImageToAsset:(UIImage *)image data:(NSData *)data phAsset:(PHAsset * _Nullable)phAsset {
     NSString *fileType = [ImagePickerUtils getFileType:data];
-    if (target == camera) {
+    if (self.target == camera) {
         if ([self.options[@"saveToPhotos"] boolValue]) {
             UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
         }
@@ -234,7 +249,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
     NSURL *videoDestinationURL = [NSURL fileURLWithPath:path];
     NSString *fileExtension = [fileName pathExtension];
 
-    if ((target == camera) && [self.options[@"saveToPhotos"] boolValue]) {
+    if ((self.target == camera) && [self.options[@"saveToPhotos"] boolValue]) {
         UISaveVideoAtPathToSavedPhotosAlbum(url.path, nil, nil, nil);
     }
 
@@ -394,10 +409,10 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
         callback(YES);
     };
 
-    if (target == camera && [self.options[@"saveToPhotos"] boolValue]) {
+    if (self.target == camera && [self.options[@"saveToPhotos"] boolValue]) {
         [self checkCameraAndPhotoPermission:permissionBlock];
     }
-    else if (target == camera) {
+    else if (self.target == camera) {
         [self checkCameraPermissions:permissionBlock];
     }
     else {
@@ -441,14 +456,14 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info
 {
+    if (self.photoSelected) {
+        return;
+    }
+    self.photoSelected = YES;
+
     dispatch_block_t dismissCompletionBlock = ^{
         NSMutableArray<NSDictionary *> *assets = [[NSMutableArray alloc] initWithCapacity:1];
         PHAsset *asset = nil;
-
-        if (photoSelected == YES) {
-           return;
-        }
-        photoSelected = YES;
 
         // If include extra, we fetch the PHAsset, this required library permissions
         if([self.options[@"includeExtra"] boolValue]) {
@@ -484,6 +499,11 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
 {
+    if (self.photoSelected) {
+        return;
+    }
+    self.photoSelected = YES;
+
     dispatch_async(dispatch_get_main_queue(), ^{
         [picker dismissViewControllerAnimated:YES completion:^{
             self.callback(@[@{@"didCancel": @YES}]);
@@ -497,7 +517,10 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
 - (void)presentationControllerDidDismiss:(UIPresentationController *)presentationController
 {
-    self.callback(@[@{@"didCancel": @YES}]);
+    if (!self.photoSelected) {
+        self.photoSelected = YES;
+        self.callback(@[@{@"didCancel": @YES}]);
+    }
 }
 
 @end
@@ -507,12 +530,11 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
 
 - (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14))
 {
-    [picker dismissViewControllerAnimated:YES completion:nil];
-
-    if (photoSelected == YES) {
+    if (self.photoSelected == YES) {
         return;
     }
-    photoSelected = YES;
+    self.photoSelected = YES;
+    [picker dismissViewControllerAnimated:YES completion:nil];
 
     if (results.count == 0) {
         dispatch_async(dispatch_get_main_queue(), ^{
